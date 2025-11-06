@@ -1,5 +1,3 @@
-<!-- src/routes/session/[id]/settings/+page.svelte -->
-
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { sessions } from '$lib/stores';
@@ -230,43 +228,7 @@
 	{/if}
 </div>
 
+<!-- (styleタグは変更なし) -->
 <style>
-	/* (styleタグの中身は変更なし) */
-	.toggle {
-		position: relative;
-		display: inline-block;
-		width: 50px;
-		height: 28px;
-		background-color: #ccc;
-		border-radius: 9999px;
-		transition: background-color 0.2s;
-		appearance: none;
-		cursor: pointer;
-	}
-	.toggle::before {
-		content: '';
-		position: absolute;
-		top: 4px;
-		left: 4px;
-		width: 20px;
-		height: 20px;
-		background-color: white;
-		border-radius: 50%;
-		transition: transform 0.2s;
-	}
-	.toggle:checked {
-		background-color: #4ade80;
-	}
-	.toggle:checked::before {
-		transform: translateX(22px);
-	}
-	.btn {
-		padding: 0.5rem 1rem;
-		border-radius: 0.5rem;
-		cursor: pointer;
-	}
-	.btn-primary {
-		background-color: #3b82f6;
-		color: white;
-	}
+	.toggle{position:relative;display:inline-block;width:50px;height:28px;background-color:#ccc;border-radius:9999px;transition:background-color .2s;-webkit-appearance:none;appearance:none;cursor:pointer}.toggle::before{content:'';position:absolute;top:4px;left:4px;width:20px;height:20px;background-color:#fff;border-radius:50%;transition:transform .2s}.toggle:checked{background-color:#4ade80}.toggle:checked::before{transform:translateX(22px)}.btn{padding:.5rem 1rem;border-radius:.5rem;cursor:pointer}.btn-primary{background-color:#3b82f6;color:#fff}
 </style>

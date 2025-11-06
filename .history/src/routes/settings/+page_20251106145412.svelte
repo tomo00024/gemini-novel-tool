@@ -20,7 +20,7 @@
 	});
 </script>
 
-<div class="flex flex-col h-screen p-4">
+<div class="p-4 max-w-3xl mx-auto">
 	<div class="flex justify-between items-center mb-6">
 		<h1 class="text-2xl font-bold">アプリ設定</h1>
 		<a

@@ -1,5 +1,3 @@
-<!-- src/routes/session/[id]/+page.svelte -->
-
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { sessions, appSettings } from '$lib/stores';
@@ -116,17 +114,13 @@
 <!-- ▼▼▼ ここからがUIの切り替えロジック ▼▼▼ -->
 
 {#if $currentSession}
-	<!-- 
-    viewModeが 'game' の場合は GameChatView を表示
-    それ以外（'standard' や未設定）の場合は StandardChatView を表示
-  -->
 	{#if $currentSession.viewMode === 'game'}
 		<GameChatView
 			currentSession={$currentSession}
 			{isLoading}
 			bind:userInput
 			{handleSubmit}
-			{base}
+			{base} <!-- ▼▼▼ この行を追加 ▼▼▼ -->
 		/>
 	{:else}
 		<StandardChatView

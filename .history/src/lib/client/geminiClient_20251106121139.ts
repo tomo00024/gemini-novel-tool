@@ -3,7 +3,7 @@ import type { ConversationContext, GoodwillFeatureData } from '$lib/types';
 import { geminiModelConfig } from '$lib/utils';
 
 // ===================================================================
-// 型定義 (サーバーから移植)
+// 型定義 
 // ===================================================================
 interface GenerateResponseArgs {
 	responseText: string;
@@ -72,7 +72,7 @@ export async function callGeminiApiOnClient(
 	const baseProperties = {
 		responseText: {
 			type: "string",
-			description: 'キャラクターがユーザーに応答する際のセリフ。'
+			description: 'ユーザーへの応答として生成されたテキストメッセージ。'
 		}
 	};
 	let combinedProperties: Record<string, any> = { ...baseProperties };
@@ -90,9 +90,9 @@ export async function callGeminiApiOnClient(
     const tools = isAnyFeatureEnabled ? [{
         functionDeclarations: [{
             name: 'generateResponse',
-            description: 'ユーザーへの応答セリフと、それに伴う全てのゲーム内状態変化を生成します。',
+            description: 'ユーザーへの応答テキストと、それに伴う好感度の変動を生成します。',
             parameters: {
-                type: 'OBJECT', // SDKのType.OBJECTは、直接指定する場合は'OBJECT'文字列
+                type: 'OBJECT', 
                 properties: combinedProperties,
                 required: ['responseText']
             }

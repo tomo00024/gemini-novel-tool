@@ -7,10 +7,10 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-
+	import type { Session } from '$lib/types';
+	// --- ストアと変数の設定 ---
 	const sessionId = derived(page, ($page) => $page.params.id);
 
-	// このderivedストアは値の「読み取り」にのみ使用します
 	const currentSession = derived(
 		[sessions, sessionId],
 		([$sessions, $sessionId]) => $sessions.find((s) => s.id === $sessionId)
@@ -20,6 +20,9 @@
 		if (!$sessions.some((s) => s.id === $page.params.id)) {
 			goto(base || '/');
 		}
+
+		// ★★★ [追加] 古いセッションデータにデフォルト値を設定 ★★★
+		// viewModeが未定義の場合、デフォルト値として'standard'を設定する
 		if ($currentSession && typeof $currentSession.viewMode === 'undefined') {
 			sessions.update((allSessions) => {
 				const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
@@ -31,66 +34,32 @@
 		}
 	});
 
-	// ▼▼▼ [ここからが修正箇所] bind: をやめ、手動でストアを更新する関数群 ▼▼▼
-
-	function handleViewModeChange(event: Event) {
-		const newMode = (event.target as HTMLInputElement).value as 'standard' | 'game';
+	// --- ストア更新用の関数 ---
+	function updateSession() {
+		// bind:groupやbind:checkedで値はすでに更新されているので、
+		// ここではlastUpdatedAtを更新して変更をストアに永続化させるのが目的
 		sessions.update((allSessions) => {
 			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
 			if (sessionToUpdate) {
-				sessionToUpdate.viewMode = newMode;
 				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
 			}
 			return allSessions;
 		});
 	}
 
-	function handleGoodwillEnabledChange(event: Event) {
-		const isEnabled = (event.target as HTMLInputElement).checked;
-		sessions.update((allSessions) => {
-			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
-			if (sessionToUpdate?.featureSettings.goodwill) {
-				sessionToUpdate.featureSettings.goodwill.isEnabled = isEnabled;
-				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
-			}
-			return allSessions;
-		});
+	// (以降の関数は変更なし)
+	function toggleGoodwillEnabled() {
+		updateSession();
 	}
 
-	function handleDescriptionChange(event: Event) {
-		const newDescription = (event.target as HTMLTextAreaElement).value;
-		sessions.update((allSessions) => {
-			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
-			if (sessionToUpdate?.featureSettings.goodwill) {
-				sessionToUpdate.featureSettings.goodwill.descriptionForAI = newDescription;
-				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
-			}
-			return allSessions;
-		});
-	}
-
-	function handleThresholdChange(index: number, field: 'level' | 'prompt_addon', event: Event) {
-		const newValue = (event.target as HTMLInputElement).value;
-		sessions.update((allSessions) => {
-			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
-			if (sessionToUpdate?.featureSettings.goodwill) {
-				const threshold = sessionToUpdate.featureSettings.goodwill.thresholds[index];
-				if (field === 'level') {
-					threshold.level = Number(newValue);
-				} else {
-					threshold.prompt_addon = newValue;
-				}
-				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
-			}
-			return allSessions;
-		});
-	}
-	
 	function addThreshold() {
-		sessions.update(allSessions => {
-			const sessionToUpdate = allSessions.find(s => s.id === $page.params.id);
+		sessions.update((allSessions) => {
+			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
 			if (sessionToUpdate?.featureSettings.goodwill) {
-				sessionToUpdate.featureSettings.goodwill.thresholds.push({ level: 0, prompt_addon: '' });
+				sessionToUpdate.featureSettings.goodwill.thresholds.push({
+					level: 0,
+					prompt_addon: ''
+				});
 				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
 			}
 			return allSessions;
@@ -98,8 +67,8 @@
 	}
 
 	function removeThreshold(index: number) {
-		sessions.update(allSessions => {
-			const sessionToUpdate = allSessions.find(s => s.id === $page.params.id);
+		sessions.update((allSessions) => {
+			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
 			if (sessionToUpdate?.featureSettings.goodwill) {
 				sessionToUpdate.featureSettings.goodwill.thresholds.splice(index, 1);
 				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
@@ -107,8 +76,6 @@
 			return allSessions;
 		});
 	}
-
-	// ▲▲▲ ここまで ▲▲▲
 </script>
 
 <div class="flex flex-col h-screen p-4">
@@ -123,101 +90,101 @@
 	</div>
 
 	{#if $currentSession}
-		{@const goodwill = $currentSession.featureSettings.goodwill}
 		<div class="space-y-6">
-			<!-- 表示モード設定 -->
+			<!-- ▼▼▼ [ここからが追加UI] 表示モード設定 ▼▼▼ -->
 			<div class="p-4 border rounded-lg">
 				<h2 class="text-lg font-semibold mb-3">表示設定</h2>
 				<p class="text-sm text-gray-600 mb-4">チャット画面の見た目を切り替えます。</p>
-				<!-- [修正] bind:group をやめ、checked と on:change を使用 -->
-				<div class="flex gap-4">
+				
+				<!-- svelteの bind:group を使ってviewModeの値をラジオボタンと連動させる -->
+				<div class="flex gap-4" on:change={updateSession}>
 					<label class="flex items-center gap-2 p-3 border rounded-md cursor-pointer has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
-						<input
-							type="radio"
-							name="view-mode"
-							value="standard"
-							checked={$currentSession.viewMode === 'standard' || !$currentSession.viewMode}
-							on:change={handleViewModeChange}
-						/>
+						<input type="radio" name="view-mode" value="standard" bind:group={$currentSession.viewMode} />
 						<span>標準モード</span>
 					</label>
 					<label class="flex items-center gap-2 p-3 border rounded-md cursor-pointer has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
-						<input
-							type="radio"
-							name="view-mode"
-							value="game"
-							checked={$currentSession.viewMode === 'game'}
-							on:change={handleViewModeChange}
-						/>
+						<input type="radio" name="view-mode" value="game" bind:group={$currentSession.viewMode} />
 						<span>ゲーム風モード</span>
 					</label>
 				</div>
 			</div>
+			<!-- ▲▲▲ ここまで ▲▲▲ -->
 
-			<!-- 好感度機能設定 -->
-			{#if goodwill}
+
+			{#if $currentSession.featureSettings.goodwill}
+				{@const goodwill = $currentSession.featureSettings.goodwill}
 				<div class="p-4 border rounded-lg">
 					<h2 class="text-lg font-semibold mb-3">好感度機能</h2>
+
+					<!-- 機能の有効/無効トグル -->
 					<label class="flex items-center justify-between cursor-pointer">
 						<span>この機能を有効にする</span>
-						<!-- [修正] bind:checked をやめ、checked と on:change を使用 -->
 						<input
 							type="checkbox"
 							class="toggle"
-							checked={goodwill.isEnabled}
-							on:change={handleGoodwillEnabledChange}
+							bind:checked={goodwill.isEnabled}
+							on:change={toggleGoodwillEnabled}
 						/>
 					</label>
 
 					{#if goodwill.isEnabled}
 						<div class="mt-4 space-y-4">
+							<!-- AIへの指示 (Description) -->
 							<div>
-								<label for="goodwill-desc" class="block mb-2 font-medium">AIへの指示 (description)</label>
-								<!-- [修正] bind:value をやめ、value と on:input を使用 -->
+								<label for="goodwill-desc" class="block mb-2 font-medium">
+									AIへの指示 (description)
+								</label>
 								<textarea
 									id="goodwill-desc"
 									class="w-full p-2 border rounded textarea"
 									placeholder="例: キャラクターの好感度の増減を2から-2までの5段階評価"
-									value={goodwill.descriptionForAI || ''}
-									on:input={handleDescriptionChange}
+									bind:value={goodwill.descriptionForAI}
+									on:input={updateSession}
 								></textarea>
 							</div>
 
+							<!-- しきい値設定UI -->
 							<div>
 								<h3 class="font-medium mb-2">好感度によるAIの応答変化ルール</h3>
 								<div class="space-y-3">
 									{#each goodwill.thresholds as threshold, i (i)}
 										<div class="flex items-start gap-2 p-2 border rounded-md bg-gray-50">
+											<!-- Level -->
 											<div class="flex-none">
 												<label for="level-{i}" class="text-sm font-bold">Level</label>
-												<!-- [修正] bind:value をやめ、value と on:input を使用 -->
 												<input
 													id="level-{i}"
 													type="number"
 													class="input input-bordered w-24"
-													value={threshold.level}
-													on:input={(e) => handleThresholdChange(i, 'level', e)}
+													bind:value={threshold.level}
+													on:input={updateSession}
 												/>
 											</div>
+											<!-- Prompt Addon -->
 											<div class="flex-grow">
 												<label for="prompt-{i}" class="text-sm font-bold">追加プロンプト</label>
-												<!-- [修正] bind:value をやめ、value と on:input を使用 -->
 												<textarea
 													id="prompt-{i}"
 													class="textarea textarea-bordered w-full h-20"
 													placeholder="このレベルの時にAIに追加される指示"
-													value={threshold.prompt_addon}
-													on:input={(e) => handleThresholdChange(i, 'prompt_addon', e)}
+													bind:value={threshold.prompt_addon}
+													on:input={updateSession}
 												></textarea>
 											</div>
+											<!-- Remove button -->
 											<button
 												class="btn btn-sm btn-circle btn-ghost mt-6"
 												on:click={() => removeThreshold(i)}
 												aria-label="Remove threshold {i}"
-											>✕</button>
+											>
+												✕
+											</button>
 										</div>
 									{/each}
-									<button class="btn btn-sm btn-outline btn-primary mt-2" on:click={addThreshold}>+ ルールを追加</button>
+
+									<button class="btn btn-sm btn-outline btn-primary mt-2" on:click={addThreshold}>
+										+ ルールを追加
+									</button>
 								</div>
 							</div>
 						</div>

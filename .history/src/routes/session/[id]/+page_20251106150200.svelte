@@ -1,5 +1,4 @@
 <!-- src/routes/session/[id]/+page.svelte -->
-
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { sessions, appSettings } from '$lib/stores';
@@ -11,11 +10,9 @@
 	import { callGeminiApiOnClient } from '$lib/geminiClient';
 	import type { ChatResponse } from '$lib/geminiClient';
 
-	// --- 表示するコンポーネントをインポート ---
+	// 新しく作成したUIコンポーネントをインポートします
 	import StandardChatView from '$lib/components/StandardChatView.svelte';
-	import GameChatView from '$lib/components/GameChatView.svelte'; // ★新規インポート
 
-	// --- ストアとロジック (変更なし) ---
 	const sessionId = derived(page, ($page) => $page.params.id);
 	const currentSession = derived(
 		[sessions, sessionId],
@@ -113,33 +110,19 @@
 	}
 </script>
 
-<!-- ▼▼▼ ここからがUIの切り替えロジック ▼▼▼ -->
-
 {#if $currentSession}
-	<!-- 
-    viewModeが 'game' の場合は GameChatView を表示
-    それ以外（'standard' や未設定）の場合は StandardChatView を表示
-  -->
-	{#if $currentSession.viewMode === 'game'}
-		<GameChatView
-			currentSession={$currentSession}
-			{isLoading}
-			bind:userInput
-			{handleSubmit}
-			{base}
-		/>
-	{:else}
-		<StandardChatView
-			currentSession={$currentSession}
-			{base}
-			{isLoading}
-			bind:userInput
-			{handleSubmit}
-		/>
-	{/if}
+	<!-- UI部分をコンポーネントに置き換え、必要なデータを渡します -->
+	<StandardChatView
+		currentSession={$currentSession}
+		{base}
+		{isLoading}
+		bind:userInput
+		{handleSubmit}
+	/>
 {:else}
-	<!-- ローディング表示 (変更なし) -->
 	<div class="flex justify-center items-center h-screen">
 		<p>セッションを読み込んでいます...</p>
 	</div>
 {/if}
+
+<!-- StyleタグはStandardChatView.svelteに移動したため、ここからは不要です -->

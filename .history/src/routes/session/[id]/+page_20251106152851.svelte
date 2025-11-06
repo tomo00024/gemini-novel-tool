@@ -1,5 +1,3 @@
-<!-- src/routes/session/[id]/+page.svelte -->
-
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { sessions, appSettings } from '$lib/stores';

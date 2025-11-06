@@ -67,9 +67,9 @@ export interface Session {
 
 	// 機能別の設定/データは、この中にすべて格納する
 	featureSettings: FeatureSettings;
-	//チャットUI表示モード
+
 	viewMode?: 'standard' | 'game';
-	
+	//チャットUI表示モード
 	logs: {
 		speaker: 'user' | 'ai';
 		text: string;

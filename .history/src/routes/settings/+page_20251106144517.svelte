@@ -18,9 +18,15 @@
 			label: '履歴に戻る'
 		};
 	});
+
+	function saveApiKey() {
+		alert('APIキーを保存しました！');
+	}
 </script>
 
-<div class="flex flex-col h-screen p-4">
+<!-- ▼▼▼ [修正点] max-w-2xl を max-w-3xl に変更 ▼▼▼ -->
+<div class="p-4 max-w-3xl mx-auto">
+<!-- ▲▲▲ ここまで ▲▲▲ -->
 	<div class="flex justify-between items-center mb-6">
 		<h1 class="text-2xl font-bold">アプリ設定</h1>
 		<a
@@ -40,8 +46,12 @@
 			class="w-full max-w-md p-2 border rounded"
 			placeholder="sk-..."
 		/>
-		<p class="text-sm text-gray-600">
-			APIキーはブラウザ内にのみ保存されます。入力すると自動的に保存されます。
-		</p>
+		<p class="text-sm text-gray-600">APIキーはブラウザ内にのみ保存されます。</p>
+	</div>
+
+	<div class="mt-4">
+		<button on:click={saveApiKey} class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+			保存
+		</button>
 	</div>
 </div>

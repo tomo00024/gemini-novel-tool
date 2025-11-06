@@ -22,20 +22,21 @@
 	}
 </script>
 
-<div class="flex flex-col h-screen p-4">
+<div class="container mx-auto p-4 max-w-2xl">
 	<!-- ▼▼▼ ここからヘッダーの修正 ▼▼▼ -->
 	<div class="flex justify-between items-center mb-6">
-		<h1 class="text-2xl font-bold">履歴画面</h1>
+		<h1 class="text-2xl font-bold">対話セッション履歴</h1>
 		<div class="flex items-center gap-4">
+			<!-- ★★★ ボタンのクラスを統一されたスタイルに変更 ★★★ -->
 			<a
 				href="{base}/settings"
-				class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-3 rounded"
+				class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded"
 			>
 				アプリ設定
 			</a>
 			<button
 				on:click={handleNewSession}
-				class="text-sm bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded"
+				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
 			>
 				新しいセッションを開始
 			</button>

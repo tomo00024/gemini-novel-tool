@@ -22,10 +22,10 @@
 	}
 </script>
 
-<div class="flex flex-col h-screen p-4">
+<div class="container mx-auto p-4 max-w-2xl">
 	<!-- ▼▼▼ ここからヘッダーの修正 ▼▼▼ -->
 	<div class="flex justify-between items-center mb-6">
-		<h1 class="text-2xl font-bold">履歴画面</h1>
+		<h1 class="text-2xl font-bold">対話セッション履歴</h1>
 		<div class="flex items-center gap-4">
 			<a
 				href="{base}/settings"

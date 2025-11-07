@@ -8,7 +8,7 @@
  * 好感度機能 (Function Calling) の設定とデータ
  */
 export interface GoodwillFeatureData {
-	isEnabled: boolean; // この機能がセッションで有効か
+	// isEnabled: boolean; // ← [修正] この行を削除します
 	currentValue: number; // 現在の好感度の合計値
 	thresholds: {
 		level: number;
@@ -39,6 +39,9 @@ export interface InventoryFeatureData {
  * 新しい機能を追加する場合は、ここにオプショナルプロパティを追加するだけ。
  */
 export interface FeatureSettings {
+    // ▼▼▼ [修正] apiModeプロパティを追加します ▼▼▼
+    apiMode: 'standard' | 'oneStepFC' | 'twoStepFC'; 
+
 	goodwill?: GoodwillFeatureData;
 	inventory?: InventoryFeatureData;
     // questSystem?: QuestFeatureData; // 将来の拡張
@@ -46,52 +49,32 @@ export interface FeatureSettings {
 
 
 // ===================================================================
-// 3. コアとなるSessionインターフェースを定義する
+// 3. コアとなるSessionインターフェースを定義する (変更なし)
 // ===================================================================
-
-/**
- * アプリケーション全体の設定
- */
 export interface AppSettings {
 	apiKey: string;
 }
 
-/**
- * 個別の対話セッションのコア構造。
- * 特定の機能に依存するプロパティは一切持たない。
- */
 export interface Session {
-	id: string; // UUID v4
-	createdAt: string; // ISO 8601
-	lastUpdatedAt: string; // ISO 8601
-
-	// 機能別の設定/データは、この中にすべて格納する
+	id: string;
+	createdAt: string;
+	lastUpdatedAt: string;
 	featureSettings: FeatureSettings;
-	//チャットUI表示モード
 	viewMode?: 'standard' | 'game';
-	
 	logs: {
 		speaker: 'user' | 'ai';
 		text: string;
-		timestamp: string; // ISO 8601
+		timestamp: string;
 	}[];
 }
 
 // ===================================================================
-// 4. (新規追加) APIとの通信で使用するデータ型
+// 4. APIとの通信で使用するデータ型 (変更なし)
 // ===================================================================
-
-/**
- * AIとの対話コンテキスト（文脈）を表すデータ。
- * サーバーAPIへ送信するために、Sessionオブジェクトから必要な情報だけを抽出したもの。
- */
 export interface ConversationContext {
-	// 対話ログ（タイムスタンプなど不要な情報は含まない）
 	logs: {
 		speaker: 'user' | 'ai';
 		text: string;
 	}[];
-
-	// 機能別の設定
 	featureSettings: FeatureSettings;
 }

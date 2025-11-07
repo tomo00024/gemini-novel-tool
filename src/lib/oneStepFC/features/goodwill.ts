@@ -1,4 +1,4 @@
-// src/lib/features/goodwill.ts
+// src/lib/oneStepFC/features/goodwill.ts
 
 /**
  * 好感度機能に関するスキーマ定義を返します。

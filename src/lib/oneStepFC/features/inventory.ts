@@ -1,4 +1,4 @@
-// src/lib/features/inventory.ts
+// src/lib/oneStepFC/features/inventory.ts
 // インベントリ機能に関するスキーマ定義
 export function getInventorySchemaProperty() {
 	return {

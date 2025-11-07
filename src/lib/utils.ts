@@ -13,15 +13,22 @@ const commonSafetySettings = [
 	{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
 ];
 
+const generationConfig = {
+	temperature: 0.9,
+	topK: 1,
+	topP: 1,
+	maxOutputTokens: 2048,
+	stopSequences: []
+};
+
 /**
  * アプリケーション全体で使用するGeminiモデルの設定
- * モデル名や設定の変更は、このオブジェクトを修正するだけで完了します
  */
 export const geminiModelConfig = {
 	model: 'gemini-2.5-flash-lite',
-	safetySettings: commonSafetySettings
+	safetySettings: commonSafetySettings,
+	generationConfig: generationConfig
 };
-
 
 // ===================================================================
 // セッション関連のヘルパー関数
@@ -38,9 +45,10 @@ export function createNewSession(): Session {
         createdAt: now,
         lastUpdatedAt: now,
         logs: [],
+        viewMode: 'standard', 
         featureSettings: {
+            apiMode: 'standard', // APIモードのデフォルト値を 'standard' に設定
             goodwill: {
-                isEnabled: true,
                 currentValue: 0,
                 thresholds: [] 
             }

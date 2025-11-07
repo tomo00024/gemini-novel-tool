@@ -1,23 +1,77 @@
-node_modules
+# =================================================================
+# History Files (ターミナル履歴など)
+# =================================================================
+history
+.history
 
-# Output
-.output
-.vercel
-.netlify
-.wrangler
+
+# =================================================================
+# Dependencies & Lockfiles (npm, yarn, pnpm, bun)
+# 依存関係パッケージは `npm install` 等で復元するため含めない
+# =================================================================
+/node_modules
+/pnpm-lock.yaml
+/yarn.lock
+/bun.lockb
+# package-lock.jsonはチーム開発の依存関係を固定するために含めるのが一般的ですが、
+# 個人開発で不要な場合は以下のコメントを外してください。
+# /package-lock.json
+
+
+# =================================================================
+# SvelteKit & Vite specific
+# SvelteKitやViteが自動生成するファイルやディレクトリ
+# =================================================================
 /.svelte-kit
-/build
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
 
-# OS
+
+# =================================================================
+# Build output (ビルド成果物)
+# =================================================================
+/build
+/.output
+/.vercel
+/.netlify
+/.wrangler
+
+
+# =================================================================
+# OS generated files (OSが自動生成する不可視ファイル)
+# =================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Env
+
+# =================================================================
+# Environment Variables (環境変数ファイル)
+# APIキーなどの機密情報を含めるため、絶対にGitに含めない
+# =================================================================
 .env
 .env.*
+# テンプレートファイルだけはバージョン管理に含め、チームメンバーに設定項目を知らせる
 !.env.example
 !.env.test
 
-# Vite
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+
+# =================================================================
+# IDE & Editor specific
+# VSCodeやその他のエディタが生成する設定ファイル
+# =================================================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

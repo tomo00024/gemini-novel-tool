@@ -7,9 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
-
-	import { callGeminiApiOnClient } from '$lib/geminiClient';
-	import type { ChatResponse } from '$lib/geminiClient';
+	import { callGeminiApi, isOneStepResponse } from '$lib/geminiService';
 
 	// --- 表示するコンポーネントをインポート ---
 	import StandardChatView from '$lib/components/StandardChatView.svelte';
@@ -68,11 +66,13 @@
 				return allSessions;
 			});
 
-			const result: ChatResponse = await callGeminiApiOnClient(
+			// ▼▼▼ [修正箇所] API呼び出しがシンプルになる ▼▼▼
+			const result = await callGeminiApi(
 				$apiKey,
 				conversationContext,
 				currentUserInput
 			);
+			// ▲▲▲ ここまで ▲▲▲
 
 			sessions.update((allSessions) => {
 				const sessionToUpdate = allSessions.find((s) => s.id === $currentSession.id);
@@ -83,17 +83,23 @@
 						timestamp: new Date().toISOString()
 					});
 
-					const goodwillSettings = sessionToUpdate.featureSettings.goodwill;
-					if (goodwillSettings?.isEnabled && result.goodwillFluctuation !== 0) {
-						goodwillSettings.currentValue += result.goodwillFluctuation;
+					if (isOneStepResponse(result)) {
+						// このifブロック内では、`result`は`OneStepFCChatResponse`型だと
+						// TypeScriptが正しく、そして確実に推論してくれます。
+						const goodwillSettings = sessionToUpdate.featureSettings.goodwill;
+						if (goodwillSettings) {
+							// エラーなくプロパティにアクセスできるはずです
+							goodwillSettings.currentValue += result.goodwillFluctuation;
+						}
 					}
+					// ▲▲▲ ここまで ▲▲▲
 
 					sessionToUpdate.lastUpdatedAt = new Date().toISOString();
 				}
 				return allSessions;
 			});
 		} catch (error) {
-			console.error('Gemini APIの呼び出し中にエラーが発生しました:', error);
+			console.error('APIの呼び出し中にエラーが発生しました:', error);
 			if (error instanceof Error && (error.message.includes('API key not valid') || error.message.includes('permission'))) {
 				alert('APIキーが無効、または権限がありません。設定を確認してください。');
 			} else {

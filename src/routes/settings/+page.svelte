@@ -20,12 +20,12 @@
 	});
 </script>
 
-<div class="flex flex-col h-screen p-4">
-	<div class="flex justify-between items-center mb-6">
+<div class="flex h-screen flex-col p-4">
+	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-2xl font-bold">アプリ設定</h1>
 		<a
 			href={$returnPath.href}
-			class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-3 rounded"
+			class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
 		>
 			{$returnPath.label}
 		</a>
@@ -37,7 +37,7 @@
 			id="api-key"
 			type="password"
 			bind:value={$appSettings.apiKey}
-			class="w-full max-w-md p-2 border rounded"
+			class="w-full max-w-md rounded border p-2"
 			placeholder="sk-..."
 		/>
 		<p class="text-sm text-gray-600">

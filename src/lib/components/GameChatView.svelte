@@ -1,8 +1,10 @@
-<!-- src/lib/components/YourComponent.svelte -->
+<!-- src/lib/components/GameChatView.svelte -->
+
 <script lang="ts">
 	import type { Session } from '$lib/types';
-	import { marked } from 'marked'; // markedをインポート
-	import DOMPurify from 'dompurify'; // DOMPurifyをインポート
+	import { marked } from 'marked';
+	import DOMPurify from 'dompurify';
+	import { onMount, onDestroy } from 'svelte';
 
 	export let currentSession: Session;
 	export let isLoading: boolean;
@@ -11,32 +13,117 @@
 	export let base: string;
 
 	let currentPageIndex = 0;
+	let dialogWidth: number;
+	let measurementDiv: HTMLDivElement | null = null;
+
+	onMount(() => {
+		measurementDiv = document.createElement('div');
+		measurementDiv.classList.add('dialog-box');
+		measurementDiv.style.position = 'absolute';
+		measurementDiv.style.visibility = 'hidden';
+		measurementDiv.style.left = '-9999px';
+		measurementDiv.style.top = '-9999px';
+		document.body.appendChild(measurementDiv);
+	});
+
+	onDestroy(() => {
+		if (measurementDiv && measurementDiv.parentNode) {
+			document.body.removeChild(measurementDiv);
+		}
+	});
 
 	$: latestAiMessage =
-		[...currentSession.logs].reverse().find((log) => log.speaker === 'ai')?.text ||
-		'......';
+		[...currentSession.logs].reverse().find((log) => log.speaker === 'ai')?.text || '......';
 
-	// ▼▼▼ ページ分割ロジック（この部分は変更ありません） ▼▼▼
 	$: messagePages = (() => {
-		if (!latestAiMessage) {
+		if (!measurementDiv || !latestAiMessage || !dialogWidth) {
 			return ['......'];
 		}
-		const finalPages: string[] = [];
+
+		measurementDiv.style.width = `${dialogWidth}px`;
+
+		const computedStyle = window.getComputedStyle(measurementDiv);
+		const lineHeight = parseFloat(computedStyle.lineHeight);
+		if (isNaN(lineHeight)) {
+			return [latestAiMessage];
+		}
+		const maxHeight = lineHeight * 3;
+
 		const paragraphs = latestAiMessage.trim().split(/\n\n+/);
+		const finalPages: string[] = [];
+
+		// ▼▼▼ [ここからが変更箇所] ▼▼▼
+		const primaryBreakChars = ['。', '！', '？'];
+		const trailingChars = ['。', '」', '）', '！', '？'];
+
 		for (const paragraph of paragraphs) {
-			const lines = paragraph.split('\n');
-			if (lines.length <= 3) {
-				finalPages.push(paragraph);
-			} else {
-				for (let i = 0; i < lines.length; i += 3) {
-					const pageChunk = lines.slice(i, i + 3).join('\n');
-					finalPages.push(pageChunk);
+			const characters = paragraph.split('');
+			let currentPageContent = '';
+			let tempContent = '';
+
+			for (let i = 0; i < characters.length; i++) {
+				tempContent += characters[i];
+				measurementDiv.innerText = tempContent;
+
+				if (measurementDiv.offsetHeight > maxHeight) {
+					// --- 3行を超えたので、最適な分割点を探す ---
+					let bestSplitIndex = -1;
+
+					// 1. 後方検索: オーバーフロー直前のテキストの末尾から前に向かって、最適な区切り文字を探す
+					for (let j = currentPageContent.length - 1; j >= 0; j--) {
+						const char = currentPageContent[j];
+
+						// 優先区切り文字かチェック
+						if (primaryBreakChars.includes(char)) {
+							// 2. 妥当性チェック: その地点で括弧が閉じてるか確認
+							const substringToCheck = currentPageContent.substring(0, j + 1);
+							const openKakko = (substringToCheck.match(/「/g) || []).length;
+							const closeKakko = (substringToCheck.match(/」/g) || []).length;
+							const openMaruKakko = (substringToCheck.match(/（/g) || []).length;
+							const closeMaruKakko = (substringToCheck.match(/）/g) || []).length;
+
+							if (openKakko <= closeKakko && openMaruKakko <= closeMaruKakko) {
+								// 括弧が閉じていれば、ここを最適な分割点とする
+								bestSplitIndex = j;
+								break; // 最適な点が見つかったのでループを抜ける
+							}
+						}
+					}
+
+					// 3. 分割処理
+					if (bestSplitIndex !== -1) {
+						// 3a. 句読点が見つかった場合
+						// さらに後ろに続く句読点を全て含める
+						let finalSplitIndex = bestSplitIndex;
+						for (let j = bestSplitIndex + 1; j < currentPageContent.length; j++) {
+							if (trailingChars.includes(currentPageContent[j])) {
+								finalSplitIndex = j;
+							} else {
+								break;
+							}
+						}
+
+						const pageText = currentPageContent.substring(0, finalSplitIndex + 1);
+						const remainingText = currentPageContent.substring(finalSplitIndex + 1);
+						finalPages.push(pageText);
+						tempContent = remainingText + characters[i];
+					} else {
+						// 3b. 句読点が見つからなかった場合 (フォールバック)
+						finalPages.push(currentPageContent);
+						tempContent = characters[i];
+					}
 				}
+				currentPageContent = tempContent;
+			}
+
+			if (currentPageContent) {
+				finalPages.push(currentPageContent);
 			}
 		}
+		// ▲▲▲ [ここまでが変更箇所] ▲▲▲
+
 		return finalPages.length > 0 ? finalPages : [''];
 	})();
-	// ▲▲▲ ここまで ▲▲▲
 
 	$: if (latestAiMessage) {
 		currentPageIndex = 0;
@@ -51,29 +138,27 @@
 	}
 </script>
 
-<!-- HTMLの部分 -->
-<div class="flex flex-col h-[100dvh] bg-gray-800 text-white">
-	
-	<!-- Part 1: ヘッダー部分 (上部固定) -->
-	<!-- flex-shrink-0 でこの要素が縮まないようにする -->
+<!-- HTMLの部分 (変更なし) -->
+<div class="flex h-[100dvh] flex-col bg-gray-800 text-white">
+	<!-- Part 1: ヘッダー部分 -->
 	<div class="flex-shrink-0 p-4">
-		<div class="flex justify-between items-center">
+		<div class="flex items-center justify-between">
 			<a
 				href="{base}/"
-				class="text-sm bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-3 rounded"
+				class="rounded bg-gray-600 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-500"
 			>
 				履歴に戻る
 			</a>
 			<div class="flex items-center gap-4">
 				<a
 					href="{base}/settings?from=session/{currentSession.id}"
-					class="text-sm bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-3 rounded"
+					class="rounded bg-gray-600 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-500"
 				>
 					アプリ設定
 				</a>
 				<a
 					href="{base}/session/{currentSession.id}/settings"
-					class="text-sm bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-3 rounded"
+					class="rounded bg-gray-600 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-500"
 				>
 					セッション設定
 				</a>
@@ -81,20 +166,36 @@
 		</div>
 	</div>
 
-	<!-- Part 2: 可変の空白エリア -->
-	<!-- flex-1 (または flex-grow) で残りの空間を全て埋める -->
-	<div class="flex-1"></div>
+	<!-- Part 2: 画像表示エリア -->
+	<div
+		class="relative flex-1 cursor-pointer overflow-hidden"
+		role="button"
+		tabindex="0"
+		on:click={handleNextPage}
+		on:keydown={(e) => e.key === 'Enter' && handleNextPage()}
+	>
+		<img
+			src="https://dashing-fenglisu-4c8446.netlify.app/テスト/背景.avif"
+			alt="背景"
+			class="absolute inset-0 z-10 h-full w-full object-cover"
+		/>
+		<img
+			src="https://dashing-fenglisu-4c8446.netlify.app/テスト/人物.avif"
+			alt="人物"
+			class="absolute bottom-0 left-1/2 z-20 h-5/6 max-w-full -translate-x-1/2 object-contain"
+		/>
+	</div>
 
-	<!-- Part 3: ダイアログと入力フォーム (下部固定) -->
-	<!-- flex-shrink-0 でこの要素が縮まないようにする -->
-	<div class="flex-shrink-0 p-4 space-y-3">
+	<!-- Part 3: ダイアログと入力フォーム -->
+	<div class="flex-shrink-0 space-y-3 p-4">
 		<!-- ダイアログボックス -->
 		<div
 			role="button"
 			tabindex="0"
-			class="dialog-box h-32 p-4 bg-black bg-opacity-50 rounded-lg border border-gray-600 cursor-pointer relative"
+			class="dialog-box bg-opacity-50 relative h-32 cursor-pointer rounded-lg border border-gray-600 bg-black p-4"
 			on:click={handleNextPage}
 			on:keydown={(e) => e.key === 'Enter' && handleNextPage()}
+			bind:clientWidth={dialogWidth}
 		>
 			{#if messagePages[currentPageIndex]}
 				{#await marked(messagePages[currentPageIndex])}
@@ -117,7 +218,7 @@
 				type="text"
 				bind:value={userInput}
 				placeholder="メッセージを入力..."
-				class="input input-bordered flex-1 bg-gray-700 border-gray-600"
+				class="input input-bordered flex-1 border-gray-600 bg-gray-700"
 				disabled={isLoading}
 			/>
 			<button type="submit" class="btn btn-primary" disabled={isLoading}>
@@ -132,6 +233,7 @@
 </div>
 
 <style>
+	/* styleタグ内は変更ありません */
 	.dialog-box {
 		overflow: hidden;
 		line-height: 1.6;
@@ -142,7 +244,6 @@
 		color: inherit;
 	}
 
-	/* ▼▼▼ [ここからが変更箇所] Markdown用のグローバルスタイルを追加 ▼▼▼ */
 	.dialog-box :global(p) {
 		margin-bottom: 0.5rem;
 	}
@@ -164,7 +265,6 @@
 		white-space: pre-wrap;
 		word-wrap: break-word;
 	}
-	/* ▲▲▲ ここまで ▲▲▲ */
 
 	.continue-indicator {
 		position: absolute;
@@ -174,12 +274,35 @@
 		animation: bounce 1.5s infinite;
 	}
 	@keyframes bounce {
-		0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-		40% { transform: translateY(-8px); }
-		60% { transform: translateY(-4px); }
+		0%,
+		20%,
+		50%,
+		80%,
+		100% {
+			transform: translateY(0);
+		}
+		40% {
+			transform: translateY(-8px);
+		}
+		60% {
+			transform: translateY(-4px);
+		}
 	}
-	.input { padding: 0.5rem; }
-	.btn { padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; }
-	.btn-primary { background-color: #3b82f6; color: white; }
-	.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+	.input {
+		padding: 0.5rem;
+	}
+	.btn {
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 0.5rem;
+		cursor: pointer;
+	}
+	.btn-primary {
+		background-color: #3b82f6;
+		color: white;
+	}
+	.btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
 </style>

@@ -1,6 +1,18 @@
 <!-- src/routes/session/[id]/settings/+page.svelte -->
 
 <script lang="ts">
+	/**
+	 * @file このファイルは、特定のセッション（:idで指定）に関する設定ページを定義します。
+	 * @component SessionSettingsPage
+	 * @description
+	 * URLの動的パラメータからセッションIDを取得し、該当するセッションの設定値を表示・編集する責務を持ちます。
+	 * 主に以下の設定項目を扱います。
+	 * - 表示モード (viewMode): チャット画面のUI（標準/ゲーム風）
+	 * - APIモード (apiMode): バックエンドAPIとの通信方式（通常/OneStepFC/TwoStepFC）
+	 *
+	 * また、古いデータ形式との後方互換性を保つためのデータマイグレーションロジックも内包しています。
+	 * @see {@link ../[id]/+page.svelte | 対応するセッションページ}
+	 */
 	import { page } from '$app/stores';
 	import { sessions } from '$lib/stores';
 	import { derived } from 'svelte/store';

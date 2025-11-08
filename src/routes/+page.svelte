@@ -1,12 +1,11 @@
 <!-- src/routes/+page.svelte -->
- 
- <script lang="ts">
+
+<script lang="ts">
 	import { sessions } from '$lib/stores';
 	import { goto } from '$app/navigation';
-    import { base } from '$app/paths';
+	import { base } from '$app/paths';
 	import { createNewSession } from '$lib/utils';
 
-	
 	/**
 	 * 「新しいセッションを開始」ボタンがクリックされたときに実行される関数
 	 */
@@ -22,20 +21,20 @@
 	}
 </script>
 
-<div class="flex flex-col h-screen p-4">
+<div class="flex h-screen flex-col p-4">
 	<!-- ▼▼▼ ここからヘッダーの修正 ▼▼▼ -->
-	<div class="flex justify-between items-center mb-6">
+	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-2xl font-bold">履歴画面</h1>
 		<div class="flex items-center gap-4">
 			<a
 				href="{base}/settings"
-				class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-3 rounded"
+				class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
 			>
 				アプリ設定
 			</a>
 			<button
 				on:click={handleNewSession}
-				class="text-sm bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded"
+				class="rounded bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
 			>
 				新しいセッションを開始
 			</button>
@@ -44,14 +43,16 @@
 	<!-- ▲▲▲ ここまでヘッダーの修正 ▲▲▲ -->
 
 	{#if $sessions.length === 0}
-		<p class="text-gray-500">まだセッションがありません。「新しいセッションを開始」ボタンから始めましょう。</p>
+		<p class="text-gray-500">
+			まだセッションがありません。「新しいセッションを開始」ボタンから始めましょう。
+		</p>
 	{:else}
 		<ul class="space-y-3">
 			{#each [...$sessions].reverse() as session (session.id)}
 				<li>
 					<a
 						href="{base}/session/{session.id}"
-						class="block p-4 bg-white rounded-lg shadow hover:bg-gray-100 transition-colors"
+						class="block rounded-lg bg-white p-4 shadow transition-colors hover:bg-gray-100"
 					>
 						<div class="text-sm text-gray-600">
 							最終更新: {new Date(session.lastUpdatedAt).toLocaleString('ja-JP')}

@@ -36,6 +36,17 @@ export interface InventoryFeatureData {
 export interface GameViewSettings {
 	imageBaseUrl: string;
 	imageExtension: string;
+
+	/**
+	 * 表示するすべてのステータスをこの配列で一元管理する。
+	 */
+	customStatuses: {
+		id: string;
+		name: string;
+		currentValue: string;
+		mode: 'add' | 'set';
+		isVisible: boolean; // ← [追加] 個別の表示/非表示フラグ
+	}[];
 }
 /**
  * 機能別の設定/データをまとめるインターフェース。
@@ -55,6 +66,7 @@ export interface FeatureSettings {
 // ===================================================================
 export interface AppSettings {
 	apiKey: string;
+	model: string;
 }
 
 export interface Session {

@@ -1,5 +1,7 @@
 <!-- src/routes/session/[id]/+page.svelte -->
 
+<!-- src/routes/session/[id]/+page.svelte -->
+
 <script lang="ts">
 	/**
 	 * @file このファイルは、特定のセッション（:idで指定）におけるチャット画面そのものを定義します。
@@ -24,6 +26,7 @@
 
 	// --- 外部サービスと型ガードをインポート ---
 	import { callGeminiApi, isOneStepResponse } from '$lib/geminiService';
+	import { processMessageIntoPages } from '$lib/utils/messageProcessor';
 
 	// --- 表示モードに応じて動的に切り替えるUIコンポーネントをインポート ---
 	import StandardChatView from '$lib/components/StandardChatView.svelte';
@@ -48,6 +51,11 @@
 	 * @description アプリケーション設定ストアから、APIキーをリアクティブに取得するderivedストア。
 	 */
 	const apiKey = derived(appSettings, ($appSettings) => $appSettings.apiKey);
+
+	/**
+	 * @description アプリケーション設定ストアから、選択されたAIモデル名をリアクティブに取得するderivedストア。
+	 */
+	const model = derived(appSettings, ($appSettings) => $appSettings.model);
 
 	/**
 	 * @description このコンポーネントがマウントされた直後に実行されるライフサイクル関数。
@@ -85,6 +93,12 @@
 			return;
 		}
 
+		// [追加] モデルが未設定の場合、処理を中断してユーザーに設定を促す。
+		if (!$model) {
+			alert('設定画面でAIモデルを選択してください。');
+			return;
+		}
+
 		isLoading = true;
 		const currentUserInput = userInput; // APIに送信する現在の入力を変数にコピー
 		userInput = ''; // 入力フィールドを即座にクリアしてUXを向上
@@ -114,7 +128,8 @@
 			};
 
 			// 3. 外部サービス(`geminiService`)を呼び出してAPIと通信する
-			const result = await callGeminiApi($apiKey, conversationContext, currentUserInput);
+			// [修正] 第2引数に選択されたモデル名($model)を追加
+			const result = await callGeminiApi($apiKey, $model, conversationContext, currentUserInput);
 
 			// 4. APIからの応答をセッションログに保存し、関連する状態を更新する
 			sessions.update((allSessions) => {
@@ -127,16 +142,41 @@
 						timestamp: new Date().toISOString()
 					});
 
-					// 応答がOneStepFCモードのものであるか型ガードで安全にチェック
-					if (isOneStepResponse(result)) {
-						// このifブロック内では、`result`は`OneStepFCChatResponse`型として扱えるため、
-						// TypeScriptコンパイラがプロパティの存在を保証してくれる。
-						const goodwillSettings = sessionToUpdate.featureSettings.goodwill;
-						if (goodwillSettings) {
-							goodwillSettings.currentValue += result.goodwillFluctuation;
+					// --- ここからが新しいステータス更新ロジック ---
+					// ゲーム風モード、かつ、設定が存在する場合のみステータス更新を実行
+					if (
+						sessionToUpdate.viewMode === 'game' &&
+						sessionToUpdate.gameViewSettings?.customStatuses
+					) {
+						// メッセージからステータス更新コマンドを抽出する
+						// ※ この処理ではページ分割は不要なため、計測関連のオプションはダミーでOK
+						const processed = processMessageIntoPages(result.responseText, {
+							maxHeight: 9999,
+							measureTextHeight: () => 0, // ダミー関数
+							imageBaseUrl: sessionToUpdate.gameViewSettings.imageBaseUrl,
+							imageExtension: sessionToUpdate.gameViewSettings.imageExtension
+						});
+						const updates = processed.statusUpdates;
+						const statuses = sessionToUpdate.gameViewSettings.customStatuses;
+
+						// 抽出したコマンドを元に、定義されている各ステータスの値を更新
+						for (const status of statuses) {
+							if (updates[status.name]) {
+								const newValueStr = updates[status.name];
+								if (status.mode === 'add') {
+									const currentValueNum = parseInt(status.currentValue, 10);
+									const changeValueNum = parseInt(newValueStr, 10);
+									if (!isNaN(currentValueNum) && !isNaN(changeValueNum)) {
+										status.currentValue = (currentValueNum + changeValueNum).toString();
+									}
+								} else {
+									// 'set' mode
+									status.currentValue = newValueStr;
+								}
+							}
 						}
 					}
-
+					// --- ステータス更新ロジックここまで ---
 					sessionToUpdate.lastUpdatedAt = new Date().toISOString();
 				}
 				return allSessions;

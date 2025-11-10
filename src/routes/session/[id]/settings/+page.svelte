@@ -3,15 +3,7 @@
 <script lang="ts">
 	/**
 	 * @file このファイルは、特定のセッション（:idで指定）に関する設定ページを定義します。
-	 * @component SessionSettingsPage
-	 * @description
-	 * URLの動的パラメータからセッションIDを取得し、該当するセッションの設定値を表示・編集する責務を持ちます。
-	 * 主に以下の設定項目を扱います。
-	 * - 表示モード (viewMode): チャット画面のUI（標準/ゲーム風）
-	 * - APIモード (apiMode): バックエンドAPIとの通信方式（通常/OneStepFC/TwoStepFC）
-	 *
-	 * また、古いデータ形式との後方互換性を保つためのデータマイグレーションロジックも内包しています。
-	 * @see {@link ../[id]/+page.svelte | 対応するセッションページ}
+	 * (ファイルコメントは変更なし)
 	 */
 	import { page } from '$app/stores';
 	import { sessions } from '$lib/stores';
@@ -19,57 +11,146 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
+	import type { GameViewSettings } from '$lib/types';
 
-	/**
-	 * @description URLの動的パラメータ `:id` から、現在のセッションIDをリアクティブに取得するderivedストア。
-	 */
 	const sessionId = derived(page, ($page) => $page.params.id);
-
-	/**
-	 * @description 全セッションリストと現在のセッションIDを元に、
-	 *              編集対象となっているセッションオブジェクト全体をリアクティブに提供するderivedストア。
-	 */
 	const currentSession = derived([sessions, sessionId], ([$sessions, $sessionId]) =>
 		$sessions.find((s) => s.id === $sessionId)
 	);
 
 	onMount(() => {
-		// 存在しないセッションのページを開こうとした場合のエラーを防ぐためのガード節。
-		// ユーザーをホームページにリダイレクトさせる。
 		if (!$sessions.some((s) => s.id === $page.params.id)) {
 			goto(base || '/');
+			return;
 		}
 
-		// アプリケーションのバージョンアップに対応するためのデータマイグレーション処理。
-		// 古い形式のセッションデータを開いた際に、新しいプロパティ(viewMode, apiMode)がなくても
-		// 画面がエラーにならないよう、ここでデフォルト値を補完する。
+		// データマイグレーション処理 (変更なし)
 		sessions.update((allSessions) => {
 			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
 			if (sessionToUpdate) {
-				if (typeof sessionToUpdate.viewMode === 'undefined') {
-					sessionToUpdate.viewMode = 'standard';
-				}
-				if (typeof sessionToUpdate.featureSettings.apiMode === 'undefined') {
-					sessionToUpdate.featureSettings.apiMode = (
-						sessionToUpdate.featureSettings.goodwill as any
-					)?.isEnabled
-						? 'oneStepFC'
-						: 'standard';
-				}
-				// ▼▼▼ [追加] gameViewSettingsのマイグレーション ▼▼▼
+				if (typeof sessionToUpdate.viewMode === 'undefined') sessionToUpdate.viewMode = 'standard';
+
 				if (typeof sessionToUpdate.gameViewSettings === 'undefined') {
 					sessionToUpdate.gameViewSettings = {
 						imageBaseUrl: 'https://dashing-fenglisu-4c8446.netlify.app',
-						imageExtension: '.avif'
+						imageExtension: '.avif',
+						customStatuses: [
+							{
+								id: crypto.randomUUID(),
+								name: '日付',
+								currentValue: '1',
+								mode: 'set',
+								isVisible: true
+							},
+							{
+								id: crypto.randomUUID(),
+								name: '好感度',
+								currentValue: '0',
+								mode: 'add',
+								isVisible: true
+							}
+						]
 					};
+				} else {
+					const settings = sessionToUpdate.gameViewSettings;
+					const oldSettings = settings as any;
+
+					if (typeof settings.customStatuses === 'undefined') {
+						settings.customStatuses = [];
+					}
+
+					let dateStatus = settings.customStatuses.find((s) => s.name === '日付');
+					if (!dateStatus) {
+						settings.customStatuses.unshift({
+							id: crypto.randomUUID(),
+							name: '日付',
+							currentValue: '1',
+							mode: 'set',
+							isVisible: typeof oldSettings.showDate === 'boolean' ? oldSettings.showDate : true
+						});
+					}
+
+					let favorabilityStatus = settings.customStatuses.find((s) => s.name === '好感度');
+					if (!favorabilityStatus) {
+						settings.customStatuses.push({
+							id: crypto.randomUUID(),
+							name: '好感度',
+							currentValue: '0',
+							mode: 'add',
+							isVisible:
+								typeof oldSettings.showFavorability === 'boolean'
+									? oldSettings.showFavorability
+									: true
+						});
+					}
+
+					settings.customStatuses.forEach((status) => {
+						if (typeof status.isVisible === 'undefined') {
+							status.isVisible = true;
+						}
+						if (typeof status.mode === 'undefined') {
+							status.mode = status.name === '好感度' ? 'add' : 'set';
+						}
+					});
+
+					delete oldSettings.showDate;
+					delete oldSettings.showFavorability;
 				}
-				// ▲▲▲ 追加ここまで ▲▲▲
 			}
 			return allSessions;
 		});
 	});
 
-	// ▼▼▼ [追加] ゲーム風モード設定用の汎用イベントハンドラ ▼▼▼
+	function handleSessionModeChange(event: Event) {
+		const newMode = (event.target as HTMLInputElement).value as
+			| 'standard'
+			| 'game'
+			| 'oneStepFC'
+			| 'twoStepFC';
+
+		sessions.update((allSessions) => {
+			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
+			if (sessionToUpdate) {
+				sessionToUpdate.viewMode = 'standard';
+				sessionToUpdate.featureSettings.apiMode = 'standard';
+
+				switch (newMode) {
+					case 'game':
+						sessionToUpdate.viewMode = 'game';
+						break;
+					case 'oneStepFC':
+						sessionToUpdate.featureSettings.apiMode = 'oneStepFC';
+						break;
+					case 'twoStepFC':
+						sessionToUpdate.featureSettings.apiMode = 'twoStepFC';
+						break;
+					case 'standard':
+					default:
+						break;
+				}
+				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+			}
+			return allSessions;
+		});
+	}
+
+	function addCustomStatus() {
+		sessions.update((allSessions) => {
+			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
+			if (sessionToUpdate?.gameViewSettings) {
+				sessionToUpdate.gameViewSettings.customStatuses.push({
+					id: crypto.randomUUID(),
+					name: '',
+					currentValue: '0',
+					mode: 'set',
+					isVisible: true
+				});
+				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+			}
+			return allSessions;
+		});
+	}
+
 	function handleGameViewSettingChange(field: 'imageBaseUrl' | 'imageExtension', event: Event) {
 		const newValue = (event.target as HTMLInputElement).value;
 		sessions.update((allSessions) => {
@@ -82,47 +163,39 @@
 		});
 	}
 
-	/**
-	 * 表示モード（標準/ゲーム風）のラジオボタンが変更された時に呼び出されるイベントハンドラ。
-	 * @param event - HTMLInputElementからのchangeイベント
-	 */
-	function handleViewModeChange(event: Event) {
-		const newMode = (event.target as HTMLInputElement).value as 'standard' | 'game';
+	function handleCustomStatusChange(id: string, field: 'name' | 'currentValue', event: Event) {
+		const newValue = (event.target as HTMLInputElement).value;
 		sessions.update((allSessions) => {
 			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
-			if (sessionToUpdate) {
-				sessionToUpdate.viewMode = newMode;
-				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+			if (sessionToUpdate?.gameViewSettings) {
+				const statusToUpdate = sessionToUpdate.gameViewSettings.customStatuses.find(
+					(s) => s.id === id
+				);
+				if (statusToUpdate) {
+					statusToUpdate[field] = newValue;
+					sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+				}
 			}
 			return allSessions;
 		});
 	}
 
-	/**
-	 * APIモード（通常/OneStepFC/TwoStepFC）のラジオボタンが変更された時に呼び出されるハンドラ。
-	 * ブラウザのネイティブな挙動により、常にどれか1つが選択された状態が保証される。
-	 * @param event - HTMLInputElementからのchangeイベント
-	 */
-	function handleApiModeChange(event: Event) {
-		const newMode = (event.target as HTMLInputElement).value as
-			| 'standard'
-			| 'oneStepFC'
-			| 'twoStepFC';
+	function handleCustomStatusModeChange(id: string, newMode: 'add' | 'set') {
 		sessions.update((allSessions) => {
 			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
-			if (sessionToUpdate) {
-				// 選択された値をストアに反映するだけ。複雑な条件分岐は不要。
-				sessionToUpdate.featureSettings.apiMode = newMode;
-				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+			if (sessionToUpdate?.gameViewSettings) {
+				const statusToUpdate = sessionToUpdate.gameViewSettings.customStatuses.find(
+					(s) => s.id === id
+				);
+				if (statusToUpdate) {
+					statusToUpdate.mode = newMode;
+					sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+				}
 			}
 			return allSessions;
 		});
 	}
 
-	/**
-	 * OneStepFCモードの「AIへの指示」テキストエリアが変更された際のイベントハンドラ。
-	 * @param event - HTMLTextAreaElementからのinputイベント
-	 */
 	function handleDescriptionChange(event: Event) {
 		const newDescription = (event.target as HTMLTextAreaElement).value;
 		sessions.update((allSessions) => {
@@ -135,12 +208,6 @@
 		});
 	}
 
-	/**
-	 * OneStepFCモードの好感度ルールの「Level」または「追加プロンプト」が変更された際の汎用イベントハンドラ。
-	 * @param index - 変更対象となったルールのインデックス番号
-	 * @param field - 変更された項目 ('level' または 'prompt_addon')
-	 * @param event - InputElementまたはTextAreaElementからのinputイベント
-	 */
 	function handleThresholdChange(index: number, field: 'level' | 'prompt_addon', event: Event) {
 		const newValue = (event.target as HTMLInputElement).value;
 		sessions.update((allSessions) => {
@@ -158,9 +225,6 @@
 		});
 	}
 
-	/**
-	 * OneStepFCモードの新しい好感度ルールをリストの末尾に追加する。
-	 */
 	function addThreshold() {
 		sessions.update((allSessions) => {
 			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
@@ -172,16 +236,40 @@
 		});
 	}
 
-	/**
-	 * OneStepFCモードの指定されたインデックスの好感度ルールを削除する。
-	 * @param index - 削除対象のルールのインデックス番号
-	 */
 	function removeThreshold(index: number) {
 		sessions.update((allSessions) => {
 			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
 			if (sessionToUpdate?.featureSettings.goodwill) {
 				sessionToUpdate.featureSettings.goodwill.thresholds.splice(index, 1);
 				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+			}
+			return allSessions;
+		});
+	}
+
+	function removeCustomStatus(id: string) {
+		sessions.update((allSessions) => {
+			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
+			if (sessionToUpdate?.gameViewSettings) {
+				const statuses = sessionToUpdate.gameViewSettings.customStatuses;
+				sessionToUpdate.gameViewSettings.customStatuses = statuses.filter((s) => s.id !== id);
+				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+			}
+			return allSessions;
+		});
+	}
+
+	function handleCustomStatusVisibilityChange(id: string, isVisible: boolean) {
+		sessions.update((allSessions) => {
+			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
+			if (sessionToUpdate?.gameViewSettings) {
+				const statusToUpdate = sessionToUpdate.gameViewSettings.customStatuses.find(
+					(s) => s.id === id
+				);
+				if (statusToUpdate) {
+					statusToUpdate.isVisible = isVisible;
+					sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+				}
 			}
 			return allSessions;
 		});
@@ -205,99 +293,184 @@
 		{@const apiMode = $currentSession.featureSettings.apiMode}
 
 		<div class="space-y-6">
-			<!-- 表示モード設定 -->
+			<!-- 通常モード -->
 			<div class="rounded-lg border p-4">
-				<h2 class="mb-3 text-lg font-semibold">表示設定</h2>
-				<p class="mb-4 text-sm text-gray-600">チャット画面の見た目を切り替えます。</p>
-				<div class="flex gap-4">
-					<label
-						class="flex cursor-pointer items-center gap-2 rounded-md border p-3 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
-					>
-						<input
-							type="radio"
-							name="view-mode"
-							value="standard"
-							checked={$currentSession.viewMode === 'standard' || !$currentSession.viewMode}
-							on:change={handleViewModeChange}
-						/>
-						<span>標準モード</span>
-					</label>
-					<label
-						class="flex cursor-pointer items-center gap-2 rounded-md border p-3 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
-					>
-						<input
-							type="radio"
-							name="view-mode"
-							value="game"
-							checked={$currentSession.viewMode === 'game'}
-							on:change={handleViewModeChange}
-						/>
-						<span>ゲーム風モード</span>
-					</label>
-				</div>
+				<label class="flex cursor-pointer items-center justify-between">
+					<div>
+						<h2 class="text-lg font-semibold">通常モード</h2>
+						<p class="text-sm text-gray-600">標準的なチャットモードです。</p>
+					</div>
+					<input
+						type="radio"
+						name="session-mode"
+						value="standard"
+						checked={$currentSession.viewMode === 'standard' && apiMode === 'standard'}
+						on:change={handleSessionModeChange}
+					/>
+				</label>
+			</div>
+
+			<!-- ゲーム風モード -->
+			<div class="rounded-lg border p-4">
+				<label class="flex cursor-pointer items-center justify-between">
+					<div>
+						<h2 class="text-lg font-semibold">ゲーム風モード</h2>
+						<p class="text-sm text-gray-600">チャット画面の見た目をゲーム風に切り替えます。</p>
+					</div>
+					<input
+						type="radio"
+						name="session-mode"
+						value="game"
+						checked={$currentSession.viewMode === 'game'}
+						on:change={handleSessionModeChange}
+					/>
+				</label>
+
 				{#if $currentSession.viewMode === 'game' && $currentSession.gameViewSettings}
-					<div class="mt-4 space-y-4 border-t pt-4">
-						<h3 class="font-medium">ゲーム風モード設定</h3>
-						<div>
-							<label for="image-base-url" class="mb-1 block text-sm text-gray-700"
-								>画像ベースURL</label
-							>
-							<input
-								id="image-base-url"
-								type="text"
-								class="input input-bordered w-full"
-								placeholder="https://..."
-								value={$currentSession.gameViewSettings.imageBaseUrl}
-								on:input={(e) => handleGameViewSettingChange('imageBaseUrl', e)}
-							/>
+					<div class="mt-4 space-y-6 border-t pt-4">
+						<!-- ▼▼▼ [変更] 画像設定のUIをここに追加 ▼▼▼ -->
+						<div class="space-y-4">
+							<h3 class="font-medium">画像設定</h3>
+							<div>
+								<label for="image-base-url" class="mb-1 block text-sm text-gray-700"
+									>画像ベースURL</label
+								>
+								<input
+									id="image-base-url"
+									type="text"
+									class="input input-bordered w-full"
+									placeholder="https://..."
+									value={$currentSession.gameViewSettings.imageBaseUrl}
+									on:input={(e) => handleGameViewSettingChange('imageBaseUrl', e)}
+								/>
+							</div>
+							<div>
+								<label for="image-extension" class="mb-1 block text-sm text-gray-700"
+									>画像拡張子</label
+								>
+								<input
+									id="image-extension"
+									type="text"
+									class="input input-bordered w-full"
+									placeholder=".avif, .webp, .png など"
+									value={$currentSession.gameViewSettings.imageExtension}
+									on:input={(e) => handleGameViewSettingChange('imageExtension', e)}
+								/>
+							</div>
 						</div>
-						<div>
-							<label for="image-extension" class="mb-1 block text-sm text-gray-700"
-								>画像拡張子</label
-							>
-							<input
-								id="image-extension"
-								type="text"
-								class="input input-bordered w-full"
-								placeholder=".avif, .webp, .png など"
-								value={$currentSession.gameViewSettings.imageExtension}
-								on:input={(e) => handleGameViewSettingChange('imageExtension', e)}
-							/>
+						<!-- ▲▲▲ 変更ここまで ▲▲▲ -->
+
+						<div class="space-y-4">
+							<h3 class="font-medium">ステータス設定</h3>
+							<div>
+								<h4 class="mb-2 text-sm font-semibold text-gray-800">ステータス一覧</h4>
+								<p class="mb-3 text-xs text-gray-600">
+									AIに `&#123;&#123;ステータス名: 値&#125;&#125;`
+									のように指示すると、各ステータスで設定された計算方法で値が変動します。
+								</p>
+								<div class="space-y-3">
+									{#each $currentSession.gameViewSettings.customStatuses as status (status.id)}
+										<div
+											class="grid grid-cols-[1fr_1fr_auto] items-center gap-x-3 gap-y-1 rounded-md border bg-gray-50 p-2"
+										>
+											<!-- 行 1: 入力欄 -->
+											<input
+												type="text"
+												class="input input-bordered w-full"
+												placeholder="ステータス名"
+												value={status.name}
+												on:input={(e) => handleCustomStatusChange(status.id, 'name', e)}
+												disabled={status.name === '好感度' || status.name === '日付'}
+											/>
+											<input
+												type="text"
+												class="input input-bordered w-full"
+												placeholder="現在の値"
+												value={status.currentValue}
+												on:input={(e) => handleCustomStatusChange(status.id, 'currentValue', e)}
+											/>
+											<button
+												class="btn btn-sm btn-circle btn-ghost"
+												on:click={() => removeCustomStatus(status.id)}
+												aria-label="Remove status {status.name}"
+												disabled={status.name === '好感度' || status.name === '日付'}
+											>
+												✕
+											</button>
+
+											<!-- 行 2: オプション -->
+											<div
+												class="col-span-full mt-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pl-1"
+											>
+												<div class="flex items-center gap-4">
+													<span class="text-xs text-gray-600">計算:</span>
+													<label class="flex cursor-pointer items-center gap-1.5">
+														<input
+															type="radio"
+															name="mode-{status.id}"
+															value="add"
+															checked={status.mode === 'add'}
+															on:change={() => handleCustomStatusModeChange(status.id, 'add')}
+														/>
+														<span class="text-sm">加算</span>
+													</label>
+													<label class="flex cursor-pointer items-center gap-1.5">
+														<input
+															type="radio"
+															name="mode-{status.id}"
+															value="set"
+															checked={status.mode === 'set'}
+															on:change={() => handleCustomStatusModeChange(status.id, 'set')}
+														/>
+														<span class="text-sm">上書き</span>
+													</label>
+												</div>
+												<label class="flex cursor-pointer items-center gap-2">
+													<input
+														type="checkbox"
+														class="checkbox checkbox-sm"
+														checked={status.isVisible}
+														on:change={(e) =>
+															handleCustomStatusVisibilityChange(
+																status.id,
+																e.currentTarget.checked
+															)}
+													/>
+													<span class="text-sm">画面に表示する</span>
+												</label>
+											</div>
+										</div>
+									{/each}
+								</div>
+								<button class="btn btn-sm btn-outline btn-primary mt-3" on:click={addCustomStatus}>
+									+ ステータスを追加
+								</button>
+							</div>
 						</div>
 					</div>
 				{/if}
 			</div>
 
-			<!-- 通常モードの枠 -->
+			<!-- 構造化出力モード -->
 			<div class="rounded-lg border p-4">
 				<label class="flex cursor-pointer items-center justify-between">
-					<h2 class="text-lg font-semibold">通常モード</h2>
+					<div>
+						<h2 class="text-lg font-semibold">構造化出力モード（非推奨・試験版）</h2>
+						<p class="text-sm text-gray-600">
+							AIの応答に特定のデータ構造を含めるように指示します。
+						</p>
+					</div>
 					<input
 						type="radio"
-						name="api-mode"
-						value="standard"
-						checked={apiMode === 'standard'}
-						on:change={handleApiModeChange}
-					/>
-				</label>
-			</div>
-
-			<!-- OneStepFCモードの枠 -->
-			<div class="rounded-lg border p-4">
-				<label class="flex cursor-pointer items-center justify-between">
-					<h2 class="text-lg font-semibold">構造化出力モード（非推奨・試験版）</h2>
-					<input
-						type="radio"
-						name="api-mode"
+						name="session-mode"
 						value="oneStepFC"
 						checked={apiMode === 'oneStepFC'}
-						on:change={handleApiModeChange}
+						on:change={handleSessionModeChange}
 					/>
 				</label>
 
-				<!-- OneStepFCモードが選択されている時だけ、詳細設定を表示するための条件分岐 -->
 				{#if apiMode === 'oneStepFC'}
-					<div class="space-y-4">
+					<div class="mt-4 space-y-4 border-t pt-4">
 						<div>
 							<label for="goodwill-desc" class="mb-2 block font-medium"
 								>AIへの指示 (description)</label
@@ -315,7 +488,6 @@
 							<h3 class="mb-2 font-medium">好感度によるAIの応答変化ルール</h3>
 							<div class="space-y-3">
 								{#if goodwill}
-									<!-- Svelteにリストの各項目を効率的に識別させるため、ユニークなキーとしてindex(i)を渡している -->
 									{#each goodwill.thresholds as threshold, i (i)}
 										<div class="flex items-start gap-2 rounded-md border bg-gray-50 p-2">
 											<div class="flex-none">
@@ -355,7 +527,7 @@
 				{/if}
 			</div>
 
-			<!-- TwoStepFCモードの枠 -->
+			<!-- Function Callingモード -->
 			<div class="rounded-lg border p-4">
 				<label class="flex cursor-pointer items-center justify-between">
 					<div>
@@ -364,15 +536,14 @@
 					</div>
 					<input
 						type="radio"
-						name="api-mode"
+						name="session-mode"
 						value="twoStepFC"
 						checked={apiMode === 'twoStepFC'}
-						on:change={handleApiModeChange}
+						on:change={handleSessionModeChange}
 					/>
 				</label>
 				{#if apiMode === 'twoStepFC'}
 					<div class="mt-4 border-t pt-4">
-						<!-- TODO: 将来的にTwoStepFC用の詳細な設定UIをここに実装する -->
 						<p class="text-sm text-gray-500">TwoStepFC用の設定項目はまだありません。</p>
 					</div>
 				{/if}

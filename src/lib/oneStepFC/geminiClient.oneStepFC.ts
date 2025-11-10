@@ -8,7 +8,8 @@ import { getInventorySchemaProperty } from './features/inventory';
 // ===================================================================
 // 型定義 (変更なし)
 // ===================================================================
-interface GenerateResponseAndStateArgs { // "Args" という接尾辞を追加し、関数の引数であることを明確化
+interface GenerateResponseAndStateArgs {
+	// "Args" という接尾辞を追加し、関数の引数であることを明確化
 	responseText: string;
 	goodwillFluctuation?: number;
 }
@@ -17,9 +18,14 @@ export interface OneStepFCChatResponse {
 	goodwillFluctuation: number;
 }
 interface GeminiApiResponse {
-    candidates: Array<{
-        content: { parts: Array<{ text?: string; functionCall?: { name: string; args: GenerateResponseAndStateArgs; }; }> };
-    }>;
+	candidates: Array<{
+		content: {
+			parts: Array<{
+				text?: string;
+				functionCall?: { name: string; args: GenerateResponseAndStateArgs };
+			}>;
+		};
+	}>;
 }
 
 // ===================================================================
@@ -30,14 +36,15 @@ interface GeminiApiResponse {
  * 1ステップFCアプローチで使用するFunction Callingの`tools`定義を構築します。
  * 'generateResponseAndState'という単一の関数を定義します。
  */
-function buildOneStepFCTool(context: ConversationContext) { // 関数名をより具体的に
+function buildOneStepFCTool(context: ConversationContext) {
+	// 関数名をより具体的に
 	const baseProperties = {
 		responseText: {
-			type: "string",
+			type: 'string',
 			description: 'ユーザーへの応答として生成されたテキストメッセージ。'
 		}
 	};
-	
+
 	let combinedProperties: Record<string, any> = { ...baseProperties };
 	let isAnyFeatureEnabled = false;
 
@@ -61,17 +68,22 @@ function buildOneStepFCTool(context: ConversationContext) { // 関数名をよ�
 		return undefined;
 	}
 
-	return [{
-        functionDeclarations: [{
-            name: 'generateResponseAndState', // 関数名を役割がわかるように変更
-            description: 'ユーザーへの応答テキストと、それに伴う内部状態の変化（好感度など）をまとめて一度に生成します。',
-            parameters: {
-                type: 'OBJECT', 
-                properties: combinedProperties,
-                required: ['responseText']
-            }
-        }]
-    }];
+	return [
+		{
+			functionDeclarations: [
+				{
+					name: 'generateResponseAndState', // 関数名を役割がわかるように変更
+					description:
+						'ユーザーへの応答テキストと、それに伴う内部状態の変化（好感度など）をまとめて一度に生成します。',
+					parameters: {
+						type: 'OBJECT',
+						properties: combinedProperties,
+						required: ['responseText']
+					}
+				}
+			]
+		}
+	];
 }
 
 /**
@@ -96,28 +108,30 @@ function prepareGeminiContents(context: ConversationContext, userInput: string) 
 		}
 	}
 
-    return [...history, { role: 'user', parts: [{ text: finalPrompt }] }];
+	return [...history, { role: 'user', parts: [{ text: finalPrompt }] }];
 }
 
 /**
  * Gemini APIからのレスポンス(1ステップFC用)を解析し、ChatResponse形式に変換します。
  */
-function parseOneStepFCResponse(data: GeminiApiResponse): OneStepFCChatResponse { // 関数名をより具体的に
+function parseOneStepFCResponse(data: GeminiApiResponse): OneStepFCChatResponse {
+	// 関数名をより具体的に
 	const part = data.candidates?.[0]?.content?.parts?.[0];
 
-	if (part?.functionCall?.name === 'generateResponseAndState') { // 対応する関数名に変更
+	if (part?.functionCall?.name === 'generateResponseAndState') {
+		// 対応する関数名に変更
 		const args = part.functionCall.args;
 		return {
 			responseText: args.responseText,
 			goodwillFluctuation: args.goodwillFluctuation ?? 0
 		};
 	}
-	
+
 	if (part?.text) {
 		return { responseText: part.text, goodwillFluctuation: 0 };
 	}
 
-	console.error("Unexpected API response format for OneStepFC:", data);
+	console.error('Unexpected API response format for OneStepFC:', data);
 	return { responseText: '予期せぬ形式の応答がありました。', goodwillFluctuation: 0 };
 }
 
@@ -133,38 +147,40 @@ function parseOneStepFCResponse(data: GeminiApiResponse): OneStepFCChatResponse 
  */
 export async function callGeminiApiWithOneStepFC( // 関数名を役割がわかるように変更
 	apiKey: string,
+	model: string,
 	context: ConversationContext,
 	userInput: string
 ): Promise<OneStepFCChatResponse> {
-
 	const tools = buildOneStepFCTool(context);
 	const contents = prepareGeminiContents(context, userInput);
 	const requestBody = {
-        contents,
-        tools,
-        safetySettings: geminiModelConfig.safetySettings
-    };
-	const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelConfig.model}:generateContent?key=${apiKey}`;
+		contents,
+		tools,
+		safetySettings: geminiModelConfig.safetySettings
+	};
+	const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
 	try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody),
-        });
+		const response = await fetch(API_URL, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(requestBody)
+		});
 
-        if (!response.ok) {
-            const errorBody = await response.json();
-            console.error('Gemini API Error (OneStepFC):', errorBody.error.message);
-            return { responseText: `APIエラーが発生しました: ${errorBody.error.message}`, goodwillFluctuation: 0 };
-        }
+		if (!response.ok) {
+			const errorBody = await response.json();
+			console.error('Gemini API Error (OneStepFC):', errorBody.error.message);
+			return {
+				responseText: `APIエラーが発生しました: ${errorBody.error.message}`,
+				goodwillFluctuation: 0
+			};
+		}
 
-        const data = await response.json() as GeminiApiResponse;
-        return parseOneStepFCResponse(data);
-
+		const data = (await response.json()) as GeminiApiResponse;
+		return parseOneStepFCResponse(data);
 	} catch (error) {
-        console.error('Network or other error calling Gemini API (OneStepFC):', error);
-        const errorMessage = error instanceof Error ? error.message : '不明なエラー';
-        return { responseText: `通信エラーが発生しました: ${errorMessage}`, goodwillFluctuation: 0 };
-    }
+		console.error('Network or other error calling Gemini API (OneStepFC):', error);
+		const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+		return { responseText: `通信エラーが発生しました: ${errorMessage}`, goodwillFluctuation: 0 };
+	}
 }

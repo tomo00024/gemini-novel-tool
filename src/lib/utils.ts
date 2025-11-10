@@ -5,7 +5,15 @@ import type { Session } from './types';
 // ===================================================================
 // LLMモデル関連の共通設定
 // ===================================================================
-
+/**
+ * ユーザーが設定画面で選択できるGeminiモデルのリスト。
+ * [モデル名, 表示名] の形式で定義します。
+ */
+export const availableModels = [
+	['gemini-2.5-pro', 'Gemini 2.5 Pro'],
+	['gemini-2.5-flash', 'Gemini 2.5 Flash'],
+	['gemini-2.5-flash-lite', 'Gemini 2.5 Flash Lite']
+];
 const commonSafetySettings = [
 	{ category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
 	{ category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -25,7 +33,6 @@ const generationConfig = {
  * アプリケーション全体で使用するGeminiモデルの設定
  */
 export const geminiModelConfig = {
-	model: 'gemini-2.5-flash-lite',
 	safetySettings: commonSafetySettings,
 	generationConfig: generationConfig
 };

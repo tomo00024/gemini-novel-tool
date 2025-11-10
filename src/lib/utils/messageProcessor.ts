@@ -1,11 +1,27 @@
+//src/lib/utils/messageProcessor.ts
+
 /**
- * ページごとのデータを表現する型定義
+ * ページごとのデータを表現する型定義 (変更なし)
  */
 export type PageData = {
 	text: string;
 	backgroundUrl?: string;
 	characterUrl?: string;
 };
+
+// ▼▼▼ [変更] 戻り値の型を、汎用的なステータス更新に対応する形式に変更 ▼▼▼
+/**
+ * processMessageIntoPages関数の戻り値の型
+ */
+export type ProcessedMessage = {
+	pages: PageData[];
+	/**
+	 * メッセージから抽出されたステータスの更新情報。
+	 * 例: { "HP": "100", "好感度": "+1" }
+	 */
+	statusUpdates: Record<string, string>;
+};
+// ▲▲▲ 変更ここまで ▲▲▲
 
 type TextMeasurer = (text: string) => number;
 
@@ -17,40 +33,36 @@ type ProcessOptions = {
 };
 
 /**
- * 生のAIメッセージを解析し、ページ分割されたデータ配列を生成する
- * @param rawMessage - AIからの生のメッセージ文字列
- * @param options - 処理に必要なオプション
- * @returns ページデータの配列
+ * 生のAIメッセージを解析し、ページ分割されたデータ配列とメタデータを生成する
  */
-export function processMessageIntoPages(rawMessage: string, options: ProcessOptions): PageData[] {
+export function processMessageIntoPages(
+	rawMessage: string,
+	options: ProcessOptions
+): ProcessedMessage {
 	const { maxHeight, measureTextHeight, imageBaseUrl, imageExtension } = options;
 	const finalPages: PageData[] = [];
 	const commandRegex = /({{\s*[^:]+?\s*:\s*.+?\s*}})/g;
-	const baseUrl = 'https://dashing-fenglisu-4c8446.netlify.app';
 
 	let pendingCommands: { bg?: string; char?: string } = {};
+	// ▼▼▼ [変更] 汎用的なステータス更新を格納するオブジェクトに変更 ▼▼▼
+	const statusUpdates: Record<string, string> = {};
+	// ▲▲▲ 変更ここまで ▲▲▲
 
-	// ▼▼▼ 変更点 1: pushPageのロジックを修正 ▼▼▼
 	const pushPage = (text: string) => {
-		// テキストが空、もしくは空白のみの場合はページを生成しない。
-		// pendingCommandsもクリアせず、次のページに持ち越す。
 		if (!text.trim()) {
 			return;
 		}
-
 		finalPages.push({
 			text: text,
 			backgroundUrl: pendingCommands.bg,
 			characterUrl: pendingCommands.char
 		});
-		// テキストを持つページにコマンドが割り当てられたので、リセットする
 		pendingCommands = {};
 	};
-	// ▲▲▲ 変更ここまで ▲▲▲
 
+	// (primaryBreakChars, trailingChars, paragraphsの定義は変更なし)
 	const primaryBreakChars = ['。', '！', '？'];
 	const trailingChars = ['。', '」', '）', '！', '？'];
-
 	const paragraphs = rawMessage.split(/\n+/).filter((p) => p.trim() !== '');
 
 	for (const paragraph of paragraphs) {
@@ -62,19 +74,30 @@ export function processMessageIntoPages(rawMessage: string, options: ProcessOpti
 			if (part.match(commandRegex)) {
 				const match = part.match(/{{\s*([^:]+?)\s*:\s*(.+?)\s*}}/);
 				if (match) {
-					const [, type, value] = match;
-					const path = value
-						.split('|')
-						.map((p) => encodeURIComponent(p.trim()))
-						.join('/');
-					const ext = imageExtension.startsWith('.') ? imageExtension : `.${imageExtension}`;
-					const finalUrl = `${imageBaseUrl}/${path}${ext}`;
-					if (type.trim() === '背景') pendingCommands.bg = finalUrl;
-					if (type.trim() === '人物') pendingCommands.char = finalUrl;
+					const [, typeStr, valueStr] = match;
+					const type = typeStr.trim();
+					const value = valueStr.trim();
+
+					// ▼▼▼ [変更] コマンド解析ロジックを汎用化 ▼▼▼
+					if (type === '背景' || type === '人物') {
+						const path = value
+							.split('|')
+							.map((p) => encodeURIComponent(p.trim()))
+							.join('/');
+						const ext = imageExtension.startsWith('.') ? imageExtension : `.${imageExtension}`;
+						const finalUrl = `${imageBaseUrl}/${path}${ext}`;
+						if (type === '背景') pendingCommands.bg = finalUrl;
+						else if (type === '人物') pendingCommands.char = finalUrl;
+					} else {
+						// 「背景」「人物」以外はすべてステータス更新として扱う
+						statusUpdates[type] = value;
+					}
+					// ▲▲▲ 変更ここまで ▲▲▲
 				}
 				continue;
 			}
 
+			// テキストのページ分割処理 (変更なし)
 			const characters = part.split('');
 			for (let i = 0; i < characters.length; i++) {
 				tempContent += characters[i];
@@ -122,24 +145,21 @@ export function processMessageIntoPages(rawMessage: string, options: ProcessOpti
 		}
 	}
 
-	// ▼▼▼ 変更点 2: ループ終了後の末尾コマンド処理 ▼▼▼
-	// ケース1: 保留中のコマンドがあり、かつ既にページが1つ以上存在する場合
-	// → 最後のページにコマンドを統合する
 	if ((pendingCommands.bg || pendingCommands.char) && finalPages.length > 0) {
 		const lastPage = finalPages[finalPages.length - 1];
 		if (!lastPage.backgroundUrl) lastPage.backgroundUrl = pendingCommands.bg;
 		if (!lastPage.characterUrl) lastPage.characterUrl = pendingCommands.char;
-	}
-	// ケース2: 保留中のコマンドがあるが、ページがまだ1つも作られていない場合（コマンドのみのメッセージ）
-	// → コマンドを運ぶための、テキストが空のページを特別に生成する
-	else if ((pendingCommands.bg || pendingCommands.char) && finalPages.length === 0) {
+	} else if ((pendingCommands.bg || pendingCommands.char) && finalPages.length === 0) {
 		finalPages.push({
 			text: '',
 			backgroundUrl: pendingCommands.bg,
 			characterUrl: pendingCommands.char
 		});
 	}
-	// ▲▲▲ 変更ここまで ▲▲▲
 
-	return finalPages.length > 0 ? finalPages : [{ text: '' }];
+	return {
+		pages: finalPages.length > 0 ? finalPages : [{ text: '' }],
+		statusUpdates: statusUpdates
+	};
+	// ▲▲▲ 変更ここまで ▲▲▲
 }

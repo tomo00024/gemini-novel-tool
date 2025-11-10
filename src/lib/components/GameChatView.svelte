@@ -5,7 +5,12 @@
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	import { onMount, onDestroy } from 'svelte';
-	import { processMessageIntoPages, type PageData } from '$lib/utils/messageProcessor';
+	// ▼▼▼ 変更点 1: ProcessedMessage 型をインポート ▼▼▼
+	import {
+		processMessageIntoPages,
+		type PageData,
+		type ProcessedMessage
+	} from '$lib/utils/messageProcessor';
 
 	// ----- Props (変更なし) -----
 	export let currentSession: Session;
@@ -15,15 +20,15 @@
 	export let base: string;
 
 	// ----- State Variables -----
-	// ▼▼▼ 変更点 1: URL変数を空の文字列で初期化 ▼▼▼
-	// 初期値はリアクティブブロックで設定されるため、ここでは安全な値で初期化するだけ。
 	let currentBackgroundUrl = '';
 	let currentCharacterUrl = '';
 	// ▲▲▲ 変更ここまで ▲▲▲
 	let currentPageIndex = 0;
 	let dialogWidth: number;
 	let measurementDiv: HTMLDivElement | null = null;
-	let messagePageData: PageData[] = [];
+	// ▼▼▼ 変更点 3: 変数名を変更 (processedMessageオブジェクト全体を保持) ▼▼▼
+	let processedMessage: ProcessedMessage;
+	// ▲▲▲ 変更ここまで ▲▲▲
 
 	// ----- Lifecycle Methods (変更なし) -----
 	onMount(() => {
@@ -48,10 +53,13 @@
 	$: latestAiMessage =
 		[...currentSession.logs].reverse().find((log) => log.speaker === 'ai')?.text || '......';
 
-	// ページデータを計算するブロック (変更なし)
-	$: messagePageData = (() => {
+	// ▼▼▼ 変更点 4: メッセージ処理ブロックを修正 ▼▼▼
+	// AIのメッセージが変更されたら、ページ分割とメタデータ抽出を再実行
+	$: processedMessage = (() => {
 		if (!measurementDiv || !latestAiMessage || !dialogWidth) {
-			return [{ text: '......' }];
+			// ▼▼▼ [修正点] statusUpdatesプロパティをデフォルト値に追加 ▼▼▼
+			return { pages: [{ text: '......' }], statusUpdates: {} };
+			// ▲▲▲ 修正ここまで ▲▲▲
 		}
 
 		const computedStyle = window.getComputedStyle(measurementDiv);
@@ -65,7 +73,7 @@
 			measurementDiv.innerText = text;
 			return measurementDiv.offsetHeight;
 		};
-		// ここでは `currentSession` を通常のプロパティとして正しく参照している
+
 		const imageBaseUrl =
 			currentSession.gameViewSettings?.imageBaseUrl ??
 			'https://dashing-fenglisu-4c8446.netlify.app';
@@ -79,13 +87,13 @@
 		});
 	})();
 
-	// ▼▼▼ 変更点 2: URLを更新するロジックを1つのリアクティブブロックに統合 ▼▼▼
-	// このブロックは `latestAiMessage` (とそれに依存する`messagePageData`) が変更された時に実行される
+	// processedMessageから各データを抽出する
+	$: messagePageData = processedMessage.pages;
+
+	// 画像URLを更新するロジック (messagePageDataへの依存は変更なし)
 	$: if (latestAiMessage && messagePageData.length > 0) {
-		// ページインデックスをリセット
 		currentPageIndex = 0;
 
-		// セッションで定義されたデフォルトのURLを計算
 		const defaultBaseUrl =
 			currentSession.gameViewSettings?.imageBaseUrl ??
 			'https://dashing-fenglisu-4c8446.netlify.app';
@@ -93,29 +101,20 @@
 		const defaultBgUrl = `${defaultBaseUrl}/テスト/背景${defaultExtension}`;
 		const defaultCharUrl = `${defaultBaseUrl}/テスト/人物${defaultExtension}`;
 
-		// **最初のページ (index: 0) の画像** を設定する
-		// ページ0にコマンドがあればそれを使い、なければセッションのデフォルト値を使う
 		currentBackgroundUrl = messagePageData[0]?.backgroundUrl || defaultBgUrl;
 		currentCharacterUrl = messagePageData[0]?.characterUrl || defaultCharUrl;
 	}
 
-	// ▼▼▼ 変更点 2: 「ページ送り時」の処理を分離 ▼▼▼
-	// このブロックは `currentPageIndex` が変更された時にのみ実行される
+	// ページ送り時の画像更新ロジック (変更なし)
 	$: if (currentPageIndex > 0 && messagePageData[currentPageIndex]) {
 		const pageData = messagePageData[currentPageIndex];
-
-		// このページに背景コマンドがあれば、URLを更新する
-		// **なければ何もしない（= 直前のページの画像が維持される）**
 		if (pageData.backgroundUrl) {
 			currentBackgroundUrl = pageData.backgroundUrl;
 		}
-
-		// このページに人物コマンドがあれば、URLを更新する
 		if (pageData.characterUrl) {
 			currentCharacterUrl = pageData.characterUrl;
 		}
 	}
-	// ▲▲▲ 変更ここまで ▲▲▲
 
 	// 算出プロパティとイベントハンドラ (変更なし)
 	$: messagePages = messagePageData.map((p) => p.text);
@@ -128,7 +127,7 @@
 	}
 </script>
 
-<!-- HTMLの部分は一切変更ありません -->
+<!-- HTML -->
 <div class="flex h-[100dvh] flex-col bg-gray-800 text-white">
 	<!-- ヘッダー部分 -->
 	<div class="flex-shrink-0 p-4">
@@ -156,7 +155,23 @@
 		</div>
 	</div>
 
-	<!-- Part 2: 画像表示エリア -->
+	<!-- ▼▼▼ 変更点 5: 日付と好感度を表示するエリアを追加 ▼▼▼ -->
+	<div
+		class="flex flex-shrink-0 flex-wrap justify-end gap-x-4 gap-y-1 px-4 pb-2 text-lg font-semibold"
+	>
+		{#if currentSession.gameViewSettings?.customStatuses}
+			{#each currentSession.gameViewSettings.customStatuses as status}
+				{#if status.isVisible}
+					<div class="bg-opacity-30 rounded-md bg-black px-3 py-1">
+						<span>{status.name}: {status.currentValue}</span>
+					</div>
+				{/if}
+			{/each}
+		{/if}
+	</div>
+	<!-- ▲▲▲ 変更ここまで ▲▲▲ -->
+
+	<!-- Part 2: 画像表示エリア (変更なし) -->
 	<div
 		class="relative flex-1 cursor-pointer overflow-hidden"
 		role="button"
@@ -176,7 +191,7 @@
 		/>
 	</div>
 
-	<!-- Part 3: ダイアログと入力フォーム -->
+	<!-- Part 3: ダイアログと入力フォーム (変更なし) -->
 	<div class="flex-shrink-0 space-y-3 p-4">
 		<!-- ダイアログボックス -->
 		<div
@@ -222,8 +237,8 @@
 	</div>
 </div>
 
+<!-- styleタグ内は変更ありません -->
 <style>
-	/* styleタグ内は変更ありません */
 	.dialog-box {
 		overflow: hidden;
 		line-height: 1.6;

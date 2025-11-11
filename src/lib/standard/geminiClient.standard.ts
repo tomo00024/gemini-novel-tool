@@ -1,6 +1,6 @@
 //src/lib/standard/geminiClient.standard.ts
 
-import type { ConversationContext } from '$lib/types';
+import type { AppSettings, ConversationContext } from '$lib/types';
 import { geminiModelConfig } from '$lib/utils';
 
 // ===================================================================
@@ -25,12 +25,28 @@ interface GeminiApiResponse {
  * Gemini APIに渡す対話履歴(`contents`)を準備します。
  *
  */
-function prepareGeminiContents(context: ConversationContext, userInput: string) {
+function prepareGeminiContents(
+	appSettings: AppSettings,
+	context: ConversationContext,
+	userInput: string
+) {
 	const history = context.logs.map((log) => ({
 		role: log.speaker === 'user' ? 'user' : 'model',
 		parts: [{ text: log.text }]
 	}));
-	return [...history, { role: 'user', parts: [{ text: userInput }] }];
+
+	// ユーザーの現在の入力を含む会話履歴を作成
+	const contents = [...history, { role: 'user', parts: [{ text: userInput }] }];
+
+	// ダミーユーザープロンプトが有効で、テキストが空でない場合、contentsの末尾に追加
+	if (appSettings.dummyUserPrompt.isEnabled && appSettings.dummyUserPrompt.text.trim()) {
+		contents.push({
+			role: 'user',
+			parts: [{ text: appSettings.dummyUserPrompt.text }]
+		});
+	}
+
+	return contents;
 }
 
 /**
@@ -55,10 +71,11 @@ function parseGeminiResponse(data: GeminiApiResponse): StandardChatResponse {
 export async function callGeminiApiOnClient(
 	apiKey: string,
 	model: string,
+	appSettings: AppSettings,
 	context: ConversationContext,
 	userInput: string
 ): Promise<StandardChatResponse> {
-	const contents = prepareGeminiContents(context, userInput);
+	const contents = prepareGeminiContents(appSettings, context, userInput);
 	const requestBody = {
 		contents,
 		safetySettings: geminiModelConfig.safetySettings,

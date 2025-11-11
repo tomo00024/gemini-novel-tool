@@ -1,7 +1,3 @@
-<!-- src/routes/session/[id]/+page.svelte -->
-
-<!-- src/routes/session/[id]/+page.svelte -->
-
 <script lang="ts">
 	/**
 	 * @file このファイルは、特定のセッション（:idで指定）におけるチャット画面そのものを定義します。
@@ -31,6 +27,7 @@
 	// --- 表示モードに応じて動的に切り替えるUIコンポーネントをインポート ---
 	import StandardChatView from '$lib/components/StandardChatView.svelte';
 	import GameChatView from '$lib/components/GameChatView.svelte';
+	import type { Trigger } from '$lib/types';
 
 	// --- リアクティブなストア定義 ---
 
@@ -84,27 +81,102 @@
 	 * フォームのsubmitイベントなどから呼び出される。
 	 */
 	async function handleSubmit() {
-		// 多重送信防止、空のメッセージ送信防止、セッション未読み込み時のガード節。
 		if (isLoading || !userInput.trim() || !$currentSession) return;
-
-		// APIキーが未設定の場合、処理を中断してユーザーに設定を促す。
 		if (!$apiKey) {
 			alert('設定画面でAPIキーを先に設定してください。');
 			return;
 		}
-
-		// [追加] モデルが未設定の場合、処理を中断してユーザーに設定を促す。
 		if (!$model) {
 			alert('設定画面でAIモデルを選択してください。');
 			return;
 		}
 
 		isLoading = true;
-		const currentUserInput = userInput; // APIに送信する現在の入力を変数にコピー
-		userInput = ''; // 入力フィールドを即座にクリアしてUXを向上
+		const currentUserInput = userInput;
+		userInput = '';
 
 		try {
-			// 1. ユーザーの入力をログに即時反映させる（楽観的UI更新）
+			// ▼▼▼ [ここから修正] ▼▼▼
+
+			// Step 1: トリガーを評価し、最終的なプロンプトと、"もし成功したら"更新するべきトリガーの状態を準備する
+			let finalUserInput = currentUserInput;
+			const activeTriggerInstructions: string[] = [];
+			// この変数が、API成功後にストアに保存される新しいトリガーの状態
+			let triggersToUpdateAfterSuccess: Trigger[] | undefined = undefined;
+
+			if ($currentSession.triggers && $currentSession.customStatuses) {
+				const statuses = $currentSession.customStatuses;
+				const evaluatedTriggers: Trigger[] = []; // 評価後のトリガーを一時的に格納
+
+				for (const trigger of $currentSession.triggers) {
+					const hasBeenExecuted = trigger.hasBeenExecuted ?? false;
+					const lastEvaluationResult = trigger.lastEvaluationResult ?? false;
+
+					let isConditionMet = false;
+					if (trigger.conditions && trigger.conditions.length > 0) {
+						const conditionResults = trigger.conditions.map((condition) => {
+							const status = statuses.find((s) => s.id === condition.statusId);
+							if (!status) return false;
+							const currentValue = parseFloat(status.currentValue);
+							if (isNaN(currentValue)) return false;
+							switch (condition.operator) {
+								case '>=':
+									return currentValue >= condition.value;
+								case '>':
+									return currentValue > condition.value;
+								case '<=':
+									return currentValue <= condition.value;
+								case '<':
+									return currentValue < condition.value;
+								default:
+									return false;
+							}
+						});
+						isConditionMet = conditionResults.reduce((acc, current, index) => {
+							if (index === 0) return current;
+							const conjunction = trigger.conjunctions[index - 1];
+							return conjunction === 'AND' ? acc && current : acc || current;
+						}, conditionResults[0] ?? false);
+					}
+
+					let shouldExecute = false;
+					switch (trigger.executionType) {
+						case 'persistent':
+							shouldExecute = isConditionMet;
+							break;
+						case 'once':
+							shouldExecute = isConditionMet && !hasBeenExecuted;
+							break;
+						case 'on-threshold-cross':
+							shouldExecute = isConditionMet && !lastEvaluationResult;
+							break;
+					}
+
+					if (shouldExecute) {
+						activeTriggerInstructions.push(trigger.responseText);
+					}
+
+					evaluatedTriggers.push({
+						...trigger,
+						hasBeenExecuted: hasBeenExecuted || shouldExecute,
+						lastEvaluationResult: isConditionMet
+					});
+				}
+
+				// 評価した結果、何かしらのトリガーが存在すれば、それを更新対象としてセット
+				if (evaluatedTriggers.length > 0) {
+					triggersToUpdateAfterSuccess = evaluatedTriggers;
+				}
+			}
+
+			// プロンプトの構築
+			if (activeTriggerInstructions.length > 0) {
+				const instructions = activeTriggerInstructions.join('\n');
+				finalUserInput = `[内部指示Start]\n${instructions}\n[内部指示End]\nユーザー文章: ${currentUserInput}`;
+			}
+
+			// Step 2: ユーザーの入力ログだけを先にストアに反映させる（UIの応答性のため）
+			// ★★★ トリガーの状態はここでは更新しない ★★★
 			sessions.update((allSessions) => {
 				const sessionToUpdate = allSessions.find((s) => s.id === $currentSession.id);
 				if (sessionToUpdate) {
@@ -118,48 +190,46 @@
 				return allSessions;
 			});
 
-			// 2. APIに渡すための会話コンテキストを構築する
+			// Step 3: APIを呼び出す
 			const conversationContext = {
-				logs: $currentSession.logs.map((log) => ({
-					speaker: log.speaker,
-					text: log.text
-				})),
+				logs: $currentSession.logs.map((log) => ({ speaker: log.speaker, text: log.text })),
 				featureSettings: $currentSession.featureSettings
 			};
 
-			// 3. 外部サービス(`geminiService`)を呼び出してAPIと通信する
-			// [修正] 第2引数に選択されたモデル名($model)を追加
-			const result = await callGeminiApi($apiKey, $model, conversationContext, currentUserInput);
+			const result = await callGeminiApi(
+				$apiKey,
+				$model,
+				$appSettings,
+				conversationContext,
+				finalUserInput
+			);
 
-			// 4. APIからの応答をセッションログに保存し、関連する状態を更新する
+			// Step 4: APIが成功した場合、応答の保存とトリガーの状態更新を"同時に"行う
 			sessions.update((allSessions) => {
 				const sessionToUpdate = allSessions.find((s) => s.id === $currentSession.id);
 				if (sessionToUpdate) {
-					// AIの返信テキストをログに追加
+					// AIの応答をログに追加
 					sessionToUpdate.logs.push({
 						speaker: 'ai',
 						text: result.responseText,
 						timestamp: new Date().toISOString()
 					});
 
-					// --- ここからが新しいステータス更新ロジック ---
-					// ゲーム風モード、かつ、設定が存在する場合のみステータス更新を実行
-					if (
-						sessionToUpdate.viewMode === 'game' &&
-						sessionToUpdate.gameViewSettings?.customStatuses
-					) {
-						// メッセージからステータス更新コマンドを抽出する
-						// ※ この処理ではページ分割は不要なため、計測関連のオプションはダミーでOK
+					// ★★★ ここで初めて、評価済みのトリガー状態をストアに保存する ★★★
+					if (triggersToUpdateAfterSuccess) {
+						sessionToUpdate.triggers = triggersToUpdateAfterSuccess;
+					}
+
+					// ステータスの更新処理 (変更なし)
+					if (sessionToUpdate.customStatuses && sessionToUpdate.gameViewSettings) {
 						const processed = processMessageIntoPages(result.responseText, {
 							maxHeight: 9999,
-							measureTextHeight: () => 0, // ダミー関数
+							measureTextHeight: () => 0,
 							imageBaseUrl: sessionToUpdate.gameViewSettings.imageBaseUrl,
 							imageExtension: sessionToUpdate.gameViewSettings.imageExtension
 						});
 						const updates = processed.statusUpdates;
-						const statuses = sessionToUpdate.gameViewSettings.customStatuses;
-
-						// 抽出したコマンドを元に、定義されている各ステータスの値を更新
+						const statuses = sessionToUpdate.customStatuses;
 						for (const status of statuses) {
 							if (updates[status.name]) {
 								const newValueStr = updates[status.name];
@@ -170,22 +240,18 @@
 										status.currentValue = (currentValueNum + changeValueNum).toString();
 									}
 								} else {
-									// 'set' mode
 									status.currentValue = newValueStr;
 								}
 							}
 						}
 					}
-					// --- ステータス更新ロジックここまで ---
 					sessionToUpdate.lastUpdatedAt = new Date().toISOString();
 				}
 				return allSessions;
 			});
+			// ▲▲▲ [ここまで修正] ▲▲▲
 		} catch (error) {
-			// 5. API通信中にエラーが発生した場合の処理
 			console.error('APIの呼び出し中にエラーが発生しました:', error);
-
-			// エラー内容に応じて、より具体的で分かりやすいアラートをユーザーに表示する
 			if (
 				error instanceof Error &&
 				(error.message.includes('API key not valid') || error.message.includes('permission'))
@@ -197,7 +263,8 @@
 				);
 			}
 
-			// 楽観的UI更新で追加したユーザーの入力をログから削除する（ロールバック処理）
+			// エラー時はユーザーの入力ログをロールバックする。
+			// トリガーの状態はストアに保存されていないので、何もしなくて良い。
 			sessions.update((allSessions) => {
 				const sessionToUpdate = allSessions.find((s) => s.id === $currentSession.id);
 				if (sessionToUpdate) {
@@ -206,23 +273,14 @@
 				return allSessions;
 			});
 		} finally {
-			// 6. 成功・失敗にかかわらず、ローディング状態を必ず解除する
 			isLoading = false;
 		}
 	}
 </script>
 
-<!-- 
-  ここから下はページのUI（ビュー）を定義するテンプレート部分です。
-  Svelteのリアクティビティにより、$currentSessionストアの値が変更されると自動的に再描画されます。
--->
+<!-- (テンプレート部分は変更なし) -->
 
 {#if $currentSession}
-	<!--
-    このページの主要機能の一つである、動的なビュー切り替え。
-    セッションの設定（`viewMode`）を読み取り、'game'ならゲーム風UIを、
-    それ以外（'standard'や未定義の場合も含む）なら標準UIを表示する。
-  -->
 	{#if $currentSession.viewMode === 'game'}
 		<GameChatView
 			currentSession={$currentSession}
@@ -241,10 +299,6 @@
 		/>
 	{/if}
 {:else}
-	<!-- 
-    `$currentSession`がまだ読み込めていない（undefinedの）場合に表示されるフォールバックUI。
-    ページの初回読み込み時などに一瞬表示される。
-  -->
 	<div class="flex h-screen items-center justify-center">
 		<p>セッションを読み込んでいます...</p>
 	</div>

@@ -1,6 +1,6 @@
 //src/lib/geminiService.ts
 
-import type { ConversationContext } from './types';
+import type { AppSettings, ConversationContext } from './types';
 import { callGeminiApiOnClient, type StandardChatResponse } from './standard/geminiClient.standard';
 import {
 	callGeminiApiWithOneStepFC,
@@ -32,24 +32,34 @@ export function isOneStepResponse(
 export async function callGeminiApi(
 	apiKey: string,
 	model: string,
+	// ▼▼▼ [ここから修正] ▼▼▼
+	appSettings: AppSettings,
+	// ▲▲▲ [ここまで修正] ▲▲▲
 	context: ConversationContext,
 	userInput: string
 ): Promise<StandardChatResponse | OneStepFCChatResponse /* | TwoStepFCChatResponse */> {
 	switch (context.featureSettings.apiMode) {
 		case 'oneStepFC':
 			console.log('[geminiService] Calling OneStepFC API');
-			return callGeminiApiWithOneStepFC(apiKey, model, context, userInput);
+			// ▼▼▼ [ここから修正] ▼▼▼
+			// oneStepFCのクライアントにも appSettings を渡す (今回は実装対象外だが、インターフェースを統一)
+			return callGeminiApiWithOneStepFC(apiKey, model, appSettings, context, userInput);
+		// ▲▲▲ [ここまで修正] ▲▲▲
 
 		case 'twoStepFC':
 			console.log('[geminiService] Calling TwoStepFC API');
 			// alert('TwoStepFC is not implemented yet.'); // 未実装なことを示す仮のアラート
 			// return callGeminiApiWithTwoStepFC(apiKey, context, userInput);
 			// 現時点ではTwoStepFCは未実装のため、一旦Standardを呼び出すようにしておきます
-			return callGeminiApiOnClient(apiKey, model, context, userInput);
+			// ▼▼▼ [ここから修正] ▼▼▼
+			return callGeminiApiOnClient(apiKey, model, appSettings, context, userInput);
+		// ▲▲▲ [ここまで修正] ▲▲▲
 
 		case 'standard':
 		default:
 			console.log('[geminiService] Calling Standard API');
-			return callGeminiApiOnClient(apiKey, model, context, userInput);
+			// ▼▼▼ [ここから修正] ▼▼▼
+			return callGeminiApiOnClient(apiKey, model, appSettings, context, userInput);
+		// ▲▲▲ [ここまで修正] ▲▲▲
 	}
 }

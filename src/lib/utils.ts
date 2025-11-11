@@ -9,11 +9,8 @@ import type { Session } from './types';
  * ユーザーが設定画面で選択できるGeminiモデルのリスト。
  * [モデル名, 表示名] の形式で定義します。
  */
-export const availableModels = [
-	['gemini-2.5-pro', 'Gemini 2.5 Pro'],
-	['gemini-2.5-flash', 'Gemini 2.5 Flash'],
-	['gemini-2.5-flash-lite', 'Gemini 2.5 Flash Lite']
-];
+export const availableModels = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+
 const commonSafetySettings = [
 	{ category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
 	{ category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },

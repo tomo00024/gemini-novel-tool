@@ -1,6 +1,6 @@
 //src/lib/oneStepFC/geminiClient.oneStepFC.ts
 
-import type { ConversationContext, GoodwillFeatureData } from '$lib/types';
+import type { AppSettings, ConversationContext, GoodwillFeatureData } from '$lib/types'; // [修正] AppSettings をインポート
 import { geminiModelConfig } from '$lib/utils';
 import { getGoodwillSchemaProperty } from './features/goodwill';
 import { getInventorySchemaProperty } from './features/inventory';
@@ -87,10 +87,16 @@ function buildOneStepFCTool(context: ConversationContext) {
 }
 
 /**
- * Gemini APIに渡す対話履歴(`contents`)を準備します。(変更なし)
+ * Gemini APIに渡す対話履歴(`contents`)を準備します。
  * 好感度に応じたプロンプトの付与もここで行います。
  */
-function prepareGeminiContents(context: ConversationContext, userInput: string) {
+// ▼▼▼ [ここから修正] ▼▼▼
+function prepareGeminiContents(
+	appSettings: AppSettings,
+	context: ConversationContext,
+	userInput: string
+) {
+	// ▲▲▲ [ここまで修正] ▲▲▲
 	const history = context.logs.map((log) => ({
 		role: log.speaker === 'user' ? 'model' : 'model', // userのログもmodelとして扱うことで、一貫した会話履歴を表現
 		parts: [{ text: log.text }]
@@ -108,7 +114,20 @@ function prepareGeminiContents(context: ConversationContext, userInput: string) 
 		}
 	}
 
-	return [...history, { role: 'user', parts: [{ text: finalPrompt }] }];
+	// ▼▼▼ [ここから修正] ▼▼▼
+	// ユーザーの現在の入力(好感度プロンプト付与後)を含む会話履歴を作成
+	const contents = [...history, { role: 'user', parts: [{ text: finalPrompt }] }];
+
+	// ダミーユーザープロンプトが有効で、テキストが空でない場合、contentsの末尾に追加
+	if (appSettings.dummyUserPrompt.isEnabled && appSettings.dummyUserPrompt.text.trim()) {
+		contents.push({
+			role: 'user',
+			parts: [{ text: appSettings.dummyUserPrompt.text }]
+		});
+	}
+
+	return contents;
+	// ▲▲▲ [ここまで修正] ▲▲▲
 }
 
 /**
@@ -145,14 +164,17 @@ function parseOneStepFCResponse(data: GeminiApiResponse): OneStepFCChatResponse 
  * @param userInput - ユーザーからの最新の入力
  * @returns {Promise<ChatResponse>} - 生成された応答と好感度の変動値を含むオブジェクト
  */
+// ▼▼▼ [ここから修正] ▼▼▼
 export async function callGeminiApiWithOneStepFC( // 関数名を役割がわかるように変更
 	apiKey: string,
 	model: string,
+	appSettings: AppSettings,
 	context: ConversationContext,
 	userInput: string
 ): Promise<OneStepFCChatResponse> {
 	const tools = buildOneStepFCTool(context);
-	const contents = prepareGeminiContents(context, userInput);
+	const contents = prepareGeminiContents(appSettings, context, userInput);
+	// ▲▲▲ [ここまで修正] ▲▲▲
 	const requestBody = {
 		contents,
 		tools,

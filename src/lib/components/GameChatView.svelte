@@ -155,12 +155,13 @@
 		</div>
 	</div>
 
-	<!-- ▼▼▼ 変更点 5: 日付と好感度を表示するエリアを追加 ▼▼▼ -->
+	<!-- ▼▼▼ ステータス表示エリアの修正 ▼▼▼ -->
 	<div
 		class="flex flex-shrink-0 flex-wrap justify-end gap-x-4 gap-y-1 px-4 pb-2 text-lg font-semibold"
 	>
-		{#if currentSession.gameViewSettings?.customStatuses}
-			{#each currentSession.gameViewSettings.customStatuses as status}
+		<!-- [修正箇所] currentSession.customStatuses を直接参照 -->
+		{#if currentSession.customStatuses}
+			{#each currentSession.customStatuses as status}
 				{#if status.isVisible}
 					<div class="bg-opacity-30 rounded-md bg-black px-3 py-1">
 						<span>{status.name}: {status.currentValue}</span>
@@ -169,7 +170,7 @@
 			{/each}
 		{/if}
 	</div>
-	<!-- ▲▲▲ 変更ここまで ▲▲▲ -->
+	<!-- ▲▲▲ 修正ここまで ▲▲▲ -->
 
 	<!-- Part 2: 画像表示エリア (変更なし) -->
 	<div

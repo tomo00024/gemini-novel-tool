@@ -1,5 +1,3 @@
-// src/lib/types.ts
-
 // ===================================================================
 // 1. 各機能が使用する、固有の設定とデータの型を定義する
 // ===================================================================
@@ -8,7 +6,6 @@
  * 好感度機能 (Function Calling) の設定とデータ
  */
 export interface GoodwillFeatureData {
-	// isEnabled: boolean; // ← [修正] この行を削除します
 	currentValue: number; // 現在の好感度の合計値
 	thresholds: {
 		level: number;
@@ -29,6 +26,43 @@ export interface InventoryFeatureData {
 	}[];
 }
 
+/**
+ * カスタムステータスの型定義
+ */
+export interface CustomStatus {
+	id: string;
+	name: string;
+	currentValue: string;
+	mode: 'add' | 'set';
+	isVisible: boolean;
+}
+
+/**
+ * トリガーの単一の条件を表す型
+ */
+export interface TriggerCondition {
+	id: string; // 条件の一意なID
+	statusId: string; // どのステータスを参照するか (CustomStatusのidや固定値)
+	operator: '>=' | '>' | '<=' | '<';
+	value: number;
+}
+
+/**
+ * 一つのトリガー全体の設定を表す型
+ */
+export interface Trigger {
+	id: string; // トリガーの一意なID
+	conditions: TriggerCondition[];
+	// 条件が2つ以上ある場合、間の結合子を格納 (例: conditionsが3つならconjunctionsは2つ)
+	conjunctions: ('AND' | 'OR')[];
+	executionType: 'once' | 'persistent' | 'on-threshold-cross';
+	responseText: string;
+	// ▼▼▼ ここから追加 ▼▼▼
+	hasBeenExecuted?: boolean; // 'once' タイプで使用: 既に実行されたか
+	lastEvaluationResult?: boolean; // 'on-threshold-cross' で使用: 前回の評価結果
+	// ▲▲▲ ここまで追加 ▲▲▲
+}
+
 // ===================================================================
 // 2. すべての機能別データを格納する、拡張可能なコンテナを定義する
 // ===================================================================
@@ -36,37 +70,29 @@ export interface InventoryFeatureData {
 export interface GameViewSettings {
 	imageBaseUrl: string;
 	imageExtension: string;
-
-	/**
-	 * 表示するすべてのステータスをこの配列で一元管理する。
-	 */
-	customStatuses: {
-		id: string;
-		name: string;
-		currentValue: string;
-		mode: 'add' | 'set';
-		isVisible: boolean; // ← [追加] 個別の表示/非表示フラグ
-	}[];
+	// customStatuses は Session 直下に移動しました
 }
-/**
- * 機能別の設定/データをまとめるインターフェース。
- * 新しい機能を追加する場合は、ここにオプショナルプロパティを追加するだけ。
- */
-export interface FeatureSettings {
-	// ▼▼▼ [修正] apiModeプロパティを追加します ▼▼▼
-	apiMode: 'standard' | 'oneStepFC' | 'twoStepFC';
 
+export interface FeatureSettings {
+	apiMode: 'standard' | 'oneStepFC' | 'twoStepFC';
 	goodwill?: GoodwillFeatureData;
 	inventory?: InventoryFeatureData;
-	// questSystem?: QuestFeatureData; // 将来の拡張
 }
 
 // ===================================================================
-// 3. コアとなるSessionインターフェースを定義する (変更なし)
+// 3. コアとなるSessionインターフェースを定義する (変更あり)
 // ===================================================================
 export interface AppSettings {
 	apiKey: string;
 	model: string;
+	systemPrompt: {
+		isEnabled: boolean;
+		text: string;
+	};
+	dummyUserPrompt: {
+		isEnabled: boolean;
+		text: string;
+	};
 }
 
 export interface Session {
@@ -76,6 +102,8 @@ export interface Session {
 	featureSettings: FeatureSettings;
 	viewMode?: 'standard' | 'game';
 	gameViewSettings?: GameViewSettings;
+	customStatuses?: CustomStatus[];
+	triggers?: Trigger[];
 	logs: {
 		speaker: 'user' | 'ai';
 		text: string;

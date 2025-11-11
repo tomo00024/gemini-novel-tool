@@ -57,10 +57,8 @@ export interface Trigger {
 	conjunctions: ('AND' | 'OR')[];
 	executionType: 'once' | 'persistent' | 'on-threshold-cross';
 	responseText: string;
-	// ▼▼▼ ここから追加 ▼▼▼
 	hasBeenExecuted?: boolean; // 'once' タイプで使用: 既に実行されたか
 	lastEvaluationResult?: boolean; // 'on-threshold-cross' で使用: 前回の評価結果
-	// ▲▲▲ ここまで追加 ▲▲▲
 }
 
 // ===================================================================
@@ -70,7 +68,6 @@ export interface Trigger {
 export interface GameViewSettings {
 	imageBaseUrl: string;
 	imageExtension: string;
-	// customStatuses は Session 直下に移動しました
 }
 
 export interface FeatureSettings {
@@ -80,7 +77,7 @@ export interface FeatureSettings {
 }
 
 // ===================================================================
-// 3. コアとなるSessionインターフェースを定義する (変更あり)
+// 3. コアとなるSessionインターフェースを定義する
 // ===================================================================
 export interface AppSettings {
 	apiKey: string;
@@ -112,7 +109,7 @@ export interface Session {
 }
 
 // ===================================================================
-// 4. APIとの通信で使用するデータ型 (変更なし)
+// 4. APIとの通信で使用するデータ型
 // ===================================================================
 export interface ConversationContext {
 	logs: {

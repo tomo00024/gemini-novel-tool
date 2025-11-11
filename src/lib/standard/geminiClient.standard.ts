@@ -3,10 +3,6 @@
 import type { AppSettings, ConversationContext } from '$lib/types';
 import { geminiModelConfig } from '$lib/utils';
 
-// ===================================================================
-// 型定義
-// ===================================================================
-
 export interface StandardChatResponse {
 	responseText: string;
 }
@@ -16,10 +12,6 @@ interface GeminiApiResponse {
 		content: { parts: Array<{ text?: string }> };
 	}>;
 }
-
-// ===================================================================
-// ユーティリティ/ヘルパー関数群
-// ===================================================================
 
 /**
  * Gemini APIに渡す対話履歴(`contents`)を準備します。
@@ -65,9 +57,6 @@ function parseGeminiResponse(data: GeminiApiResponse): StandardChatResponse {
 	return { responseText: '予期せぬ形式の応答がありました。' };
 }
 
-// ===================================================================
-// Gemini API を呼び出すメイン関数 (リファクタリング後)
-// ===================================================================
 export async function callGeminiApiOnClient(
 	apiKey: string,
 	model: string,

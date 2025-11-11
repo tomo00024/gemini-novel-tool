@@ -5,32 +5,25 @@
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	import { onMount, onDestroy } from 'svelte';
-	// ▼▼▼ 変更点 1: ProcessedMessage 型をインポート ▼▼▼
 	import {
 		processMessageIntoPages,
 		type PageData,
 		type ProcessedMessage
 	} from '$lib/utils/messageProcessor';
 
-	// ----- Props (変更なし) -----
 	export let currentSession: Session;
 	export let isLoading: boolean;
 	export let userInput: string;
 	export let handleSubmit: () => Promise<void>;
 	export let base: string;
 
-	// ----- State Variables -----
 	let currentBackgroundUrl = '';
 	let currentCharacterUrl = '';
-	// ▲▲▲ 変更ここまで ▲▲▲
 	let currentPageIndex = 0;
 	let dialogWidth: number;
 	let measurementDiv: HTMLDivElement | null = null;
-	// ▼▼▼ 変更点 3: 変数名を変更 (processedMessageオブジェクト全体を保持) ▼▼▼
 	let processedMessage: ProcessedMessage;
-	// ▲▲▲ 変更ここまで ▲▲▲
 
-	// ----- Lifecycle Methods (変更なし) -----
 	onMount(() => {
 		measurementDiv = document.createElement('div');
 		measurementDiv.classList.add('dialog-box');
@@ -47,19 +40,13 @@
 		}
 	});
 
-	// ----- Reactive Logic -----
-
-	// 最新のAIメッセージを取得 (変更なし)
 	$: latestAiMessage =
 		[...currentSession.logs].reverse().find((log) => log.speaker === 'ai')?.text || '......';
 
-	// ▼▼▼ 変更点 4: メッセージ処理ブロックを修正 ▼▼▼
 	// AIのメッセージが変更されたら、ページ分割とメタデータ抽出を再実行
 	$: processedMessage = (() => {
 		if (!measurementDiv || !latestAiMessage || !dialogWidth) {
-			// ▼▼▼ [修正点] statusUpdatesプロパティをデフォルト値に追加 ▼▼▼
 			return { pages: [{ text: '......' }], statusUpdates: {} };
-			// ▲▲▲ 修正ここまで ▲▲▲
 		}
 
 		const computedStyle = window.getComputedStyle(measurementDiv);
@@ -90,7 +77,7 @@
 	// processedMessageから各データを抽出する
 	$: messagePageData = processedMessage.pages;
 
-	// 画像URLを更新するロジック (messagePageDataへの依存は変更なし)
+	// 画像URLを更新するロジック
 	$: if (latestAiMessage && messagePageData.length > 0) {
 		currentPageIndex = 0;
 
@@ -105,7 +92,7 @@
 		currentCharacterUrl = messagePageData[0]?.characterUrl || defaultCharUrl;
 	}
 
-	// ページ送り時の画像更新ロジック (変更なし)
+	// ページ送り時の画像更新ロジック
 	$: if (currentPageIndex > 0 && messagePageData[currentPageIndex]) {
 		const pageData = messagePageData[currentPageIndex];
 		if (pageData.backgroundUrl) {
@@ -116,7 +103,7 @@
 		}
 	}
 
-	// 算出プロパティとイベントハンドラ (変更なし)
+	// 算出プロパティとイベントハンドラ
 	$: messagePages = messagePageData.map((p) => p.text);
 	$: hasMorePages = currentPageIndex < messagePages.length - 1;
 
@@ -127,7 +114,6 @@
 	}
 </script>
 
-<!-- HTML -->
 <div class="flex h-[100dvh] flex-col bg-gray-800 text-white">
 	<!-- ヘッダー部分 -->
 	<div class="flex-shrink-0 p-4">
@@ -155,11 +141,9 @@
 		</div>
 	</div>
 
-	<!-- ▼▼▼ ステータス表示エリアの修正 ▼▼▼ -->
 	<div
 		class="flex flex-shrink-0 flex-wrap justify-end gap-x-4 gap-y-1 px-4 pb-2 text-lg font-semibold"
 	>
-		<!-- [修正箇所] currentSession.customStatuses を直接参照 -->
 		{#if currentSession.customStatuses}
 			{#each currentSession.customStatuses as status}
 				{#if status.isVisible}
@@ -170,9 +154,8 @@
 			{/each}
 		{/if}
 	</div>
-	<!-- ▲▲▲ 修正ここまで ▲▲▲ -->
 
-	<!-- Part 2: 画像表示エリア (変更なし) -->
+	<!-- Part 2: 画像表示エリア -->
 	<div
 		class="relative flex-1 cursor-pointer overflow-hidden"
 		role="button"
@@ -192,7 +175,7 @@
 		/>
 	</div>
 
-	<!-- Part 3: ダイアログと入力フォーム (変更なし) -->
+	<!-- Part 3: ダイアログと入力フォーム -->
 	<div class="flex-shrink-0 space-y-3 p-4">
 		<!-- ダイアログボックス -->
 		<div
@@ -238,7 +221,6 @@
 	</div>
 </div>
 
-<!-- styleタグ内は変更ありません -->
 <style>
 	.dialog-box {
 		overflow: hidden;

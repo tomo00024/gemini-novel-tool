@@ -96,8 +96,6 @@
 		userInput = '';
 
 		try {
-			// ▼▼▼ [ここから修正] ▼▼▼
-
 			// Step 1: トリガーを評価し、最終的なプロンプトと、"もし成功したら"更新するべきトリガーの状態を準備する
 			let finalUserInput = currentUserInput;
 			const activeTriggerInstructions: string[] = [];
@@ -176,7 +174,6 @@
 			}
 
 			// Step 2: ユーザーの入力ログだけを先にストアに反映させる（UIの応答性のため）
-			// ★★★ トリガーの状態はここでは更新しない ★★★
 			sessions.update((allSessions) => {
 				const sessionToUpdate = allSessions.find((s) => s.id === $currentSession.id);
 				if (sessionToUpdate) {
@@ -214,13 +211,11 @@
 						text: result.responseText,
 						timestamp: new Date().toISOString()
 					});
-
-					// ★★★ ここで初めて、評価済みのトリガー状態をストアに保存する ★★★
 					if (triggersToUpdateAfterSuccess) {
 						sessionToUpdate.triggers = triggersToUpdateAfterSuccess;
 					}
 
-					// ステータスの更新処理 (変更なし)
+					// ステータスの更新処理
 					if (sessionToUpdate.customStatuses && sessionToUpdate.gameViewSettings) {
 						const processed = processMessageIntoPages(result.responseText, {
 							maxHeight: 9999,
@@ -249,7 +244,6 @@
 				}
 				return allSessions;
 			});
-			// ▲▲▲ [ここまで修正] ▲▲▲
 		} catch (error) {
 			console.error('APIの呼び出し中にエラーが発生しました:', error);
 			if (
@@ -277,8 +271,6 @@
 		}
 	}
 </script>
-
-<!-- (テンプレート部分は変更なし) -->
 
 {#if $currentSession}
 	{#if $currentSession.viewMode === 'game'}

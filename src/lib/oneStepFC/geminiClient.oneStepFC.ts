@@ -6,7 +6,7 @@ import { getGoodwillSchemaProperty } from './features/goodwill';
 import { getInventorySchemaProperty } from './features/inventory';
 
 // ===================================================================
-// 型定義 (変更なし)
+// 型定義
 // ===================================================================
 interface GenerateResponseAndStateArgs {
 	// "Args" という接尾辞を追加し、関数の引数であることを明確化
@@ -90,13 +90,11 @@ function buildOneStepFCTool(context: ConversationContext) {
  * Gemini APIに渡す対話履歴(`contents`)を準備します。
  * 好感度に応じたプロンプトの付与もここで行います。
  */
-// ▼▼▼ [ここから修正] ▼▼▼
 function prepareGeminiContents(
 	appSettings: AppSettings,
 	context: ConversationContext,
 	userInput: string
 ) {
-	// ▲▲▲ [ここまで修正] ▲▲▲
 	const history = context.logs.map((log) => ({
 		role: log.speaker === 'user' ? 'model' : 'model', // userのログもmodelとして扱うことで、一貫した会話履歴を表現
 		parts: [{ text: log.text }]
@@ -114,7 +112,6 @@ function prepareGeminiContents(
 		}
 	}
 
-	// ▼▼▼ [ここから修正] ▼▼▼
 	// ユーザーの現在の入力(好感度プロンプト付与後)を含む会話履歴を作成
 	const contents = [...history, { role: 'user', parts: [{ text: finalPrompt }] }];
 
@@ -127,7 +124,6 @@ function prepareGeminiContents(
 	}
 
 	return contents;
-	// ▲▲▲ [ここまで修正] ▲▲▲
 }
 
 /**
@@ -164,7 +160,6 @@ function parseOneStepFCResponse(data: GeminiApiResponse): OneStepFCChatResponse 
  * @param userInput - ユーザーからの最新の入力
  * @returns {Promise<ChatResponse>} - 生成された応答と好感度の変動値を含むオブジェクト
  */
-// ▼▼▼ [ここから修正] ▼▼▼
 export async function callGeminiApiWithOneStepFC( // 関数名を役割がわかるように変更
 	apiKey: string,
 	model: string,
@@ -174,7 +169,6 @@ export async function callGeminiApiWithOneStepFC( // 関数名を役割がわか
 ): Promise<OneStepFCChatResponse> {
 	const tools = buildOneStepFCTool(context);
 	const contents = prepareGeminiContents(appSettings, context, userInput);
-	// ▲▲▲ [ここまで修正] ▲▲▲
 	const requestBody = {
 		contents,
 		tools,

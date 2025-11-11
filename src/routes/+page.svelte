@@ -10,7 +10,7 @@
 	 * 「新しいセッションを開始」ボタンがクリックされたときに実行される関数
 	 */
 	function handleNewSession(): void {
-		// ★★★ 複雑なオブジェクト作成ロジックを、ヘルパー関数の呼び出しに置き換え ★★★
+		// 複雑なオブジェクト作成ロジックを、ヘルパー関数の呼び出しに置き換え ★★★
 		const newSession = createNewSession();
 
 		// sessionsストアを更新する
@@ -22,7 +22,6 @@
 </script>
 
 <div class="flex h-screen flex-col p-4">
-	<!-- ▼▼▼ ここからヘッダーの修正 ▼▼▼ -->
 	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-2xl font-bold">履歴画面</h1>
 		<div class="flex items-center gap-4">
@@ -40,7 +39,6 @@
 			</button>
 		</div>
 	</div>
-	<!-- ▲▲▲ ここまでヘッダーの修正 ▲▲▲ -->
 
 	{#if $sessions.length === 0}
 		<p class="text-gray-500">

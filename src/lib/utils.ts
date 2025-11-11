@@ -51,7 +51,7 @@ export function createNewSession(): Session {
 		logs: [],
 		viewMode: 'standard',
 		featureSettings: {
-			apiMode: 'standard', // APIモードのデフォルト値を 'standard' に設定
+			apiMode: 'standard',
 			goodwill: {
 				currentValue: 0,
 				thresholds: []

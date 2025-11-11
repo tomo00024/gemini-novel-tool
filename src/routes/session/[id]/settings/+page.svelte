@@ -52,14 +52,12 @@
 						if (!trigger.conjunctions) {
 							trigger.conjunctions = [];
 						}
-						// ▼▼▼ ここから追加 ▼▼▼
 						if (typeof trigger.hasBeenExecuted === 'undefined') {
 							trigger.hasBeenExecuted = false;
 						}
 						if (typeof trigger.lastEvaluationResult === 'undefined') {
 							trigger.lastEvaluationResult = false;
 						}
-						// ▲▲▲ ここまで追加 ▲▲▲
 					});
 				}
 				// 2. gameViewSettings の初期化と、古い status データの移行
@@ -128,7 +126,6 @@
 	}
 </script>
 
-<!-- (テンプレート部分は変更なし) -->
 <div class="flex h-screen flex-col p-4">
 	<!-- ヘッダー部分 -->
 	<div class="mb-6 flex items-center justify-between">

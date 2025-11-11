@@ -8,9 +8,6 @@ import { availableModels } from './utils';
 const APP_SETTINGS_KEY = 'app_settings';
 const SESSIONS_KEY = 'sessions';
 
-// --- AppSettings Store ---
-
-// [ここから修正]
 // 1. デフォルトのアプリケーション設定を定義する
 const defaultAppSettings: AppSettings = {
 	apiKey: '',
@@ -60,7 +57,6 @@ if (browser) {
 		localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(value));
 	});
 }
-// [ここまで修正]
 
 // --- Sessions Store ---
 const storedSessions = browser ? localStorage.getItem(SESSIONS_KEY) : null;

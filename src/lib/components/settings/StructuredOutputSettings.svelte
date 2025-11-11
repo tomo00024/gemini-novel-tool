@@ -19,7 +19,6 @@
 		($currentSession) => $currentSession?.featureSettings.apiMode
 	);
 
-	// ... (handleDescriptionChange, handleThresholdChange などの関数は元のまま) ...
 	function handleDescriptionChange(event: Event) {
 		const newDescription = (event.target as HTMLTextAreaElement).value;
 		sessions.update((allSessions) => {
@@ -105,7 +104,6 @@
 					{#if $goodwill}
 						{#each $goodwill.thresholds as threshold, i (i)}
 							<div class="flex items-start gap-2 rounded-md border bg-gray-50 p-2">
-								<!-- ... (ルール設定のUIは元のまま) ... -->
 								<div class="flex-none">
 									<label for="level-{i}" class="text-sm font-bold">Level</label>
 									<input

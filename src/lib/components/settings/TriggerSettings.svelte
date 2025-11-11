@@ -84,10 +84,8 @@
 				conjunctions: [],
 				executionType: 'once',
 				responseText: '',
-				// ▼▼▼ ここから追加 ▼▼▼
 				hasBeenExecuted: false,
 				lastEvaluationResult: false
-				// ▲▲▲ ここまで追加 ▲▲▲
 			});
 		});
 	}
@@ -137,7 +135,6 @@
 	}
 </script>
 
-<!-- (テンプレート部分は変更なし) -->
 <div class="space-y-4">
 	<h3 class="font-medium">トリガー設定</h3>
 	<p class="mb-3 text-xs text-gray-600">

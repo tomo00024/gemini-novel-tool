@@ -1,7 +1,7 @@
 //src/lib/utils/messageProcessor.ts
 
 /**
- * ページごとのデータを表現する型定義 (変更なし)
+ * ページごとのデータを表現する型定義
  */
 export type PageData = {
 	text: string;
@@ -9,7 +9,6 @@ export type PageData = {
 	characterUrl?: string;
 };
 
-// ▼▼▼ [変更] 戻り値の型を、汎用的なステータス更新に対応する形式に変更 ▼▼▼
 /**
  * processMessageIntoPages関数の戻り値の型
  */
@@ -21,7 +20,6 @@ export type ProcessedMessage = {
 	 */
 	statusUpdates: Record<string, string>;
 };
-// ▲▲▲ 変更ここまで ▲▲▲
 
 type TextMeasurer = (text: string) => number;
 
@@ -44,9 +42,7 @@ export function processMessageIntoPages(
 	const commandRegex = /({{\s*[^:]+?\s*:\s*.+?\s*}})/g;
 
 	let pendingCommands: { bg?: string; char?: string } = {};
-	// ▼▼▼ [変更] 汎用的なステータス更新を格納するオブジェクトに変更 ▼▼▼
 	const statusUpdates: Record<string, string> = {};
-	// ▲▲▲ 変更ここまで ▲▲▲
 
 	const pushPage = (text: string) => {
 		if (!text.trim()) {
@@ -60,7 +56,6 @@ export function processMessageIntoPages(
 		pendingCommands = {};
 	};
 
-	// (primaryBreakChars, trailingChars, paragraphsの定義は変更なし)
 	const primaryBreakChars = ['。', '！', '？'];
 	const trailingChars = ['。', '」', '）', '！', '？'];
 	const paragraphs = rawMessage.split(/\n+/).filter((p) => p.trim() !== '');
@@ -77,8 +72,6 @@ export function processMessageIntoPages(
 					const [, typeStr, valueStr] = match;
 					const type = typeStr.trim();
 					const value = valueStr.trim();
-
-					// ▼▼▼ [変更] コマンド解析ロジックを汎用化 ▼▼▼
 					if (type === '背景' || type === '人物') {
 						const path = value
 							.split('|')
@@ -92,12 +85,11 @@ export function processMessageIntoPages(
 						// 「背景」「人物」以外はすべてステータス更新として扱う
 						statusUpdates[type] = value;
 					}
-					// ▲▲▲ 変更ここまで ▲▲▲
 				}
 				continue;
 			}
 
-			// テキストのページ分割処理 (変更なし)
+			// テキストのページ分割処理
 			const characters = part.split('');
 			for (let i = 0; i < characters.length; i++) {
 				tempContent += characters[i];
@@ -161,5 +153,4 @@ export function processMessageIntoPages(
 		pages: finalPages.length > 0 ? finalPages : [{ text: '' }],
 		statusUpdates: statusUpdates
 	};
-	// ▲▲▲ 変更ここまで ▲▲▲
 }

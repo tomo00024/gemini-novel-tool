@@ -11,6 +11,7 @@
 		type ProcessedMessage
 	} from '$lib/utils/messageProcessor';
 	import { defaultGameViewSettings } from '$lib/utils';
+	import { appSettings } from '$lib/stores';
 
 	export let currentSession: Session;
 
@@ -182,7 +183,12 @@
 	}
 </script>
 
-<div class="flex h-full flex-col">
+<div
+	class="flex h-full flex-col"
+	style="--dialog-font-size: {$appSettings.ui.useCustomFontSize
+		? `${$appSettings.ui.chatFontSize}px`
+		: 'initial'}"
+>
 	<div
 		class="flex flex-shrink-0 flex-wrap justify-end gap-x-4 gap-y-1 px-4 pb-2 text-lg font-semibold"
 	>
@@ -262,6 +268,7 @@
 		text-align: left;
 		font-family: inherit;
 		color: inherit;
+		font-size: var(--dialog-font-size, inherit);
 	}
 
 	.dialog-box :global(p) {

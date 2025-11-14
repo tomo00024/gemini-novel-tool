@@ -204,15 +204,6 @@
 			<h2 class="block text-lg font-medium">UI設定</h2>
 			<div class="flex items-center space-x-2">
 				<input
-					id="show-token-count"
-					type="checkbox"
-					bind:checked={$appSettings.ui.showTokenCount}
-					class="h-4 w-4 rounded"
-				/>
-				<label for="show-token-count" class="text-sm">トークン数を表示する</label>
-			</div>
-			<div class="flex items-center space-x-2">
-				<input
 					id="custom-font-size"
 					type="checkbox"
 					bind:checked={$appSettings.ui.useCustomFontSize}

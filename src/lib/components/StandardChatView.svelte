@@ -8,6 +8,7 @@
 	// --- ストアと型をインポート ---
 	import { chatSessionStore } from '$lib/chatSessionStore';
 	import type { Log } from '$lib/types';
+	import { appSettings } from '$lib/stores';
 
 	export let handleRetry: (userMessageId: string) => Promise<void>;
 
@@ -108,7 +109,12 @@
 
 {#if $chatSessionStore.session}
 	<!-- チャットログのループ処理 -->
-	<div class="space-y-4 rounded px-4">
+	<div
+		class="space-y-4 rounded px-4"
+		style="--chat-font-size: {$appSettings.ui.useCustomFontSize
+			? `${$appSettings.ui.chatFontSize}px`
+			: 'initial'}"
+	>
 		{#each displayableLogs as log (log.id)}
 			{@const isUser = log.speaker === 'user'}
 			{@const isEditing = $chatSessionStore.editingMessageId === log.id}
@@ -256,7 +262,6 @@
 {/if}
 
 <style>
-	/* スタイルは変更なし */
 	.chat {
 		display: flex;
 		flex-direction: column;
@@ -274,6 +279,7 @@
 		border-radius: 1rem;
 		background-color: #f3f3f3;
 		color: #3d3d3d;
+		font-size: var(--chat-font-size, inherit);
 	}
 	.chat-bubble :global(h1),
 	.chat-bubble :global(h2),

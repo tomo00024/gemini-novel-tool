@@ -1,4 +1,3 @@
-<!-- src/routes/session/[id]/+page.svelte -->
 <script lang="ts">
 	// --- SvelteKitのコア機能とストアをインポート ---
 	import { page } from '$app/stores';
@@ -65,63 +64,113 @@
 		return history;
 	}
 
-	// --- API呼び出し関数 (変更なし) ---
+	// --- ▼▼▼【変更】API呼び出し関数をキー切り替え対応に修正 ▼▼▼ ---
 	async function getAiResponseAndUpdate(
 		contextLogs: Log[],
 		finalUserInput: string,
 		userMessageId: string, // 親となるユーザーメッセージのID
 		isRetry: boolean,
 		sessionId: string,
-		featureSettings: FeatureSettings,
-		activeApiKey: string,
-		model: string,
-		appSettings: AppSettings
+		featureSettings: FeatureSettings
 	) {
 		isLoading = true;
 		try {
-			const conversationContext = {
-				logs: contextLogs.map((log) => ({ speaker: log.speaker, text: log.text })),
-				featureSettings: featureSettings
-			};
-			const result = await callGeminiApi(
-				activeApiKey,
-				model,
-				appSettings,
-				conversationContext,
-				finalUserInput
-			);
-			sessions.update((allSessions) => {
-				const sessionToUpdate = allSessions.find((s) => s.id === sessionId);
-				if (sessionToUpdate) {
-					const parentUserMessage = sessionToUpdate.logs.find((log) => log.id === userMessageId);
+			let currentAppSettings = get(appSettings);
+			let currentActiveApiKey = currentAppSettings.apiKeys.find(
+				(k) => k.id === currentAppSettings.activeApiKeyId
+			)?.key;
+			let currentModel = currentAppSettings.model;
 
-					// 1. ユーザーメッセージにリクエストボディをメタデータとして保存
-					if (parentUserMessage && 'requestBody' in result) {
-						// oneStepFCなど他のモードからの返り値も考慮し、プロパティの存在をチェック
-						parentUserMessage.metadata = (result as any).requestBody;
-					}
-
-					// 2. 新しいAIの応答を作成
-					const newAiResponse: Log = {
-						id: generateUUID(),
-						speaker: 'ai',
-						text: result.responseText,
-						timestamp: new Date().toISOString(),
-						parentId: userMessageId,
-						activeChildId: null,
-						metadata: result.metadata // APIからのレスポンスボディ
-					};
-					sessionToUpdate.logs.push(newAiResponse);
-
-					// 3. 親メッセージの activeChildId を更新
-					if (parentUserMessage) {
-						parentUserMessage.activeChildId = newAiResponse.id;
-					}
-
-					sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+			// APIキー切り替えに対応するためループ処理を追加
+			while (true) {
+				if (!currentActiveApiKey || !currentModel) {
+					alert('APIキーまたはモデルが設定されていません。');
+					break; // ループを抜ける
 				}
-				return allSessions;
-			});
+
+				const conversationContext = {
+					logs: contextLogs.map((log) => ({ speaker: log.speaker, text: log.text })),
+					featureSettings: featureSettings
+				};
+
+				const result = await callGeminiApi(
+					currentActiveApiKey,
+					currentModel,
+					currentAppSettings,
+					conversationContext,
+					finalUserInput
+				);
+
+				// キー切り替えが必要なシグナルをチェック
+				if (result.metadata?.requiresApiKeyLoop) {
+					const currentApiKeyInfo = currentAppSettings.apiKeys.find(
+						(k) => k.id === currentAppSettings.activeApiKeyId
+					);
+					const currentApiKeyName = currentApiKeyInfo ? currentApiKeyInfo.name : '現在のキー';
+
+					if (
+						confirm(
+							`APIキー「${currentApiKeyName}」がレート制限(429)に達しました。次のAPIキーに切り替えて再試行しますか？`
+						)
+					) {
+						// OK: 次のAPIキーを探して設定を更新し、ループを継続
+						const currentIndex = currentAppSettings.apiKeys.findIndex(
+							(k) => k.id === currentAppSettings.activeApiKeyId
+						);
+						const nextIndex = (currentIndex + 1) % currentAppSettings.apiKeys.length;
+						const nextApiKey = currentAppSettings.apiKeys[nextIndex];
+
+						appSettings.update((settings) => {
+							settings.activeApiKeyId = nextApiKey.id;
+							return settings;
+						});
+
+						alert(`APIキーを「${nextApiKey.name}」に切り替えました。再試行します。`);
+
+						// 次のループのために変数を更新
+						currentAppSettings = get(appSettings);
+						currentActiveApiKey = nextApiKey.key;
+						continue; // ループの先頭に戻って再試行
+					} else {
+						// キャンセル: エラーメッセージを表示して処理を中断
+						const errorMessage = result.metadata.error?.error?.message || 'レート制限エラーです。';
+						alert(`処理を中断しました: ${errorMessage}`);
+						break; // ループを抜ける
+					}
+				} else {
+					// 通常の成功時: ストアを更新してループを抜ける
+					sessions.update((allSessions) => {
+						const sessionToUpdate = allSessions.find((s) => s.id === sessionId);
+						if (sessionToUpdate) {
+							const parentUserMessage = sessionToUpdate.logs.find(
+								(log) => log.id === userMessageId
+							);
+
+							if (parentUserMessage && 'requestBody' in result) {
+								parentUserMessage.metadata = (result as any).requestBody;
+							}
+
+							const newAiResponse: Log = {
+								id: generateUUID(),
+								speaker: 'ai',
+								text: result.responseText,
+								timestamp: new Date().toISOString(),
+								parentId: userMessageId,
+								activeChildId: null,
+								metadata: result.metadata
+							};
+							sessionToUpdate.logs.push(newAiResponse);
+
+							if (parentUserMessage) {
+								parentUserMessage.activeChildId = newAiResponse.id;
+							}
+							sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+						}
+						return allSessions;
+					});
+					break; // 成功したのでループを抜ける
+				}
+			}
 		} catch (error) {
 			console.error('API Error:', error);
 			alert(`エラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -129,8 +178,9 @@
 			isLoading = false;
 		}
 	}
+	// --- ▲▲▲【変更】ここまで ▲▲▲ ---
 
-	// --- メッセージ送信関数 (変更なし) ---
+	// --- メッセージ送信関数 (getAiResponseAndUpdateの引数をシンプルにするため微修正) ---
 	async function handleSubmit() {
 		if (isLoading || !userInput.trim() || !$currentSession) return;
 		if (!$activeApiKey || !$model) {
@@ -198,14 +248,11 @@
 			newUserMessage.id,
 			false,
 			$currentSession.id,
-			$currentSession.featureSettings,
-			$activeApiKey,
-			$model,
-			$appSettings
+			$currentSession.featureSettings
 		);
 	}
 
-	// --- リトライ関数 (変更なし) ---
+	// --- リトライ関数 (getAiResponseAndUpdateの引数をシンプルにするため微修正) ---
 	async function handleRetry(userMessageId: string) {
 		if (isLoading || !$currentSession) return;
 		if (!$activeApiKey || !$model) {
@@ -222,10 +269,7 @@
 			userMessageId,
 			true,
 			$currentSession.id,
-			$currentSession.featureSettings,
-			$activeApiKey,
-			$model,
-			$appSettings
+			$currentSession.featureSettings
 		);
 	}
 

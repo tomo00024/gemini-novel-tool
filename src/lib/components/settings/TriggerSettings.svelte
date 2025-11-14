@@ -5,7 +5,7 @@
 	import { sessions } from '$lib/stores';
 	import { derived } from 'svelte/store';
 	import type { Trigger } from '$lib/types';
-
+	import { generateUUID } from '$lib/utils';
 	const sessionId = derived(page, ($page) => $page.params.id);
 	const currentSession = derived([sessions, sessionId], ([$sessions, $sessionId]) =>
 		$sessions.find((s) => s.id === $sessionId)
@@ -74,10 +74,10 @@
 				session.triggers = [];
 			}
 			session.triggers?.push({
-				id: crypto.randomUUID(),
+				id: generateUUID(),
 				conditions: [
 					{
-						id: crypto.randomUUID(),
+						id: generateUUID(),
 						statusId: '', // 初期値は空
 						operator: '>=',
 						value: 0
@@ -105,7 +105,7 @@
 			const targetTrigger = session.triggers?.find((t) => t.id === trigger.id);
 			if (targetTrigger) {
 				targetTrigger.conditions.push({
-					id: crypto.randomUUID(),
+					id: generateUUID(),
 					statusId: '',
 					operator: '>=',
 					value: 0

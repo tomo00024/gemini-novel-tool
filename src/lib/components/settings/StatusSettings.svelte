@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { sessions } from '$lib/stores';
 	import { derived } from 'svelte/store';
-
+	import { generateUUID } from '$lib/utils';
 	const sessionId = derived(page, ($page) => $page.params.id);
 	const session = derived([sessions, sessionId], ([$sessions, $sessionId]) =>
 		$sessions.find((s) => s.id === $sessionId)
@@ -18,7 +18,7 @@
 					sessionToUpdate.customStatuses = [];
 				}
 				sessionToUpdate.customStatuses.push({
-					id: crypto.randomUUID(),
+					id: generateUUID(),
 					name: '',
 					currentValue: '0',
 					mode: 'set',

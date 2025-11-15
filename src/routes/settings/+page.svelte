@@ -9,6 +9,11 @@
 	import type { ApiKey } from '$lib/types';
 	import { generateUUID } from '$lib/utils';
 
+	// --- UIデモ用の仮の状態変数 ---
+	// この値を true に変えると「ログイン後」、false にすると「ログイン前」の表示になります。
+	let isLoggedIn = false;
+	let userEmail = 'user@example.com';
+
 	const returnPath = derived(page, ($page) => {
 		const from = $page.url.searchParams.get('from');
 		if (from && from.startsWith('session/')) {
@@ -60,11 +65,6 @@
 			return settings;
 		});
 	}
-
-	// --- Google Drive 同期機能のUIデモ用の仮の状態変数 (これは機能未実装のため残します) ---
-	let driveSyncStatus: 'disconnected' | 'connected' | 'error' = 'disconnected';
-	let driveUserEmail = 'user@example.com';
-	let lastSyncTime = new Date(Date.now() - 1000 * 60 * 5).toLocaleString(); // 5分前の時刻
 </script>
 
 <div class="flex h-screen flex-col p-4">
@@ -362,60 +362,99 @@
 				/>
 			</div>
 		</div>
+		<!-- アカウント連携 -->
+		<div class="space-y-3">
+			<h2 class="block text-lg font-medium">アカウント連携</h2>
+			{#if isLoggedIn}
+				<div class="space-y-2 text-sm">
+					<p>✓ <span class="font-medium">{userEmail}</span> としてログイン中</p>
+					<button
+						class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+					>
+						ログアウト
+					</button>
+				</div>
+				<div class="space-y-2 border-t pt-3">
+					<h3 class="font-medium text-red-800">アカウントの削除 (退会)</h3>
+					<p class="text-sm text-gray-600">
+						アカウントを削除すると、サーバーにアップロードしたすべてのセッション履歴が完全に削除され、元に戻すことはできません。
+					</p>
+					<button
+						class="rounded bg-red-200 px-3 py-2 text-sm font-semibold text-red-800 hover:bg-red-300"
+					>
+						アカウントを完全に削除する
+					</button>
+				</div>
+			{:else}
+				<div class="space-y-2">
+					<button
+						class="rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600"
+					>
+						Googleアカウントでログイン
+					</button>
+					<p class="text-sm text-gray-600">
+						ログインすると、セッション履歴をWeb上に公開して共有したり、Google
+						Driveへ自動でバックアップしたりできるようになります。
+					</p>
+				</div>
+			{/if}
+		</div>
+
 		<!-- データ管理 -->
 		<div class="space-y-3">
 			<h2 class="block text-lg font-medium">データ管理</h2>
 
-			{#if driveSyncStatus === 'disconnected'}
-				<button
-					class="rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600"
-				>
-					Googleアカウントと連携する
-				</button>
-				<p class="text-sm text-gray-600">
-					セッション履歴をGoogle Driveに自動でバックアップします。
-				</p>
-			{:else if driveSyncStatus === 'connected'}
-				<div class="space-y-2 text-sm">
-					<p class="text-green-700">✓ 自動同期は有効です</p>
-					<p>アカウント: <span class="font-medium">{driveUserEmail}</span></p>
-					<p>最終同期: <span class="font-medium">{lastSyncTime}</span></p>
+			<!-- Google Drive 連携 -->
+			<div class="space-y-2">
+				<h3 class="font-medium">Google Drive 連携</h3>
+				<div class="flex items-center space-x-2">
+					<input
+						id="drive-sync-enabled"
+						type="checkbox"
+						class="h-4 w-4 rounded"
+						disabled={!isLoggedIn}
+					/>
+					<label for="drive-sync-enabled" class="text-sm" class:text-gray-400={!isLoggedIn}>
+						Google Driveへの自動バックアップを有効にする
+					</label>
 				</div>
-				<div class="flex flex-wrap gap-2 pt-2">
-					<button
-						class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-					>
-						今すぐ同期
-					</button>
-					<button
-						class="rounded bg-red-200 px-3 py-2 text-sm font-semibold text-red-800 hover:bg-red-300"
-					>
-						連携を解除
-					</button>
-				</div>
-			{:else if driveSyncStatus === 'error'}
-				<p class="text-sm text-red-700">
-					同期エラーが発生しました。アカウントの連携を再度お試しください。
-				</p>
-				<button
-					class="rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600"
-				>
-					Googleアカウントと再連携する
-				</button>
-			{/if}
-			<div class="flex flex-wrap gap-2">
-				<button
-					class="rounded bg-green-200 px-3 py-2 text-sm font-semibold text-green-800 hover:bg-green-300"
-				>
-					セッション履歴をJSON出力
-				</button>
-				<button
-					class="rounded bg-green-200 px-3 py-2 text-sm font-semibold text-green-800 hover:bg-green-300"
-				>
-					セッション履歴をJSON読込
-				</button>
+
+				{#if !isLoggedIn}
+					<p class="pl-6 text-sm text-gray-500">
+						この機能を利用するには、まずGoogleアカウントでログインしてください。
+					</p>
+				{:else}
+					<div class="pl-6">
+						<!-- ログイン後に表示する同期ステータスやボタン -->
+						<p class="text-sm text-gray-700">最終同期: 5分前</p>
+						<button
+							class="mt-1 rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+						>
+							今すぐ同期
+						</button>
+					</div>
+				{/if}
 			</div>
-			<p class="text-sm text-gray-600">セッション履歴をJSONファイルで手動でバックアップします。</p>
+
+			<!-- 手動バックアップ -->
+			<div class="space-y-2 border-t pt-3">
+				<h3 class="font-medium">手動バックアップ</h3>
+				<div class="flex flex-wrap gap-2">
+					<button
+						class="rounded bg-green-200 px-3 py-2 text-sm font-semibold text-green-800 hover:bg-green-300"
+					>
+						セッション履歴をJSON出力
+					</button>
+					<button
+						class="rounded bg-green-200 px-3 py-2 text-sm font-semibold text-green-800 hover:bg-green-300"
+					>
+						セッション履歴をJSON読込
+					</button>
+				</div>
+				<p class="text-sm text-gray-600">
+					セッション履歴をJSONファイルで手動でバックアップします。
+				</p>
+			</div>
 		</div>
 
 		<!-- 破壊的変更 -->

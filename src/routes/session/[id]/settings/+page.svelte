@@ -19,6 +19,7 @@
 	import StatusSettings from '$lib/components/settings/StatusSettings.svelte';
 	import TriggerSettings from '$lib/components/settings/TriggerSettings.svelte';
 	import ImportExportSettings from '$lib/components/settings/ImportExportSettings.svelte';
+	import DiceRollSettings from '$lib/components/settings/DiceRollSettings.svelte';
 
 	const sessionId = derived(page, ($page) => $page.params.id);
 	const currentSession = derived([sessions, sessionId], ([$sessions, $sessionId]) =>
@@ -143,6 +144,8 @@
 
 	{#if $currentSession}
 		<div class="space-y-6">
+			<h1 class=" font-bold">ユーザー文章の最初を非表示チェックボックス（メモ）</h1>
+
 			<ImportExportSettings />
 			<!-- モード選択 -->
 			<StandardMode {currentSession} onModeChange={handleSessionModeChange} />
@@ -151,6 +154,7 @@
 			<FunctionCallingSettings {currentSession} onModeChange={handleSessionModeChange} />
 
 			<!-- 汎用設定 -->
+			<DiceRollSettings />
 			<StatusSettings />
 			<TriggerSettings />
 		</div>

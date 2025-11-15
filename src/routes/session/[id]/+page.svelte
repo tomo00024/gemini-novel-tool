@@ -1,5 +1,4 @@
-<!-- src/routes/session/[id]/+page.svelte -->
-
+<!-- src/routes/session/[id]/settings/+page.svelte -->
 <script lang="ts">
 	// --- SvelteKitのコア機能とストアをインポート ---
 	import { page } from '$app/stores';
@@ -12,20 +11,26 @@
 
 	// --- 外部サービスと型定義、ヘルパー関数をインポート ---
 	import { callGeminiApi } from '$lib/geminiService';
-	import { processMessageIntoPages } from '$lib/utils/messageProcessor';
-	import type { Trigger, Log, FeatureSettings, AppSettings } from '$lib/types';
+	import type {
+		Trigger,
+		Log,
+		FeatureSettings,
+		AppSettings,
+		DiceRoll,
+		CustomStatus
+	} from '$lib/types';
 	import { generateUUID } from '$lib/utils';
 	import {
 		initializeAndStoreImageRules,
-		correctImageMarkdownInText,
-		extractImageUrlsFromAiResponse
+		correctImageMarkdownInText
 	} from '$lib/utils/imageUrlCorrector';
 
 	// --- UIコンポーネントをインポート ---
 	import StandardChatView from '$lib/components/StandardChatView.svelte';
 	import GameChatView from '$lib/components/GameChatView.svelte';
 	import ChatLayout from '$lib/components/ChatLayout.svelte';
-	// --- リアクティブなストア定義 (変更なし) ---
+
+	// --- リアクティブなストア定義 ---
 	$: if ($currentSession) {
 		chatSessionStore.init($currentSession);
 	}
@@ -50,38 +55,172 @@
 		}
 	});
 
-	// --- コンポーネントの状態変数 (変更なし) ---
+	// --- コンポーネントの状態変数 ---
 	let userInput = '';
 	let isLoading = false;
 	let lastProcessedSessionId: string | null = null;
 	let lastProcessedLogCount: number = 0;
-	// 役割：本当に必要なタイミングでだけ、ルールの解析を実行する
+
 	$: if ($currentSession) {
 		const currentId = $currentSession.id;
 		const currentLogCount = $currentSession.logs.length;
-
-		// --- 実行条件の判定 ---
-		// 1. 最後に処理したセッションIDと今のIDが違う (＝セッションを切り替えた)
 		const hasSessionChanged = currentId !== lastProcessedSessionId;
-
-		// 2. 最後に処理した時のログ数が0で、今のログ数が0より多い (＝初めての投稿)
 		const isFirstPost = lastProcessedLogCount === 0 && currentLogCount > 0;
 
-		// --- 条件を満たした場合のみ処理を実行 ---
 		if (hasSessionChanged || isFirstPost) {
 			console.log('ルール解析の実行条件を満たしました。処理を実行します。');
-
-			// 必要な初期化処理を実行
 			chatSessionStore.init($currentSession);
 			initializeAndStoreImageRules($currentSession);
-
-			// 「記憶用の変数」を現在の状態に更新し、次回の不要な実行を防ぐ
 			lastProcessedSessionId = currentId;
 			lastProcessedLogCount = currentLogCount;
 		}
 	}
-	// --- ヘルパー関数 (変更なし) ---
+
+	// --- ▼▼▼【ここから追加】プロンプト生成のためのヘルパー関数群 ▼▼▼ ---
+
+	/**
+	 * ダイスロール設定に基づき、ダイスロールを実行し、指示ブロック文字列を生成する関数
+	 * @param diceRolls ダイスロール設定の配列
+	 * @returns [ダイスロールStart]...[ダイスロールEnd] で囲まれた文字列。該当なければ空文字列。
+	 */
+	function generateDiceRollBlock(diceRolls: DiceRoll[] | undefined): string {
+		if (!diceRolls || diceRolls.length === 0) {
+			return '';
+		}
+
+		const instructions: string[] = [];
+		for (const diceRoll of diceRolls) {
+			if (!diceRoll.isEnabled) continue;
+
+			const results: number[] = [];
+			for (let i = 0; i < diceRoll.diceCount; i++) {
+				const result = Math.floor(Math.random() * diceRoll.diceType) + 1;
+				results.push(result);
+			}
+
+			if (results.length > 0) {
+				const formattedString = `｛${diceRoll.instructionText}:${results.join(',')}｝`;
+				instructions.push(formattedString);
+			}
+		}
+
+		if (instructions.length === 0) {
+			return '';
+		}
+
+		return `[ダイスロールStart]\n${instructions.join('\n')}\n[ダイスロールEnd]`;
+	}
+
+	/**
+	 * トリガーを評価し、指示ブロック文字列と更新後のトリガー配列を返す関数
+	 * @param triggers トリガー設定の配列
+	 * @param customStatuses カスタムステータスの配列
+	 * @returns 指示ブロックと更新後のトリガーデータを含むオブジェクト
+	 */
+	function evaluateTriggers(
+		triggers: Trigger[] | undefined,
+		customStatuses: CustomStatus[] | undefined
+	): { triggerBlock: string; updatedTriggers: Trigger[] | undefined } {
+		if (!triggers || triggers.length === 0 || !customStatuses) {
+			return { triggerBlock: '', updatedTriggers: triggers };
+		}
+
+		const instructions: string[] = [];
+		const evaluatedTriggers: Trigger[] = [];
+
+		for (const trigger of triggers) {
+			const hasBeenExecuted = trigger.hasBeenExecuted ?? false;
+			const lastEvaluationResult = trigger.lastEvaluationResult ?? false;
+
+			let isConditionMet = false;
+			if (trigger.conditions && trigger.conditions.length > 0) {
+				const conditionResults = trigger.conditions.map((condition) => {
+					const status = customStatuses.find((s) => s.id === condition.statusId);
+					if (!status) return false;
+					const currentValue = parseFloat(status.currentValue);
+					if (isNaN(currentValue)) return false;
+
+					switch (condition.operator) {
+						case '>=':
+							return currentValue >= condition.value;
+						case '>':
+							return currentValue > condition.value;
+						case '<=':
+							return currentValue <= condition.value;
+						case '<':
+							return currentValue < condition.value;
+						case '==':
+							return currentValue === condition.value;
+						default:
+							return false;
+					}
+				});
+
+				isConditionMet = conditionResults.reduce((acc, current, index) => {
+					if (index === 0) return current;
+					const conjunction = trigger.conjunctions[index - 1];
+					return conjunction === 'AND' ? acc && current : acc || current;
+				}, conditionResults[0] ?? false);
+			}
+
+			let shouldExecute = false;
+			switch (trigger.executionType) {
+				case 'persistent':
+					shouldExecute = isConditionMet;
+					break;
+				case 'once':
+					shouldExecute = isConditionMet && !hasBeenExecuted;
+					break;
+				case 'on-threshold-cross':
+					shouldExecute = isConditionMet && !lastEvaluationResult;
+					break;
+			}
+
+			if (shouldExecute) {
+				instructions.push(trigger.responseText);
+			}
+
+			evaluatedTriggers.push({
+				...trigger,
+				hasBeenExecuted: hasBeenExecuted || (shouldExecute && trigger.executionType === 'once'),
+				lastEvaluationResult: isConditionMet
+			});
+		}
+
+		const triggerBlock =
+			instructions.length > 0 ? `[トリガーStart]\n${instructions.join('\n')}\n[トリガーEnd]` : '';
+
+		return { triggerBlock, updatedTriggers: evaluatedTriggers };
+	}
+
+	/**
+	 * ユーザー入力と各種指示ブロックから最終的なプロンプトを組み立てる関数
+	 * @param currentUserInput ユーザーの入力テキスト
+	 * @param blocks 指示ブロック文字列の配列
+	 * @returns AIに送信する最終的なプロンプト文字列
+	 */
+	function buildFinalUserInput(currentUserInput: string, blocks: string[]): string {
+		const validBlocks = blocks.filter((block) => block); // 空文字列を除去
+		const finalParts: string[] = [];
+
+		// 内部指示ブロックが存在すれば、配列に追加
+		if (validBlocks.length > 0) {
+			const internalInstructions = `[内部指示Start]\n${validBlocks.join('\n')}\n[内部指示End]`;
+			finalParts.push(internalInstructions);
+		}
+
+		// ユーザー文章ブロックを常に配列に追加
+		const userMessageBlock = `[ユーザー文章Start]\n${currentUserInput}\n[ユーザー文章End]`;
+		finalParts.push(userMessageBlock);
+
+		// 配列の要素を改行で結合して最終的な文字列を返す
+		return finalParts.join('\n');
+	}
+
+	// --- ▲▲▲【ここまで追加】プロンプト生成のためのヘルパー関数群 ▲▲▲ ---
+
 	function buildConversationHistory(allLogs: Log[], targetLogId: string): Log[] {
+		// (この関数に変更はありません)
 		const history: Log[] = [];
 		const logMap = new Map(allLogs.map((log) => [log.id, log]));
 		const targetLog = logMap.get(targetLogId);
@@ -97,16 +236,16 @@
 		return history;
 	}
 
-	// --- ▼▼▼【変更】API呼び出し関数をトリガー更新対応に修正 ▼▼▼ ---
 	async function getAiResponseAndUpdate(
 		contextLogs: Log[],
 		finalUserInput: string,
-		userMessageId: string, // 親となるユーザーメッセージのID
+		userMessageId: string,
 		isRetry: boolean,
 		sessionId: string,
 		featureSettings: FeatureSettings,
-		triggersToUpdateAfterSuccess: Trigger[] | undefined // 【追加】
+		triggersToUpdateAfterSuccess: Trigger[] | undefined
 	) {
+		// (この関数に変更はありません)
 		isLoading = true;
 		try {
 			let currentAppSettings = get(appSettings);
@@ -115,11 +254,10 @@
 			)?.key;
 			let currentModel = currentAppSettings.model;
 
-			// APIキー切り替えに対応するためループ処理を追加
 			while (true) {
 				if (!currentActiveApiKey || !currentModel) {
 					alert('APIキーまたはモデルが設定されていません。');
-					break; // ループを抜ける
+					break;
 				}
 
 				const conversationContext = {
@@ -135,7 +273,6 @@
 					finalUserInput
 				);
 
-				// キー切り替えが必要なシグナルをチェック
 				if (result.metadata?.requiresApiKeyLoop) {
 					const currentApiKeyInfo = currentAppSettings.apiKeys.find(
 						(k) => k.id === currentAppSettings.activeApiKeyId
@@ -147,7 +284,6 @@
 							`APIキー「${currentApiKeyName}」がレート制限(429)に達しました。次のAPIキーに切り替えて再試行しますか？`
 						)
 					) {
-						// OK: 次のAPIキーを探して設定を更新し、ループを継続
 						const currentIndex = currentAppSettings.apiKeys.findIndex(
 							(k) => k.id === currentAppSettings.activeApiKeyId
 						);
@@ -161,29 +297,24 @@
 
 						alert(`APIキーを「${nextApiKey.name}」に切り替えました。再試行します。`);
 
-						// 次のループのために変数を更新
 						currentAppSettings = get(appSettings);
 						currentActiveApiKey = nextApiKey.key;
-						continue; // ループの先頭に戻って再試行
+						continue;
 					} else {
-						// キャンセル: エラーメッセージを表示して処理を中断
 						const errorMessage = result.metadata.error?.error?.message || 'レート制限エラーです。';
 						alert(`処理を中断しました: ${errorMessage}`);
-						break; // ループを抜ける
+						break;
 					}
 				} else {
-					// AIの応答からURLを抽出してコンソールにログ出力する
 					let responseText = result.responseText;
-					const settings = get(appSettings); // 最新の設定を取得
+					const settings = get(appSettings);
 
-					// 「URLの自動補正」がONの場合のみ、補正処理を実行する
 					if (settings.assist.autoCorrectUrl) {
 						console.log('[AI Response] URL auto-correction is enabled. Applying correction...');
 						responseText = correctImageMarkdownInText(responseText);
 					} else {
 						console.log('[AI Response] URL auto-correction is disabled.');
 					}
-					// 通常の成功時: ストアを更新してループを抜ける
 					sessions.update((allSessions) => {
 						const sessionToUpdate = allSessions.find((s) => s.id === sessionId);
 						if (sessionToUpdate) {
@@ -210,17 +341,15 @@
 								parentUserMessage.activeChildId = newAiResponse.id;
 							}
 
-							// ▼▼▼【追加】トリガーの状態を更新するロジック ▼▼▼
 							if (triggersToUpdateAfterSuccess) {
 								sessionToUpdate.triggers = triggersToUpdateAfterSuccess;
 							}
-							// ▲▲▲【追加】ここまで ▲▲▲
 
 							sessionToUpdate.lastUpdatedAt = new Date().toISOString();
 						}
 						return allSessions;
 					});
-					break; // 成功したのでループを抜ける
+					break;
 				}
 			}
 		} catch (error) {
@@ -230,9 +359,8 @@
 			isLoading = false;
 		}
 	}
-	// --- ▲▲▲ 変更ここまで ▲▲▲ ---
 
-	// --- ▼▼▼【変更】メッセージ送信関数にトリガー処理を追加 ▼▼▼ ---
+	// --- ▼▼▼【ここから修正】handleSubmit 関数 ▼▼▼ ---
 	async function handleSubmit() {
 		if (isLoading || !userInput.trim() || !$currentSession) return;
 		if (!$activeApiKey || !$model) {
@@ -241,84 +369,26 @@
 		}
 
 		const currentUserInput = userInput;
-		userInput = '';
+		userInput = ''; // 入力欄をクリア
 
-		// --- ▼▼▼【追加】トリガー評価ロジック ▼▼▼ ---
-		let finalUserInput = currentUserInput;
-		let triggersToUpdateAfterSuccess: Trigger[] | undefined = undefined;
+		// 1. 各指示ブロックをヘルパー関数で生成
+		const diceBlock = generateDiceRollBlock($currentSession.diceRolls);
+		const { triggerBlock, updatedTriggers } = evaluateTriggers(
+			$currentSession.triggers,
+			$currentSession.customStatuses
+		);
 
-		if ($currentSession.triggers && $currentSession.customStatuses) {
-			const statuses = $currentSession.customStatuses;
-			const evaluatedTriggers: Trigger[] = [];
+		// 2. 最終的なプロンプトを組み立てる
+		const finalUserInput = buildFinalUserInput(currentUserInput, [diceBlock, triggerBlock]);
 
-			for (const trigger of $currentSession.triggers) {
-				const hasBeenExecuted = trigger.hasBeenExecuted ?? false;
-				const lastEvaluationResult = trigger.lastEvaluationResult ?? false;
-
-				let isConditionMet = false;
-				if (trigger.conditions && trigger.conditions.length > 0) {
-					const conditionResults = trigger.conditions.map((condition) => {
-						const status = statuses.find((s) => s.id === condition.statusId);
-						if (!status) return false;
-						const currentValue = parseFloat(status.currentValue);
-						if (isNaN(currentValue)) return false;
-
-						switch (condition.operator) {
-							case '>=':
-								return currentValue >= condition.value;
-							case '>':
-								return currentValue > condition.value;
-							case '<=':
-								return currentValue <= condition.value;
-							case '<':
-								return currentValue < condition.value;
-							case '==':
-								return currentValue === condition.value;
-							default:
-								return false;
-						}
-					});
-
-					isConditionMet = conditionResults.reduce((acc, current, index) => {
-						if (index === 0) return current;
-						const conjunction = trigger.conjunctions[index - 1];
-						return conjunction === 'AND' ? acc && current : acc || current;
-					}, conditionResults[0] ?? false);
-				}
-
-				let shouldExecute = false;
-				switch (trigger.executionType) {
-					case 'persistent':
-						shouldExecute = isConditionMet;
-						break;
-					case 'once':
-						shouldExecute = isConditionMet && !hasBeenExecuted;
-						break;
-					case 'on-threshold-cross':
-						shouldExecute = isConditionMet && !lastEvaluationResult;
-						break;
-				}
-
-				if (shouldExecute) {
-					finalUserInput = `[内部指示Start]\n${trigger.responseText}\n[内部指示End]\nユーザー文章: ${currentUserInput}`;
-				}
-
-				evaluatedTriggers.push({
-					...trigger,
-					hasBeenExecuted: hasBeenExecuted || (shouldExecute && trigger.executionType === 'once'),
-					lastEvaluationResult: isConditionMet
-				});
-			}
-			triggersToUpdateAfterSuccess = evaluatedTriggers;
-		}
-		// --- ▲▲▲【追加】トリガー評価ロジックここまで ▲▲▲ ---
-
+		// --- ユーザーメッセージのログ保存処理 (変更なし) ---
 		const now = new Date().toISOString();
 		const allLogs = $currentSession.logs;
 		const logMap = new Map(allLogs.map((log) => [log.id, log]));
 
 		let lastLog: Log | null = null;
 		if (allLogs.length > 0) {
+			// (アクティブな会話の末尾を見つけるロジック - 変更なし)
 			let currentLog = allLogs.find((log) => log.parentId === null);
 			if (currentLog) {
 				lastLog = currentLog;
@@ -363,20 +433,21 @@
 			return allSessions;
 		});
 
+		// 3. AIに応答を要求
 		const updatedLogs = get(sessions).find((s) => s.id === $currentSession.id)!.logs;
 		const history = buildConversationHistory(updatedLogs, newUserMessage.id);
 		await getAiResponseAndUpdate(
 			history,
-			finalUserInput, // currentUserInputから変更
+			finalUserInput,
 			newUserMessage.id,
 			false,
 			$currentSession.id,
 			$currentSession.featureSettings,
-			triggersToUpdateAfterSuccess // 【追加】
+			updatedTriggers // 更新後のトリガーデータを渡す
 		);
 	}
 
-	// --- ▼▼▼【変更】リトライ関数にトリガー処理を追加 ▼▼▼ ---
+	// --- ▼▼▼【ここから修正】handleRetry 関数 ▼▼▼ ---
 	async function handleRetry(userMessageId: string) {
 		if (isLoading || !$currentSession) return;
 		if (!$activeApiKey || !$model) {
@@ -386,93 +457,33 @@
 		const targetUserMessage = $currentSession.logs.find((log) => log.id === userMessageId);
 		if (!targetUserMessage) return;
 
-		// --- ▼▼▼【追加】リトライ時もトリガーを再評価 ▼▼▼ ---
 		const userInputForRetry = targetUserMessage.text;
-		let finalUserInput = userInputForRetry;
-		let triggersToUpdateAfterSuccess: Trigger[] | undefined = undefined;
 
-		if ($currentSession.triggers && $currentSession.customStatuses) {
-			const statuses = $currentSession.customStatuses;
-			const evaluatedTriggers: Trigger[] = [];
+		// 1. 各指示ブロックをヘルパー関数で生成
+		const diceBlock = generateDiceRollBlock($currentSession.diceRolls);
+		const { triggerBlock, updatedTriggers } = evaluateTriggers(
+			$currentSession.triggers,
+			$currentSession.customStatuses
+		);
 
-			for (const trigger of $currentSession.triggers) {
-				const hasBeenExecuted = trigger.hasBeenExecuted ?? false;
-				const lastEvaluationResult = trigger.lastEvaluationResult ?? false;
+		// 2. 最終的なプロンプトを組み立てる
+		const finalUserInput = buildFinalUserInput(userInputForRetry, [diceBlock, triggerBlock]);
 
-				let isConditionMet = false;
-				if (trigger.conditions && trigger.conditions.length > 0) {
-					const conditionResults = trigger.conditions.map((condition) => {
-						const status = statuses.find((s) => s.id === condition.statusId);
-						if (!status) return false;
-						const currentValue = parseFloat(status.currentValue);
-						if (isNaN(currentValue)) return false;
-
-						switch (condition.operator) {
-							case '>=':
-								return currentValue >= condition.value;
-							case '>':
-								return currentValue > condition.value;
-							case '<=':
-								return currentValue <= condition.value;
-							case '<':
-								return currentValue < condition.value;
-							case '==':
-								return currentValue === condition.value;
-							default:
-								return false;
-						}
-					});
-
-					isConditionMet = conditionResults.reduce((acc, current, index) => {
-						if (index === 0) return current;
-						const conjunction = trigger.conjunctions[index - 1];
-						return conjunction === 'AND' ? acc && current : acc || current;
-					}, conditionResults[0] ?? false);
-				}
-
-				let shouldExecute = false;
-				switch (trigger.executionType) {
-					case 'persistent':
-						shouldExecute = isConditionMet;
-						break;
-					case 'once':
-						shouldExecute = isConditionMet && !hasBeenExecuted;
-						break;
-					case 'on-threshold-cross':
-						shouldExecute = isConditionMet && !lastEvaluationResult;
-						break;
-				}
-
-				if (shouldExecute) {
-					finalUserInput = `[内部指示Start]\n${trigger.responseText}\n[内部指示End]\nユーザー文章: ${userInputForRetry}`;
-				}
-
-				evaluatedTriggers.push({
-					...trigger,
-					hasBeenExecuted: hasBeenExecuted || (shouldExecute && trigger.executionType === 'once'),
-					lastEvaluationResult: isConditionMet
-				});
-			}
-			triggersToUpdateAfterSuccess = evaluatedTriggers;
-		}
-		// --- ▲▲▲【追加】リトライ時のトリガー評価ここまで ▲▲▲ ---
-
+		// 3. AIに応答を要求
 		const history = buildConversationHistory($currentSession.logs, userMessageId);
 		await getAiResponseAndUpdate(
 			history,
-			finalUserInput, // userInputForRetryから変更
+			finalUserInput,
 			userMessageId,
 			true,
 			$currentSession.id,
 			$currentSession.featureSettings,
-			triggersToUpdateAfterSuccess // 【追加】
+			updatedTriggers // 更新後のトリガーデータを渡す
 		);
 	}
 
-	/**
-	 * ▼▼▼【追加】タイトル更新イベントを処理する関数 ▼▼▼
-	 */
 	function handleUpdateTitle(event: CustomEvent<{ title: string }>): void {
+		// (この関数に変更はありません)
 		const newTitle = event.detail.title;
 		if (!$currentSession || !newTitle) return;
 
@@ -488,7 +499,6 @@
 </script>
 
 {#if $currentSession}
-	<!-- ▼▼▼【変更】on:updateTitleイベントリスナーを追加 ▼▼▼ -->
 	<ChatLayout
 		bind:userInput
 		{isLoading}

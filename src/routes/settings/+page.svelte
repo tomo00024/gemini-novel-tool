@@ -68,7 +68,6 @@
 </script>
 
 <div class="flex h-screen flex-col p-4">
-	<!-- ▼▼▼【変更なし】ヘッダー部分は変更ありません ▼▼▼ -->
 	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-xl font-bold">アプリ設定</h1>
 		<a
@@ -78,10 +77,8 @@
 			{$returnPath.label}
 		</a>
 	</div>
-	<!-- ▲▲▲【変更なし】ヘッダー部分は変更ありません ▲▲▲ -->
 
 	<div class="space-y-6 overflow-y-auto pb-10">
-		<!-- ▼▼▼【変更なし】APIキー設定, AIモデル選択, プロンプト設定部分は変更ありません ▼▼▼ -->
 		<!-- APIキー設定 -->
 		<div class="space-y-3">
 			<h2 class="block text-lg font-medium">API Key</h2>
@@ -437,6 +434,5 @@
 				</button>
 			</div>
 		</div>
-		<!-- ▲▲▲【変更なし】ここまで ▲▲▲ -->
 	</div>
 </div>

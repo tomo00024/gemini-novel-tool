@@ -63,7 +63,18 @@ export interface Trigger {
 	hasBeenExecuted?: boolean; // 'once' タイプで使用: 既に実行されたか
 	lastEvaluationResult?: boolean; // 'on-threshold-cross' で使用: 前回の評価結果
 }
-
+/**
+ * ▼▼▼【変更箇所】▼▼▼
+ * ダイスロール機能の設定
+ * 複数の設定を管理できるようidを追加
+ */
+export interface DiceRoll {
+	id: string; // ダイスロール設定の一意なID
+	isEnabled: boolean; // 機能が有効か
+	instructionText: string; // 指示文章
+	diceCount: number; // ダイスの数
+	diceType: number; // ダイスの種類 (例: 6, 100)
+}
 // ===================================================================
 // 2. すべての機能別データを格納する、拡張可能なコンテナを定義する
 // ===================================================================
@@ -198,6 +209,7 @@ export interface Session {
 	gameViewSettings?: GameViewSettings;
 	customStatuses?: CustomStatus[];
 	triggers?: Trigger[];
+	diceRolls?: DiceRoll[];
 	/**
 	 * @description 会話ログの構造をLogのフラットな配列に変更
 	 */

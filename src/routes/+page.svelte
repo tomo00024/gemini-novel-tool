@@ -1,3 +1,5 @@
+<!-- src/routes/+page.svelte -->
+
 <script lang="ts">
 	import { sessions } from '$lib/stores';
 	import { goto } from '$app/navigation';
@@ -60,7 +62,7 @@
 					</a>
 					<button
 						on:click|stopPropagation={(e) => {
-							e.preventDefault(); // aタグの遷移を防ぐ
+							e.preventDefault();
 							handleDeleteSession(session.id);
 						}}
 						class="ml-4 flex-shrink-0 rounded bg-red-200 px-3 py-2 text-sm font-semibold text-red-800 hover:bg-red-300"

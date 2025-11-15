@@ -347,7 +347,7 @@ function _parseRuleFromText(prompt: string): ImageCorrectionRule | null {
 	const extensionMatches = prompt.match(/\.\b(avif|png|jpg|jpeg|webp|gif)\b/g);
 	const extensions = extensionMatches ? [...new Set(extensionMatches)] : ['.avif', '.png'];
 
-	const lines = prompt.split('\n');
+	const lines = prompt.split(/[\n,]/);
 	const pathKeywords: string[] = [];
 
 	for (const line of lines) {

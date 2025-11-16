@@ -1,3 +1,4 @@
-//src/hooks.server.ts
+// src/hooks.server.ts
+import { handle } from './auth';
 
-export { handle } from './auth';
+export { handle };

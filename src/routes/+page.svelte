@@ -7,10 +7,12 @@
 	import { createNewSession } from '$lib/utils';
 	import { onDestroy } from 'svelte';
 	import { tick } from 'svelte';
-
+	import PublishModal from '$lib/components/PublishModal.svelte';
 	// --- UIの状態管理用変数 ---
 	let isUploadMode = false;
 	let isModalOpen = false;
+	let isPublishModalOpen = false; // ★ 新しいモーダルの表示状態
+	let isSubmitting = false; // ★ アップロード処理中かどうかの状態
 	let isDataLinkModalOpen = false;
 	let sessionToPublishId: string | null = null;
 	let publishScope: 'template' | 'full' | null = null;
@@ -85,19 +87,60 @@
 	}
 
 	/**
-	 * 公開を確定する関数（仮実装）
+	 * 公開を確定する関数
 	 */
-	function handleConfirmPublish(): void {
+	function handleSelectPublishScope(): void {
+		if (!sessionToPublishId || !publishScope) return;
+		closeModal(); // 範囲選択モーダルを閉じる
+		isPublishModalOpen = true; // ★ 新しい情報入力モーダルを開く
+	}
+
+	/**
+	 * ★ 最終的なアップロードを実行する新しい関数
+	 */
+	async function handleFinalPublish(event: CustomEvent) {
 		if (!sessionToPublishId || !publishScope) return;
 
-		const scopeText = publishScope === 'template' ? 'テンプレートのみ' : 'すべての会話履歴';
-		alert(
-			`セッションID: ${sessionToPublishId}\n公開範囲: ${scopeText}\n\n上記の内容で公開します。(機能は未実装です)`
-		);
+		// localStorageから対象のセッションデータを取得
+		const sessionData = $sessions.find((s) => s.id === sessionToPublishId);
+		if (!sessionData) {
+			alert('エラー: 対象のセッションが見つかりませんでした。');
+			return;
+		}
 
-		closeModal();
-		isUploadMode = false;
+		isSubmitting = true;
+
+		try {
+			const response = await fetch('/upload', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					// PublishModalから受け取ったメタデータ
+					...event.detail,
+					// こちらで管理している情報
+					sessionId: sessionToPublishId,
+					publishScope: publishScope,
+					sessionData: sessionData // ★ セッションデータ本体をサーバーに送る
+				})
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				throw new Error(error.message || 'アップロードに失敗しました。');
+			}
+
+			const result = await response.json();
+			alert(`公開が完了しました！\n公開URL: ${result.url}`);
+			isPublishModalOpen = false;
+			isUploadMode = false;
+		} catch (error: any) {
+			console.error(error);
+			alert(`エラー: ${error.message}`);
+		} finally {
+			isSubmitting = false;
+		}
 	}
+
 	/**
 	 * データ連携モーダルを開く関数
 	 */
@@ -290,16 +333,19 @@
 				>
 					キャンセル
 				</button>
-				<button
-					on:click={handleConfirmPublish}
-					disabled={!publishScope}
-					class="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-				>
+				<button on:click={handleSelectPublishScope} disabled={!publishScope} class="...">
 					選択して公開
 				</button>
 			</div>
 		</div>
 	</div>
+{/if}
+{#if isPublishModalOpen && sessionToPublishId && publishScope}
+	<PublishModal
+		busy={isSubmitting}
+		on:submit={handleFinalPublish}
+		on:close={() => (isPublishModalOpen = false)}
+	/>
 {/if}
 <!-- ========================================================== -->
 <!-- ここからがデータ連携モーダルのコードです        -->

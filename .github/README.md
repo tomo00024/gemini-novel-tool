@@ -65,3 +65,70 @@ You can preview the production build with `npm run preview`.
    → ルールCに基づき、古い一枚絵は新しい一枚絵に**上書き（差し替え）**されます。
    もし、新しい応答メッセージ内に画像指定コマンドが一つも存在しない場合
    → 古い一枚絵は表示されたままとなります。
+
+機能
+
+アップロード、自身のセッション履歴をアップロードできる。セッションすべてのアップロードもしくは世界観のみでセッション設定初回のユーザーとAIの応答。
+
+ダウンロード、アップロードされているセッションを読み込む。他のセッションを参考にしたり、世界観のみでセッション設定と初回のユーザーとAIの応答から自分で物語の続きを作成できる。
+
+アプリ設定
+429エラーのときに複数APIがあればループ
+
+指数関数バックオフ機能
+
+AI応答のURLを自動修正
+
+トークン数が多くなったら要約
+
+生成パラメーター
+
+Googleアカウントと連携
+
+自身のGoogleDriveと連携して自動保存
+
+セッション設定
+セッション設定のJSON化、セッション設定をコピーできるようにする。難読化も可。
+
+ダイスロール、指示文とダイス数とダイス目を指定してランダムな数をユーザーの送信とともに常時送る。
+
+ステータス設定、{{ステータス:数値}}このような文字をAIの応答にあれば数値を加算、上書きできる。AIが意図しない数を出力したときに上限下限も設定可。（ユーザープロンプトにて出力指示）
+
+トリガー設定、ステータス情報をもとに閾値を設定してユーザーの送信とともに指示文を追加して送る。
+
+チャット画面
+チャットバブル機能、再送信、編集、削除、コピー、送受信のメタデータ機能
+
+サーバーテーブル
+CREATE TABLE files (
+-- 基本情報
+id VARCHAR(255) PRIMARY KEY, -- ファイルの一意なID (UUIDなど)
+title VARCHAR(255) NOT NULL, -- 表示用のファイルタイトル
+description TEXT, -- ファイルの内容に関する説明文
+imageUrl TEXT, -- 表示用の画像URL
+
+    -- ファイル実体に関する情報 (Vercel Blob)
+    fileName VARCHAR(255) NOT NULL, -- 元のファイル名
+    blobUrl TEXT NOT NULL, -- Vercel Blob上のファイルの公開URL
+    pathname TEXT NOT NULL, -- Vercel Blob上のパス名 (削除時に使用)
+    contentType VARCHAR(255), -- application/json など
+    size INTEGER NOT NULL, -- ファイルサイズ (バイト)
+    checksum VARCHAR(255), -- ファイルのハッシュ値 (SHA-256など)
+
+    -- タイムスタンプとバージョン
+    uploadedAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- アップロード日時
+    updatedAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    expiresAt TIMESTAMP WITH TIME ZONE, -- ファイルの有効期限
+
+    -- ユーザーと権限
+    uploaderId VARCHAR(255) NOT NULL, -- 【重要】 アップロードしたユーザーのID
+    visibility VARCHAR(50) DEFAULT 'public', -- public (公開), private (非公開)
+
+    -- 集計・メタ情報
+    downloadCount INTEGER DEFAULT 0, -- ダウンロード回数
+    starCount INTEGER DEFAULT 0, -- 「お気に入り」や「スター」が付けられた回数
+    commentCount INTEGER DEFAULT 0, -- ファイルに付けられたコメントの数
+    tags TEXT[], -- 検索用のタグ配列 (例: {"api", "v2"})
+    version INTEGER DEFAULT 1 -- バージョン番号 (デフォルト: 1)
+
+);

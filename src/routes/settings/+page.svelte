@@ -8,11 +8,7 @@
 	import { availableModels } from '$lib/utils';
 	import type { ApiKey } from '$lib/types';
 	import { generateUUID } from '$lib/utils';
-
-	// --- UIデモ用の仮の状態変数 ---
-	// この値を true に変えると「ログイン後」、false にすると「ログイン前」の表示になります。
-	let isLoggedIn = false;
-	let userEmail = 'user@example.com';
+	import { signIn, signOut } from '@auth/sveltekit/client';
 
 	const returnPath = derived(page, ($page) => {
 		const from = $page.url.searchParams.get('from');
@@ -365,10 +361,16 @@
 		<!-- アカウント連携 -->
 		<div class="space-y-3">
 			<h2 class="block text-lg font-medium">アカウント連携</h2>
-			{#if isLoggedIn}
+			<!-- $page.data.sessionが存在するかどうかでログイン状態を判断 -->
+			{#if $page.data.session}
 				<div class="space-y-2 text-sm">
-					<p>✓ <span class="font-medium">{userEmail}</span> としてログイン中</p>
+					<!-- セッション情報からEmailを表示 -->
+					<p>
+						✓ <span class="font-medium">{$page.data.session.user?.email}</span> としてログイン中
+					</p>
+					<!-- signOut関数を呼び出す -->
 					<button
+						on:click={() => signOut()}
 						class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
 					>
 						ログアウト
@@ -387,7 +389,9 @@
 				</div>
 			{:else}
 				<div class="space-y-2">
+					<!-- signIn('google')関数を呼び出す -->
 					<button
+						on:click={() => signIn('google')}
 						class="rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600"
 					>
 						Googleアカウントでログイン
@@ -400,7 +404,7 @@
 			{/if}
 		</div>
 
-		<!-- データ管理 -->
+		<!-- ▼▼▼データ管理 (ログイン状態に応じてUIを制御) ▼▼▼ -->
 		<div class="space-y-3">
 			<h2 class="block text-lg font-medium">データ管理</h2>
 
@@ -412,14 +416,14 @@
 						id="drive-sync-enabled"
 						type="checkbox"
 						class="h-4 w-4 rounded"
-						disabled={!isLoggedIn}
+						disabled={!$page.data.session}
 					/>
-					<label for="drive-sync-enabled" class="text-sm" class:text-gray-400={!isLoggedIn}>
+					<label for="drive-sync-enabled" class="text-sm" class:text-gray-400={!$page.data.session}>
 						Google Driveへの自動バックアップを有効にする
 					</label>
 				</div>
 
-				{#if !isLoggedIn}
+				{#if !$page.data.session}
 					<p class="pl-6 text-sm text-gray-500">
 						この機能を利用するには、まずGoogleアカウントでログインしてください。
 					</p>

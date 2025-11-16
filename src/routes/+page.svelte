@@ -8,8 +8,6 @@
 	import { onDestroy } from 'svelte';
 	import { tick } from 'svelte';
 	import PublishModal from '$lib/components/PublishModal.svelte';
-	import { signIn, signOut } from '../auth';
-	export let data;
 	// --- UIの状態管理用変数 ---
 	let isUploadMode = false;
 	let isModalOpen = false;
@@ -20,7 +18,23 @@
 	let publishScope: 'template' | 'full' | null = null;
 	let modalElement: HTMLDivElement;
 	let dataLinkModalElement: HTMLDivElement;
+	import { onMount } from 'svelte'; // ★ onMount をインポート
 
+	export let data; // ★ +layout.server.ts からデータを受け取る
+
+	// ★ この onMount ブロックを丸ごと追加してください
+	onMount(() => {
+		console.log('--- ページ読み込み時のセッション情報 ---');
+		if (data.session) {
+			console.log('✅ ログインしています。');
+			console.log('セッション内容:', data.session);
+			// 例: ユーザーIDの確認
+			console.log('ユーザーID:', data.session.user?.id);
+		} else {
+			console.log('❌ ログインしていません。');
+		}
+		console.log('------------------------------------');
+	});
 	// --- キーボードイベントハンドラ ---
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
@@ -180,51 +194,33 @@
 	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-xl font-bold text-gray-700">履歴画面</h1>
 		<div class="flex items-center gap-4">
-			{#if data.session?.user}
-				<!-- ログイン中の表示 -->
-				{#if isUploadMode}
-					<button
-						on:click={() => (isUploadMode = false)}
-						class="rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-					>
-						完了
-					</button>
-				{:else}
-					<button
-						on:click={openDataLinkModal}
-						class="rounded bg-gray-500 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-600"
-					>
-						公開サーバー
-					</button>
-				{/if}
-				<a
-					href="{base}/settings"
-					class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-					>アプリ設定</a
-				>
+			{#if isUploadMode}
+				<!-- アップロードモード中は「完了」ボタンを表示 -->
 				<button
-					on:click={handleNewSession}
-					class="rounded bg-[#133a0e] px-3 py-2 text-sm font-semibold text-white hover:bg-[#0d2c0b]"
-					>新規セッション</button
+					on:click={() => (isUploadMode = false)}
+					class="rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
 				>
-				<!-- サインアウトボタン -->
-				<form action="{base}/auth/signout" method="post">
-					<button
-						class="rounded bg-red-500 px-3 py-2 text-sm font-semibold text-white hover:bg-red-600"
-						>サインアウト</button
-					>
-				</form>
+					完了
+				</button>
 			{:else}
-				<!-- 未ログインの表示 -->
-				<p class="text-sm text-gray-600">機能を試すにはサインインしてください。</p>
-				<!-- サインインボタン -->
-				<form action="{base}/auth/signin/google" method="post">
-					<button
-						class="rounded bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-600"
-						>Googleでサインイン</button
-					>
-				</form>
+				<!-- 通常時は「公開サーバー」ボタンを表示 -->
+				<button
+					on:click={openDataLinkModal}
+					class="rounded bg-gray-500 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-600"
+				>
+					公開サーバー
+				</button>
 			{/if}
+			<a
+				href="{base}/settings"
+				class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+				>アプリ設定</a
+			>
+			<button
+				on:click={handleNewSession}
+				class="rounded bg-[#133a0e] px-3 py-2 text-sm font-semibold text-white hover:bg-[#0d2c0b]"
+				>新規セッション</button
+			>
 		</div>
 	</div>
 

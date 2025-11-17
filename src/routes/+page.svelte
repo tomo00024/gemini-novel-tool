@@ -1,5 +1,4 @@
 <!-- src/routes/+page.svelte -->
-
 <script lang="ts">
 	import { sessions, appSettings } from '$lib/stores';
 	import { goto } from '$app/navigation';
@@ -12,8 +11,8 @@
 	// --- UIの状態管理用変数 ---
 	let isUploadMode = false;
 	let isModalOpen = false;
-	let isPublishModalOpen = false; // ★ 新しいモーダルの表示状態
-	let isSubmitting = false; // ★ アップロード処理中かどうかの状態
+	let isPublishModalOpen = false;
+	let isSubmitting = false;
 	let isDataLinkModalOpen = false;
 	let sessionToPublishId: string | null = null;
 	let publishScope: 'template' | 'full' | null = null;
@@ -28,11 +27,9 @@
 		}
 	}
 
-	// isModalOpenまたはisDataLinkModalOpenの値が変更されるたびに処理
 	$: if (isModalOpen || isDataLinkModalOpen) {
 		window.addEventListener('keydown', handleKeydown);
 		tick().then(() => {
-			// 開いているモーダルにフォーカスを当てる
 			if (isModalOpen) modalElement?.focus();
 			if (isDataLinkModalOpen) dataLinkModalElement?.focus();
 		});
@@ -40,23 +37,16 @@
 		window.removeEventListener('keydown', handleKeydown);
 	}
 
-	// コンポーネントが破棄されるときに、念のためリスナーを削除する
 	onDestroy(() => {
 		window.removeEventListener('keydown', handleKeydown);
 	});
 
-	/**
-	 * 「新しいセッションを開始」ボタンがクリックされたときに実行される関数
-	 */
 	function handleNewSession(): void {
 		const newSession = createNewSession();
 		sessions.update((currentSessions) => [...currentSessions, newSession]);
 		goto(`${base}/session/${newSession.id}`);
 	}
 
-	/**
-	 * 指定されたIDのセッションを削除する関数
-	 */
 	function handleDeleteSession(id: string): void {
 		if (!confirm('このセッションを削除しますか？この操作は取り消せません。')) {
 			return;
@@ -64,51 +54,39 @@
 		sessions.update((currentSessions) => currentSessions.filter((session) => session.id !== id));
 	}
 
-	/**
-	 * アップロードモードのオン/オフを切り替える関数
-	 */
 	function toggleUploadMode(): void {
 		isUploadMode = !isUploadMode;
 	}
 
-	/**
-	 * 公開オプションを選択するモーダルを開く関数
-	 */
 	function openPublishModal(id: string): void {
 		sessionToPublishId = id;
 		publishScope = null;
 		isModalOpen = true;
 	}
 
-	/**
-	 * モーダルを閉じる関数
-	 */
 	function closeModal(): void {
 		isModalOpen = false;
 	}
 
-	/**
-	 * 公開を確定する関数
-	 */
 	function handleSelectPublishScope(): void {
 		if (!sessionToPublishId || !publishScope) return;
-		closeModal(); // 範囲選択モーダルを閉じる
-		isPublishModalOpen = true; // ★ 新しい情報入力モーダルを開く
+		closeModal();
+		isPublishModalOpen = true;
 	}
 
 	/**
-	 * ★ 最終的なアップロードを実行する新しい関数
+	 * 最終的なアップロードを実行する関数
 	 */
 	async function handleFinalPublish(event: CustomEvent) {
 		if (!sessionToPublishId || !publishScope) return;
 
-		// localStorageから対象のセッションデータを取得
 		const sessionData = $sessions.find((s) => s.id === sessionToPublishId);
 		if (!sessionData) {
 			alert('エラー: 対象のセッションが見つかりませんでした。');
 			return;
 		}
-		// ▼▼▼ ここでストアを更新し、次回のために作者名を記憶させる ▼▼▼
+
+		// ▼▼▼ ストアを更新し、次回のために作者名を記憶させる ▼▼▼
 		appSettings.update((settings) => ({
 			...settings,
 			lastUsedAuthorName: event.detail.authorName || ''
@@ -120,12 +98,10 @@
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					// PublishModalから受け取ったメタデータ
 					...event.detail,
-					// こちらで管理している情報
 					sessionId: sessionToPublishId,
 					publishScope: publishScope,
-					sessionData: sessionData // ★ セッションデータ本体をサーバーに送る
+					sessionData: sessionData
 				})
 			});
 
@@ -133,6 +109,17 @@
 				const error = await response.json();
 				throw new Error(error.message || 'アップロードに失敗しました。');
 			}
+
+			// ★ 変更点 1: アップロード成功後、ローカルのセッションタイトルも更新する
+			sessions.update((currentSessions) =>
+				currentSessions.map((session) => {
+					if (session.id === sessionToPublishId) {
+						// 新しいタイトルでセッションオブジェクトを更新
+						return { ...session, title: event.detail.title };
+					}
+					return session;
+				})
+			);
 
 			const result = await response.json();
 			alert(`公開が完了しました！\n公開URL: ${result.url}`);
@@ -146,35 +133,26 @@
 		}
 	}
 
-	/**
-	 * データ連携モーダルを開く関数
-	 */
 	function openDataLinkModal(): void {
 		isDataLinkModalOpen = true;
 	}
 
-	/**
-	 * データ連携モーダルを閉じる関数
-	 */
 	function closeDataLinkModal(): void {
 		isDataLinkModalOpen = false;
 	}
 
-	/**
-	 * モーダルで「アップロード」が選択されたときの処理
-	 */
 	function handleUploadSelect(): void {
 		closeDataLinkModal();
-		isUploadMode = true; // アップロードモードに移行
+		isUploadMode = true;
 	}
 </script>
 
 <div class="flex h-screen flex-col p-4">
+	<!-- ... (変更なし) ... -->
 	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-xl font-bold text-gray-700">履歴画面</h1>
 		<div class="flex items-center gap-4">
 			{#if isUploadMode}
-				<!-- アップロードモード中は「完了」ボタンを表示 -->
 				<button
 					on:click={() => (isUploadMode = false)}
 					class="rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
@@ -182,7 +160,6 @@
 					完了
 				</button>
 			{:else}
-				<!-- 通常時は「公開サーバー」ボタンを表示 -->
 				<button
 					on:click={openDataLinkModal}
 					class="rounded bg-gray-500 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-600"
@@ -253,17 +230,13 @@
 	{/if}
 </div>
 
-<!-- ========================================================== -->
-<!-- ここからがモーダルのコードです (アクセシビリティ対応済み)    -->
-<!-- ========================================================== -->
+<!-- ... (公開範囲選択モーダルの部分は変更なし) ... -->
 {#if isModalOpen}
-	<!-- 背景オーバーレイ -->
 	<!-- svelte-ignore a11y-no-static-element-interactions, a11y-click-events-have-key-events -->
 	<div
 		class="bg-opacity-60 fixed inset-0 z-50 flex items-center justify-center bg-black"
 		on:click={closeModal}
 	>
-		<!-- モーダル本体 -->
 		<div
 			bind:this={modalElement}
 			tabindex="-1"
@@ -276,7 +249,6 @@
 			<h2 id="modal-title" class="text-xl font-bold text-gray-800">セッションの公開</h2>
 			<p class="mt-2 text-sm text-gray-600">どの範囲の情報を公開しますか？</p>
 
-			<!-- 公開範囲の選択肢 -->
 			<div class="mt-4 space-y-4">
 				<label
 					class="flex cursor-pointer items-start rounded-lg border p-4 transition hover:bg-gray-50"
@@ -320,7 +292,6 @@
 				</label>
 			</div>
 
-			<!-- アクションボタン -->
 			<div class="mt-6 flex justify-end gap-3">
 				<button
 					on:click={closeModal}
@@ -328,31 +299,38 @@
 				>
 					キャンセル
 				</button>
-				<button on:click={handleSelectPublishScope} disabled={!publishScope} class="...">
+				<button
+					on:click={handleSelectPublishScope}
+					disabled={!publishScope}
+					class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+				>
 					選択して公開
 				</button>
 			</div>
 		</div>
 	</div>
 {/if}
+
+<!-- ★ 変更点 2: PublishModalに `initialTitle` を渡す -->
 {#if isPublishModalOpen && sessionToPublishId && publishScope}
-	<PublishModal
-		busy={isSubmitting}
-		on:submit={handleFinalPublish}
-		on:close={() => (isPublishModalOpen = false)}
-	/>
+	{@const sessionToPublish = $sessions.find((s) => s.id === sessionToPublishId)}
+	{#if sessionToPublish}
+		<PublishModal
+			busy={isSubmitting}
+			initialTitle={sessionToPublish.title}
+			on:submit={handleFinalPublish}
+			on:close={() => (isPublishModalOpen = false)}
+		/>
+	{/if}
 {/if}
-<!-- ========================================================== -->
-<!-- ここからがデータ連携モーダルのコードです        -->
-<!-- ========================================================== -->
+
+<!-- ... (データ連携モーダルの部分は変更なし) ... -->
 {#if isDataLinkModalOpen}
-	<!-- 背景オーバーレイ -->
 	<!-- svelte-ignore a11y-no-static-element-interactions, a11y-click-events-have-key-events -->
 	<div
 		class="bg-opacity-60 fixed inset-0 z-50 flex items-center justify-center bg-black"
 		on:click={closeDataLinkModal}
 	>
-		<!-- モーダル本体 -->
 		<div
 			bind:this={dataLinkModalElement}
 			tabindex="-1"
@@ -365,9 +343,7 @@
 			<h2 id="data-link-modal-title" class="text-xl font-bold text-gray-800">公開サーバー</h2>
 			<p class="mt-2 text-sm text-gray-600">どの操作を実行しますか？</p>
 
-			<!-- 選択肢 -->
 			<div class="mt-4 space-y-4">
-				<!-- アップロード -->
 				<button
 					on:click={handleUploadSelect}
 					class="flex w-full cursor-pointer items-start rounded-lg border p-4 text-left transition hover:bg-gray-50"
@@ -381,7 +357,6 @@
 					</div>
 				</button>
 
-				<!-- ダウンロード -->
 				<a
 					href="{base}/public"
 					class="flex w-full cursor-pointer items-start rounded-lg border p-4 text-left transition hover:bg-gray-50"
@@ -396,7 +371,6 @@
 				</a>
 			</div>
 
-			<!-- アクションボタン -->
 			<div class="mt-6 flex justify-end gap-3">
 				<button
 					on:click={closeDataLinkModal}

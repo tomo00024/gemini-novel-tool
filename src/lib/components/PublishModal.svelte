@@ -5,21 +5,21 @@
 
 	// busy状態のみを親から受け取るように変更
 	export let busy = false;
+	// ★ 変更点 1: 親から初期タイトルを受け取るプロパティを追加
+	export let initialTitle = '';
 
 	// 親コンポーネントにイベントを伝えるための仕組み
 	const dispatch = createEventDispatcher();
 
-	// フォームの入力値を保持する変数
-	let title = '';
+	// ★ 変更点 2: フォームの入力値を保持する変数の初期値にinitialTitleを設定
+	let title = initialTitle;
 	let description = '';
 	let imageUrl = '';
 	let expiresAt = '';
 	// appSettingsストアから読み込んだ前回の作者名で初期化する
 	let authorName = $appSettings.lastUsedAuthorName || '';
-	// ★ 修正点 2: モーダル本体の要素を束縛する
 	let modalElement: HTMLDivElement;
 
-	// ★ 修正点 2: コンポーネントが表示されたらモーダルにフォーカスを当てる
 	onMount(() => {
 		modalElement?.focus();
 	});
@@ -52,7 +52,6 @@
 	class="bg-opacity-60 fixed inset-0 z-50 flex items-center justify-center bg-black"
 	on:click={handleCancel}
 >
-	<!-- ★ 修正点 2: tabindex="-1" を追加し、bind:thisで要素を束縛 -->
 	<div
 		bind:this={modalElement}
 		tabindex="-1"
@@ -87,7 +86,6 @@
 			</div>
 			<div>
 				<label for="description" class="block text-sm font-medium text-gray-700">説明文</label>
-				<!-- ★ 修正点 3: textareaタグを正しく閉じる -->
 				<textarea
 					id="description"
 					bind:value={description}

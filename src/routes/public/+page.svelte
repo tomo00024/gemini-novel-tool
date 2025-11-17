@@ -1,27 +1,35 @@
 <!-- src/routes/public/+page.svelte -->
 <script lang="ts">
 	import { base } from '$app/paths';
+	// 作成したモーダルコンポーネントをインポート
+	import FileDetailModal from '$lib/components/FileDetailModal.svelte';
 
-	/**
-	 * +page.server.ts の load 関数から返されたデータは、
-	 * この `data` プロパティを通じて自動的に受け取ることができます。
-	 */
 	export let data;
 
-	function handleDownload(fileId: string) {
-		alert(`ID: ${fileId} のファイルをダウンロードします。(機能は未実装です)`);
+	// モーダル表示のための状態変数
+	let selectedFile: any = null;
+	let isModalOpen = false;
+
+	// カードがクリックされたときにモーダルを開く関数
+	function openModal(file: any) {
+		selectedFile = file;
+		isModalOpen = true;
+	}
+
+	// モーダルを閉じる関数
+	function closeModal() {
+		isModalOpen = false;
+		selectedFile = null;
 	}
 
 	/**
 	 * Markdown形式の画像リンクからURLを抽出する関数。
-	 * もしMarkdown形式でなければ、元の文字列をそのまま返す。
 	 * @param urlString - URLを含む可能性のある文字列
 	 */
 	function extractImageUrl(urlString: string): string {
 		if (typeof urlString !== 'string') {
 			return '';
 		}
-		// 正規表現を使って ![alt text](URL) の形式から URL 部分を抜き出す
 		const match = urlString.match(/!\[.*?\]\((.*?)\)/);
 		return match ? match[1] : urlString;
 	}
@@ -51,16 +59,18 @@
 		/>
 	</div>
 
-	<!-- ★ ここからが大きな変更点 -->
 	<div class="space-y-4">
-		<!-- data.files にデータが1件もない場合の表示を追加 -->
 		{#if data.files.length === 0}
 			<div class="py-16 text-center text-gray-500">まだ公開されているセッションがありません。</div>
 		{:else}
-			<!-- ループの対象を mockFiles から `data.files` に変更 -->
 			{#each data.files as file (file.id)}
-				<div class="rounded-lg border bg-white p-4 transition-shadow hover:shadow-md">
-					<!-- ... 以下のHTML構造は変更ありません ... -->
+				<!-- ★ 変更点: カード全体をクリック可能にし、モーダルを開くようにする -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<div
+					class="cursor-pointer rounded-lg border bg-white p-4 transition-shadow hover:shadow-md"
+					on:click={() => openModal(file)}
+				>
 					<div class="flex flex-row gap-4">
 						{#if file.imageUrl}
 							<div class="flex-shrink-0">
@@ -89,6 +99,7 @@
 
 							<p class="mt-2 flex-grow text-sm text-gray-600">{file.description}</p>
 
+							<!-- ★ 変更点: メタ情報とボタンのレイアウトを調整 -->
 							<div class="mt-3 flex items-center justify-between">
 								<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
 									<span>👤 {file.authorName}</span>
@@ -96,12 +107,7 @@
 									<span>↓ {file.downloadCount}</span>
 									<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
 								</div>
-								<button
-									on:click={() => handleDownload(file.id)}
-									class="ml-2 flex-shrink-0 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-								>
-									ダウンロード
-								</button>
+								<!-- ★ 変更点: カード内のダウンロードボタンを削除 -->
 							</div>
 						</div>
 					</div>
@@ -110,3 +116,8 @@
 		{/if}
 	</div>
 </div>
+
+<!-- ★ 追加: isModalOpenがtrueの時にモーダルコンポーネントを描画する -->
+{#if isModalOpen && selectedFile}
+	<FileDetailModal file={selectedFile} on:close={closeModal} />
+{/if}

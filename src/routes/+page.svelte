@@ -116,7 +116,7 @@
 		isSubmitting = true;
 
 		try {
-			const response = await fetch('/upload', {
+			const response = await fetch(`${base}/api/upload`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({

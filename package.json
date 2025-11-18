@@ -29,6 +29,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.4",
 		"globals": "^16.4.0",
+		"next": "^16.0.3",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
 		"prettier-plugin-tailwindcss": "^0.7.1",
@@ -46,6 +47,7 @@
 		"@vercel/postgres": "^0.10.0",
 		"dompurify": "^3.3.0",
 		"marked": "^16.4.1",
-		"uuid": "^13.0.0"
+		"uuid": "^13.0.0",
+		"zod": "^4.1.12"
 	}
 }

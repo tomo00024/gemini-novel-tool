@@ -1,20 +1,20 @@
-// src/routes/api/import/[id]/+server.ts
 import { error, json } from '@sveltejs/kit';
-import { createPool } from '@vercel/postgres';
-import { POSTGRES_URL } from '$env/static/private';
+import { db } from '$lib/server/db';
 import type { RequestHandler } from './$types';
 
-const pool = createPool({
-	connectionString: POSTGRES_URL
-});
-
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, locals }) => {
+	// `locals` を受け取る
 	const fileId = params.id;
+	const session = await locals.auth(); // ユーザーセッションを取得
+	const currentUserId = session?.user?.id;
 
 	try {
-		const { rows } = await pool.sql`
+		// ファイル情報を取得する際に、権限チェックに必要なカラムも取得
+		const { rows } = await db.sql`
             SELECT
-                bloburl AS "blobUrl"
+                blob_url AS "blobUrl",
+                visibility,
+                uploader_id AS "uploaderId"
             FROM
                 files
             WHERE
@@ -26,19 +26,29 @@ export const GET: RequestHandler = async ({ params }) => {
 			throw error(404, 'Not Found: 指定されたファイルが見つかりません。');
 		}
 
-		await pool.sql`
-            UPDATE files
-            SET downloadcount = downloadcount + 1
-            WHERE id = ${fileId};
-        `;
+		// ファイルが 'private' の場合
+		if (file.visibility === 'private') {
+			// ログインしていない、またはファイルの所有者でない場合はアクセスを拒否
+			if (!currentUserId || file.uploaderId !== currentUserId) {
+				throw error(403, 'Forbidden: このファイルにアクセスする権限がありません。');
+			}
+		}
+		// 'unlisted' の場合のロジックも必要であればここに追加
 
+		// 先にファイル取得を試みる（ストレージエラー時にカウントアップしないため）
 		const blobResponse = await fetch(file.blobUrl);
 		if (!blobResponse.ok) {
 			throw error(500, 'Failed to fetch file from storage.');
 		}
 
-		const sessionData = await blobResponse.json();
+		// 全てのチェックをパスした後で、ダウンロード数を更新
+		await db.sql`
+            UPDATE files
+            SET download_count = download_count + 1
+            WHERE id = ${fileId};
+        `;
 
+		const sessionData = await blobResponse.json();
 		return json(sessionData, { status: 200 });
 	} catch (e: any) {
 		console.error('Import API Error:', e);

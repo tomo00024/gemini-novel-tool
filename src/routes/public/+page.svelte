@@ -56,19 +56,19 @@
 </script>
 
 <div class="mx-auto max-w-4xl p-4 sm:p-6">
-	<div class="mb-6 flex items-center justify-between">
-		<div>
-			<h1 class="text-2xl font-bold text-gray-800">公開セッションを探す</h1>
-			<p class="mt-1 text-gray-600">
-				他のユーザーが公開したセッションをあなたのアプリに読み込みます
-			</p>
+	<div class="mb-6">
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl font-bold text-gray-800">公開セッション</h1>
+			<a
+				href="{base}/"
+				class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+			>
+				履歴画面
+			</a>
 		</div>
-		<a
-			href="{base}/"
-			class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-		>
-			履歴画面に戻る
-		</a>
+		<p class="mt-1 text-gray-600">
+			他のユーザーが公開したセッションを読み込みます
+		</p>
 	</div>
 
 	<div class="mb-6">

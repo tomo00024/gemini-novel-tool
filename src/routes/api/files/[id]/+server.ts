@@ -1,11 +1,11 @@
 // src/routes/api/files/[id]/+server.ts
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-// `sql`の代わりに`createPool`をインポートする
-import { createPool } from '@vercel/postgres';
+// --- 修正箇所 (ここから) ---
+// `createPool`と`POSTGRES_URL`の代わりに共有プール`db`をインポート
+import { db } from '$lib/server/db';
+// --- 修正箇所 (ここまで) ---
 import { del } from '@vercel/blob';
-// POSTGRES_URLをインポートする
-import { POSTGRES_URL } from '$env/static/private';
 
 // --- PATCHハンドラの修正 ---
 export const PATCH: RequestHandler = async ({ params, locals, request }) => {
@@ -22,15 +22,17 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 		throw error(400, 'Bad Request: タイトルは必須です。');
 	}
 
-	// データベース接続プールを作成
-	const db = createPool({ connectionString: POSTGRES_URL }); // ← 追加
+	// --- 修正箇所 ---
+	// リクエストごとにプールを作成するコードを削除
+	// const db = createPool({ connectionString: POSTGRES_URL });
 
 	try {
-		// 権限チェックのためにuploaderIdを取得
+		// 権限チェックのためにuploaderIdを取得 (共有プール`db`を使用)
 		const { rows: fileRows } = await db.sql`
 			SELECT uploaderid AS "uploaderId" FROM files WHERE id = ${fileId};
 		`;
 
+		// ... (以降の処理は変更なし)
 		const file = fileRows[0];
 		if (!file) {
 			throw error(404, 'Not Found: 指定されたファイルが見つかりません。');
@@ -39,20 +41,19 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 			throw error(403, 'Forbidden: このファイルを編集する権限がありません。');
 		}
 
-		// データベースを更新
 		const { rows: updatedRows } = await db.sql`
 			UPDATE files
 			SET
 				title = ${title},
 				description = ${description},
-				imageUrl = ${imageUrl},
-				authorName = ${authorName}
+				image_url = ${imageUrl},
+				author_name = ${authorName}
 			WHERE id = ${fileId}
 			RETURNING
-				id, title, description, tags, imageurl AS "imageUrl",
-				starcount AS "starCount", downloadcount AS "downloadCount",
-				uploadedat AS "uploadedAt", authorname AS "authorName",
-				uploaderid AS "uploaderId";
+				id, title, description, tags, image_url AS "imageUrl",
+				star_count AS "starCount", download_count AS "downloadCount",
+				uploaded_at AS "uploadedAt", author_name AS "authorName",
+				uploader_id AS "uploaderId";
 		`;
 
 		return json(updatedRows[0], { status: 200 });
@@ -74,11 +75,12 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const currentUserId = session.user.id;
 	const fileId = params.id;
 
-	// データベース接続プールを作成
-	const db = createPool({ connectionString: POSTGRES_URL }); // ← 追加
+	// --- 修正箇所 ---
+	// リクエストごとにプールを作成するコードを削除
+	// const db = createPool({ connectionString: POSTGRES_URL });
 
 	try {
-		// ファイル情報を取得
+		// ファイル情報を取得 (共有プール`db`を使用)
 		const { rows } = await db.sql`
 			SELECT
 				uploaderid AS "uploaderId",
@@ -88,22 +90,20 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 			WHERE id = ${fileId};
 		`;
 
+		// ... (以降の処理は変更なし)
 		const file = rows[0];
 		if (!file) {
 			throw error(404, 'Not Found: 指定されたファイルが見つかりません。');
 		}
 
-		// 権限チェック
 		if (file.uploaderId !== currentUserId) {
 			throw error(403, 'Forbidden: このファイルを削除する権限がありません。');
 		}
 
-		// Blobストレージからファイルを削除
 		if (file.pathname) {
 			await del(file.pathname);
 		}
 
-		// データベースからレコードを削除
 		await db.sql`
 			DELETE FROM files WHERE id = ${fileId};
 		`;

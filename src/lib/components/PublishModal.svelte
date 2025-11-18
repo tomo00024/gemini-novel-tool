@@ -9,12 +9,16 @@
 	// 親コンポーネントにイベントを伝えるための仕組み
 	const dispatch = createEventDispatcher();
 
+	// --- フォームの入力値を保持する変数 ---
 	let title = initialTitle;
 	let description = '';
 	let imageUrl = '';
 	let expiresAt = '';
 	// appSettingsストアから読み込んだ前回の作者名で初期化する
 	let authorName = $appSettings.lastUsedAuthorName || '';
+	// 公開範囲をこのコンポーネント内で管理する
+	let contentScope: 'template' | 'full' | null = null;
+
 	let modalElement: HTMLDivElement;
 
 	onMount(() => {
@@ -25,14 +29,17 @@
 	 * 「公開」ボタンが押されたときの処理
 	 */
 	function handleSubmit() {
-		if (!title || busy) return;
+		// タイトルと公開範囲が選択されていること、処理中でないことを確認
+		if (!title || !contentScope || busy) return;
 
 		dispatch('submit', {
 			title,
 			description,
 			imageUrl: imageUrl || null,
 			expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
-			authorName: authorName || null
+			authorName: authorName || null,
+			// 選択された公開範囲もイベントに含める
+			contentScope
 		});
 	}
 
@@ -56,11 +63,57 @@
 		on:click|stopPropagation
 		role="dialog"
 		aria-modal="true"
+		aria-labelledby="modal-title"
 	>
-		<h2 class="text-xl font-bold text-gray-800">公開情報の入力</h2>
-		<p class="mt-2 text-sm text-gray-600">サーバーに公開するセッションの情報を入力してください。</p>
+		<h2 id="modal-title" class="text-xl font-bold text-gray-800">セッションの公開</h2>
+		<p class="mt-2 text-sm text-gray-600">
+			公開する情報の範囲を選択し、サーバーに登録する情報を入力してください。
+		</p>
 
+		<!-- 1. 公開範囲の選択 -->
 		<div class="mt-4 space-y-4">
+			<h3 class="text-base font-semibold text-gray-800">1. 公開範囲の選択 *</h3>
+			<label class="flex cursor-pointer items-start rounded-lg border p-4 transition hover:bg-gray-50">
+				<input
+					type="radio"
+					name="publish-scope"
+					value="template"
+					class="mt-1 mr-4 h-5 w-5"
+					bind:group={contentScope}
+				/>
+				<div>
+					<span class="font-semibold text-gray-800">テンプレートのみ公開</span>
+					<p class="mt-1 text-sm text-gray-600">
+						最初のプロンプトとAIの最初の応答、セッション設定を公開します。
+					</p>
+				</div>
+			</label>
+			<label class="flex cursor-pointer items-start rounded-lg border p-4 transition hover:bg-gray-50">
+				<input
+					type="radio"
+					name="publish-scope"
+					value="full"
+					class="mt-1 mr-4 h-5 w-5"
+					bind:group={contentScope}
+				/>
+				<div>
+					<span class="font-semibold text-gray-800">すべての会話履歴を公開</span>
+					<p class="mt-1 text-sm text-gray-600">
+						設定、プロンプト、そしてすべてのAIとの会話履歴を公開します。
+					</p>
+					<div
+						class="mt-2 rounded border-l-4 border-yellow-400 bg-yellow-50 p-2 text-sm text-yellow-800"
+					>
+						<strong class="font-bold">⚠️【注意】</strong>
+						個人情報や機密情報が含まれていないか内容をよく確認してください。
+					</div>
+				</div>
+			</label>
+		</div>
+
+		<!-- 2. 公開情報の入力 -->
+		<div class="mt-6 space-y-4">
+			<h3 class="text-base font-semibold text-gray-800">2. 公開情報の入力</h3>
 			<div>
 				<label for="title" class="block text-sm font-medium text-gray-700">タイトル *</label>
 				<input
@@ -120,7 +173,7 @@
 			</button>
 			<button
 				on:click={handleSubmit}
-				disabled={!title || busy}
+				disabled={!title || !contentScope || busy}
 				class="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
 			>
 				{#if busy}処理中...{:else}同意して公開{/if}

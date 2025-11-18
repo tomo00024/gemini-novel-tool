@@ -102,33 +102,109 @@ Googleアカウントと連携
 サーバーテーブル
 CREATE TABLE files (
 -- 基本情報
-id VARCHAR(255) PRIMARY KEY, -- ファイルの一意なID (UUIDなど)
-title VARCHAR(255) NOT NULL, -- 表示用のファイルタイトル
-description TEXT, -- ファイルの内容に関する説明文
-imageUrl TEXT, -- 表示用の画像URL
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+title VARCHAR(150) NOT NULL,
+description TEXT,
+image_url TEXT,
+author_name VARCHAR(100) NOT NULL,
 
     -- ファイル実体に関する情報 (Vercel Blob)
-    fileName VARCHAR(255) NOT NULL, -- 元のファイル名
-    blobUrl TEXT NOT NULL, -- Vercel Blob上のファイルの公開URL
-    pathname TEXT NOT NULL, -- Vercel Blob上のパス名 (削除時に使用)
-    contentType VARCHAR(255), -- application/json など
-    size INTEGER NOT NULL, -- ファイルサイズ (バイト)
-    checksum VARCHAR(255), -- ファイルのハッシュ値 (SHA-256など)
+    file_name VARCHAR(255) NOT NULL,
+    blob_url TEXT NOT NULL UNIQUE,
+    pathname TEXT NOT NULL UNIQUE,
+    content_type VARCHAR(100),
+    size_bytes INTEGER NOT NULL CHECK (size_bytes >= 0),
+    checksum VARCHAR(64),
 
     -- タイムスタンプとバージョン
-    uploadedAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- アップロード日時
-    updatedAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
-    expiresAt TIMESTAMP WITH TIME ZONE, -- ファイルの有効期限
+    uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE,
+    version INTEGER DEFAULT 1 NOT NULL,
 
     -- ユーザーと権限
-    uploaderId VARCHAR(255) NOT NULL, -- 【重要】 アップロードしたユーザーのID
-    visibility VARCHAR(50) DEFAULT 'public', -- public (公開), private (非公開)
+    uploader_id TYPE TEXT;
+    visibility VARCHAR(20) DEFAULT 'public' NOT NULL
+               CHECK (visibility IN ('public', 'private', 'unlisted')),
 
     -- 集計・メタ情報
-    downloadCount INTEGER DEFAULT 0, -- ダウンロード回数
-    starCount INTEGER DEFAULT 0, -- 「お気に入り」や「スター」が付けられた回数
-    commentCount INTEGER DEFAULT 0, -- ファイルに付けられたコメントの数
-    tags TEXT[], -- 検索用のタグ配列 (例: {"api", "v2"})
-    version INTEGER DEFAULT 1 -- バージョン番号 (デフォルト: 1)
+    download_count INTEGER DEFAULT 0 NOT NULL,
+    star_count INTEGER DEFAULT 0 NOT NULL,
+    comment_count INTEGER DEFAULT 0 NOT NULL,
+    tags TEXT[]
 
 );
+
+-- トリガー関数: updated_atを自動更新
+CREATE OR REPLACE FUNCTION trigger_set_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+NEW.updated_at = NOW();
+RETURN NEW;
+END;
+
+$$
+LANGUAGE plpgsql;
+
+-- トリガーの作成
+CREATE TRIGGER set_timestamp
+BEFORE UPDATE ON files
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- --- パフォーマンス向上のためのインデックス ---
+
+-- 1. 自分の投稿履歴を高速に表示するため
+CREATE INDEX idx_files_uploader_id ON files (uploader_id);
+
+-- 2. 公開ファイル一覧を最新順で高速に表示するため
+CREATE INDEX idx_files_visibility_uploaded_at ON files (visibility, uploaded_at DESC);
+
+-- 3. タグによる検索を高速化するため
+CREATE INDEX idx_files_tags ON files USING GIN (tags);
+
+-- 4. 人気順（ダウンロード数順）で高速に表示するため (今回追加)
+CREATE INDEX idx_files_download_count ON files (download_count DESC);
+
+JSONをわかりやすく
+提供された情報を以下のように整理しました。
+
+### 基本情報
+
+- **ID:** 87c1a24d-c879-4029-b3f1-55982fe38979
+- **タイトル:** ｗてｗてｔｗｔｗ
+- **作成日時:** 2025年11月17日 12:25:14
+- **最終更新日時:** 2025年11月17日 12:40:30
+
+### 対話ログ
+
+- **ユーザーの発言 (2025/11/17 12:25:18):**
+  ｗてｗてｔｗｔｗ
+- **AIの応答 (2025/11/17 12:25:19):**
+  この文章は、意味のある単語や文法的な構造を持たない、ランダムな文字の羅列のように見えます。
+
+  もし、何か意図があってこの文字を並べられたのであれば、どのような意図だったのか教えていただけますでしょうか？例えば、
+  - **特定の意味を持たせたかった**（隠語、暗号など）
+  - **単にキーボードを叩いただけ**
+  - **他の文章の一部だった**
+
+  など、何かヒントがあれば、より的確な回答ができるかもしれません。
+
+### 各種設定
+
+#### カスタムステータス
+
+- **ステータス名:** てて
+- **現在の値:** 0
+
+#### トリガー
+
+- **条件:** 「てて」のステータスが0以上の場合に1度だけ実行
+- **実行内容:** うぇてｗｔを語尾につけること
+
+### インポート情報
+
+- **作成者:** ｗｗ
+- **インポート日時:** 2025年11月17日 12:40:30
+$$

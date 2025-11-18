@@ -1,4 +1,4 @@
-<!-- src/routes/session/[id]/settings/+page.svelte -->
+<!-- src/routes/session/[id]/+page.svelte -->
 <script lang="ts">
 	// --- SvelteKitのコア機能とストアをインポート ---
 	import { page } from '$app/stores';
@@ -77,8 +77,6 @@
 
 	/**
 	 * ダイスロール設定に基づき、ダイスロールを実行し、指示ブロック文字列を生成する関数
-	 * @param diceRolls ダイスロール設定の配列
-	 * @returns [ダイスロールStart]...[ダイスロールEnd] で囲まれた文字列。該当なければ空文字列。
 	 */
 	function generateDiceRollBlock(diceRolls: DiceRoll[] | undefined): string {
 		if (!diceRolls || diceRolls.length === 0) {
@@ -109,30 +107,40 @@
 	}
 
 	/**
-	 * トリガーを評価し、指示ブロック文字列と更新後のトリガー配列を返す関数
-	 * @param triggers トリガー設定の配列
-	 * @param customStatuses カスタムステータスの配列
-	 * @returns 指示ブロックと更新後のトリガーデータを含むオブジェクト
+	 * トリガーを評価し、指示ブロックと「更新後のステータス配列」「更新後のトリガー配列」を返す
+	 * シーケンシャル（上から順）に実行し、ステータス変更はその場で後続の判定に反映される
 	 */
 	function evaluateTriggers(
 		triggers: Trigger[] | undefined,
-		customStatuses: CustomStatus[] | undefined
-	): { triggerBlock: string; updatedTriggers: Trigger[] | undefined } {
-		if (!triggers || triggers.length === 0 || !customStatuses) {
-			return { triggerBlock: '', updatedTriggers: triggers };
+		initialCustomStatuses: CustomStatus[] | undefined
+	): {
+		triggerBlock: string;
+		updatedTriggers: Trigger[] | undefined;
+		updatedStatuses: CustomStatus[] | undefined;
+	} {
+		if (!triggers || triggers.length === 0 || !initialCustomStatuses) {
+			return {
+				triggerBlock: '',
+				updatedTriggers: triggers,
+				updatedStatuses: initialCustomStatuses
+			};
 		}
 
 		const instructions: string[] = [];
 		const evaluatedTriggers: Trigger[] = [];
 
+		// 計算用にステータスのディープコピーを作成（これを次々と書き換えていく）
+		let currentStatuses = JSON.parse(JSON.stringify(initialCustomStatuses)) as CustomStatus[];
+
 		for (const trigger of triggers) {
 			const hasBeenExecuted = trigger.hasBeenExecuted ?? false;
 			const lastEvaluationResult = trigger.lastEvaluationResult ?? false;
 
+			// 1. 条件判定 (currentStatuses の値を使う)
 			let isConditionMet = false;
 			if (trigger.conditions && trigger.conditions.length > 0) {
 				const conditionResults = trigger.conditions.map((condition) => {
-					const status = customStatuses.find((s) => s.id === condition.statusId);
+					const status = currentStatuses.find((s) => s.id === condition.statusId);
 					if (!status) return false;
 					const currentValue = parseFloat(status.currentValue);
 					if (isNaN(currentValue)) return false;
@@ -160,6 +168,7 @@
 				}, conditionResults[0] ?? false);
 			}
 
+			// 2. 実行判定
 			let shouldExecute = false;
 			switch (trigger.executionType) {
 				case 'persistent':
@@ -173,8 +182,33 @@
 					break;
 			}
 
+			// 3. 実行 (テキスト収集 & ステータス更新)
 			if (shouldExecute) {
-				instructions.push(trigger.responseText);
+				// A. テキスト追加
+				if (trigger.responseText) {
+					instructions.push(trigger.responseText);
+				}
+
+				// B. ステータス即時更新 (バッファを書き換え、次のトリガー判定に影響させる)
+				if (trigger.statusUpdates && trigger.statusUpdates.length > 0) {
+					for (const update of trigger.statusUpdates) {
+						const targetStatus = currentStatuses.find((s) => s.id === update.targetStatusId);
+						if (targetStatus) {
+							let val = parseFloat(targetStatus.currentValue);
+							if (isNaN(val)) val = 0;
+
+							if (update.operation === 'set') {
+								val = update.value;
+							} else if (update.operation === 'add') {
+								val += update.value;
+							} else if (update.operation === 'sub') {
+								val -= update.value;
+							}
+
+							targetStatus.currentValue = String(val); // 文字列として保存
+						}
+					}
+				}
 			}
 
 			evaluatedTriggers.push({
@@ -187,33 +221,27 @@
 		const triggerBlock =
 			instructions.length > 0 ? `[トリガーStart]\n${instructions.join('\n')}\n[トリガーEnd]` : '';
 
-		return { triggerBlock, updatedTriggers: evaluatedTriggers };
+		return {
+			triggerBlock,
+			updatedTriggers: evaluatedTriggers,
+			updatedStatuses: currentStatuses
+		};
 	}
 
-	/**
-	 * ユーザー入力と各種指示ブロックから最終的なプロンプトを組み立てる関数
-	 * @param currentUserInput ユーザーの入力テキスト
-	 * @param blocks 指示ブロック文字列の配列
-	 * @returns AIに送信する最終的なプロンプト文字列
-	 */
 	function buildFinalUserInput(currentUserInput: string, blocks: string[]): string {
-		const validBlocks = blocks.filter((block) => block); // 空文字列を除去
+		const validBlocks = blocks.filter((block) => block);
 		const finalParts: string[] = [];
 
-		// 内部指示ブロックが存在すれば、配列に追加
 		if (validBlocks.length > 0) {
 			const internalInstructions = `[内部指示Start]\n${validBlocks.join('\n')}\n[内部指示End]`;
 			finalParts.push(internalInstructions);
 		}
 
-		// ユーザー文章ブロックを常に配列に追加
 		const userMessageBlock = `[ユーザー文章Start]\n${currentUserInput}\n[ユーザー文章End]`;
 		finalParts.push(userMessageBlock);
 
-		// 配列の要素を改行で結合して最終的な文字列を返す
 		return finalParts.join('\n');
 	}
-
 
 	function buildConversationHistory(allLogs: Log[], targetLogId: string): Log[] {
 		const history: Log[] = [];
@@ -268,6 +296,7 @@
 				);
 
 				if (result.metadata?.requiresApiKeyLoop) {
+					// APIキーローテーション処理
 					const currentApiKeyInfo = currentAppSettings.apiKeys.find(
 						(k) => k.id === currentAppSettings.activeApiKeyId
 					);
@@ -300,15 +329,15 @@
 						break;
 					}
 				} else {
+					// 成功時
 					let responseText = result.responseText;
 					const settings = get(appSettings);
 
 					if (settings.assist.autoCorrectUrl) {
 						console.log('[AI Response] URL auto-correction is enabled. Applying correction...');
 						responseText = correctImageMarkdownInText(responseText);
-					} else {
-						console.log('[AI Response] URL auto-correction is disabled.');
 					}
+
 					sessions.update((allSessions) => {
 						const sessionToUpdate = allSessions.find((s) => s.id === sessionId);
 						if (sessionToUpdate) {
@@ -323,7 +352,7 @@
 							const newAiResponse: Log = {
 								id: generateUUID(),
 								speaker: 'ai',
-								text: result.responseText,
+								text: responseText,
 								timestamp: new Date().toISOString(),
 								parentId: userMessageId,
 								activeChildId: null,
@@ -362,26 +391,26 @@
 		}
 
 		const currentUserInput = userInput;
-		userInput = ''; // 入力欄をクリア
+		userInput = '';
 
-		// 1. 各指示ブロックをヘルパー関数で生成
+		// 1. 指示ブロック生成（ダイス & トリガー）
 		const diceBlock = generateDiceRollBlock($currentSession.diceRolls);
-		const { triggerBlock, updatedTriggers } = evaluateTriggers(
+		const { triggerBlock, updatedTriggers, updatedStatuses } = evaluateTriggers(
 			$currentSession.triggers,
 			$currentSession.customStatuses
 		);
 
-		// 2. 最終的なプロンプトを組み立てる
+		// 2. 最終プロンプト構築
 		const finalUserInput = buildFinalUserInput(currentUserInput, [diceBlock, triggerBlock]);
 
-		// --- ユーザーメッセージのログ保存処理---
+		// 3. ログ保存 & ステータス更新
 		const now = new Date().toISOString();
 		const allLogs = $currentSession.logs;
 		const logMap = new Map(allLogs.map((log) => [log.id, log]));
 
+		// 末尾のログ（親ID）を見つける
 		let lastLog: Log | null = null;
 		if (allLogs.length > 0) {
-			// (アクティブな会話の末尾を見つけるロジック)
 			let currentLog = allLogs.find((log) => log.parentId === null);
 			if (currentLog) {
 				lastLog = currentLog;
@@ -409,34 +438,42 @@
 		};
 
 		sessions.update((allSessions) => {
-			const sessionToUpdate = allSessions.find((s) => s.id === $currentSession.id);
+			const sessionToUpdate = allSessions.find((s) => s.id === $currentSession!.id);
 			if (sessionToUpdate) {
 				if (sessionToUpdate.logs.length === 0) {
 					sessionToUpdate.title = currentUserInput.substring(0, 10);
 				}
 				sessionToUpdate.logs.push(newUserMessage);
+
 				if (parentId) {
 					const parentLog = sessionToUpdate.logs.find((log) => log.id === parentId);
 					if (parentLog) {
 						parentLog.activeChildId = newUserMessage.id;
 					}
 				}
+
+				// ステータス更新を適用
+				if (updatedStatuses) {
+					sessionToUpdate.customStatuses = updatedStatuses;
+				}
+
 				sessionToUpdate.lastUpdatedAt = now;
 			}
 			return allSessions;
 		});
 
-		// 3. AIに応答を要求
-		const updatedLogs = get(sessions).find((s) => s.id === $currentSession.id)!.logs;
+		// 4. AI応答要求
+		const updatedLogs = get(sessions).find((s) => s.id === $currentSession!.id)!.logs;
 		const history = buildConversationHistory(updatedLogs, newUserMessage.id);
+
 		await getAiResponseAndUpdate(
 			history,
 			finalUserInput,
 			newUserMessage.id,
 			false,
-			$currentSession.id,
-			$currentSession.featureSettings,
-			updatedTriggers // 更新後のトリガーデータを渡す
+			$currentSession!.id,
+			$currentSession!.featureSettings,
+			updatedTriggers
 		);
 	}
 
@@ -451,17 +488,26 @@
 
 		const userInputForRetry = targetUserMessage.text;
 
-		// 1. 各指示ブロックをヘルパー関数で生成
 		const diceBlock = generateDiceRollBlock($currentSession.diceRolls);
-		const { triggerBlock, updatedTriggers } = evaluateTriggers(
+		const { triggerBlock, updatedTriggers, updatedStatuses } = evaluateTriggers(
 			$currentSession.triggers,
 			$currentSession.customStatuses
 		);
 
-		// 2. 最終的なプロンプトを組み立てる
 		const finalUserInput = buildFinalUserInput(userInputForRetry, [diceBlock, triggerBlock]);
 
-		// 3. AIに応答を要求
+		// リトライ時もステータス更新を反映させる
+		if (updatedStatuses) {
+			sessions.update((allSessions) => {
+				const s = allSessions.find((x) => x.id === $currentSession!.id);
+				if (s) {
+					s.customStatuses = updatedStatuses;
+					s.lastUpdatedAt = new Date().toISOString();
+				}
+				return allSessions;
+			});
+		}
+
 		const history = buildConversationHistory($currentSession.logs, userMessageId);
 		await getAiResponseAndUpdate(
 			history,
@@ -470,10 +516,11 @@
 			true,
 			$currentSession.id,
 			$currentSession.featureSettings,
-			updatedTriggers // 更新後のトリガーデータを渡す
+			updatedTriggers
 		);
 	}
 
+	// 欠損していた関数を追加
 	function handleUpdateTitle(event: CustomEvent<{ title: string }>): void {
 		const newTitle = event.detail.title;
 		if (!$currentSession || !newTitle) return;

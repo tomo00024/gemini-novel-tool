@@ -49,18 +49,31 @@ export interface TriggerCondition {
 	value: number;
 }
 
-/**
- * 一つのトリガー全体の設定を表す型
- */
+export interface StatusUpdate {
+	targetStatusId: string;
+	operation: 'set' | 'add' | 'sub'; // 代入、加算、減算
+	value: number;
+}
+
+export interface Condition {
+	id: string;
+	statusId: string;
+	operator: string; // '==' | '>=' | '>' | '<=' | '<' などの文字列
+	value: number;
+}
+
 export interface Trigger {
-	id: string; // トリガーの一意なID
-	conditions: TriggerCondition[];
-	// 条件が2つ以上ある場合、間の結合子を格納 (例: conditionsが3つならconjunctionsは2つ)
+	id: string;
+	conditions: Condition[];
 	conjunctions: ('AND' | 'OR')[];
 	executionType: 'once' | 'persistent' | 'on-threshold-cross';
 	responseText: string;
-	hasBeenExecuted?: boolean; // 'once' タイプで使用: 既に実行されたか
-	lastEvaluationResult?: boolean; // 'on-threshold-cross' で使用: 前回の評価結果
+
+	// --- 追加: ステータス更新設定 ---
+	statusUpdates?: StatusUpdate[];
+
+	hasBeenExecuted?: boolean;
+	lastEvaluationResult?: boolean;
 }
 /**
  * ダイスロール機能の設定
@@ -163,6 +176,7 @@ export interface AppSettings {
 	apiKeys: ApiKey[];
 	activeApiKeyId: string | null;
 	model: string;
+	availableModelList?: string[];
 	systemPrompt: {
 		isEnabled: boolean;
 		text: string;
@@ -203,6 +217,7 @@ export interface Session {
 	lastUpdatedAt: string;
 	featureSettings: FeatureSettings;
 	viewMode?: 'standard' | 'game';
+	hideFirstUserMessage?: boolean;
 	gameViewSettings?: GameViewSettings;
 	customStatuses?: CustomStatus[];
 	triggers?: Trigger[];

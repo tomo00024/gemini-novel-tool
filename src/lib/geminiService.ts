@@ -52,3 +52,41 @@ export async function callGeminiApi(
 			return callGeminiApiOnClient(apiKey, model, appSettings, context, userInput);
 	}
 }
+
+/**
+ * Google APIから利用可能なモデル一覧を取得します。
+ * @param apiKey APIキー
+ * @returns モデル名の配列 (例: ['gemini-1.5-pro', 'gemini-1.5-flash'])
+ */
+export async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
+	try {
+		// APIキーを使ってモデルリストを取得
+		const response = await fetch(
+			`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+		);
+
+		if (!response.ok) {
+			throw new Error(`Failed to fetch models: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+
+		if (!data.models) return [];
+
+		return (
+			data.models
+				// チャット生成 ('generateContent') に対応しているモデルのみをフィルタリング
+				.filter(
+					(m: any) =>
+						m.supportedGenerationMethods &&
+						m.supportedGenerationMethods.includes('generateContent') &&
+						m.name.includes('gemini') // geminiシリーズに限定
+				)
+				// 'models/gemini-1.5-pro' のような形式から 'gemini-1.5-pro' の部分だけ抽出
+				.map((m: any) => m.name.replace('models/', ''))
+		);
+	} catch (error) {
+		console.error('Error fetching models:', error);
+		throw error;
+	}
+}

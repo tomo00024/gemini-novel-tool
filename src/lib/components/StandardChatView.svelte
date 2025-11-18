@@ -82,6 +82,12 @@
 				break;
 			}
 		}
+		if ($chatSessionStore.session.hideFirstUserMessage) {
+			if (filteredLogs.length > 0 && filteredLogs[0].speaker === 'user') {
+				// 元の配列を変更せず、スライスした新しい配列を返す
+				return filteredLogs.slice(1);
+			}
+		}
 		return filteredLogs;
 	})();
 

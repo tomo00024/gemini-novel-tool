@@ -9,7 +9,55 @@
 	import type { ApiKey } from '$lib/types';
 	import { generateUUID } from '$lib/utils';
 	import { signIn, signOut } from '@auth/sveltekit/client';
+	import { getAvailableGeminiModels } from '$lib/geminiService';
 
+	// 現在表示するモデルリスト（初期値は utils.ts の availableModels）
+	let currentModelList = [...availableModels];
+	let isFetchingModels = false;
+	let modelFetchError = '';
+	// ▼ 表示用モデルリストの算出ロジック
+	// ストアに保存されたリストがあればそれを使い、なければデフォルトリストを使う
+	$: selectableModels =
+		$appSettings.availableModelList && $appSettings.availableModelList.length > 0
+			? $appSettings.availableModelList
+			: availableModels;
+
+	/**
+	 * アクティブなAPIキーを使用してモデルリストを更新し、ストアに保存する
+	 */
+	async function refreshModelList() {
+		const activeKeyId = $appSettings.activeApiKeyId;
+		const activeKey = $appSettings.apiKeys.find((k) => k.id === activeKeyId)?.key;
+
+		if (!activeKey) {
+			alert('有効なAPIキーが選択されていません。');
+			return;
+		}
+
+		isFetchingModels = true;
+		modelFetchError = '';
+
+		try {
+			const models = await getAvailableGeminiModels(activeKey);
+
+			if (models.length > 0) {
+				// ▼ 変更点: 取得したリストをストア(appSettings)に保存して永続化する
+				appSettings.update((settings) => ({
+					...settings,
+					availableModelList: models
+				}));
+
+				alert(`モデルリストを更新しました。\n取得件数: ${models.length}`);
+			} else {
+				modelFetchError = '利用可能なGeminiモデルが見つかりませんでした。';
+			}
+		} catch (e) {
+			modelFetchError = 'モデルの取得に失敗しました。APIキーを確認してください。';
+			console.error(e);
+		} finally {
+			isFetchingModels = false;
+		}
+	}
 	const returnPath = derived(page, ($page) => {
 		const from = $page.url.searchParams.get('from');
 		if (from && from.startsWith('session/')) {
@@ -128,20 +176,40 @@
 				APIキーはブラウザ内にのみ保存されます。入力や変更は自動的に保存されます。
 			</p>
 		</div>
-		<!-- AIモデル選択 -->
+		<!-- AIモデル選択エリア -->
 		<div class="space-y-2">
 			<label for="model-select" class="block font-medium">AIモデル</label>
-			<select
-				id="model-select"
-				bind:value={$appSettings.model}
-				class="w-full max-w-md rounded border bg-white p-2"
-			>
-				{#each availableModels as model}
-					<option value={model}>{model}</option>
-				{/each}
-			</select>
+			<div class="flex gap-2">
+				<select
+					id="model-select"
+					bind:value={$appSettings.model}
+					class="w-full max-w-md rounded border bg-white p-2"
+				>
+					{#each selectableModels as model}
+						<option value={model}>{model}</option>
+					{/each}
+				</select>
+
+				<button
+					on:click={refreshModelList}
+					disabled={isFetchingModels || !$appSettings.activeApiKeyId}
+					class="flex-shrink-0 rounded bg-blue-100 px-3 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-50"
+					title="Googleから最新のモデル一覧を取得します"
+				>
+					{#if isFetchingModels}
+						取得中...
+					{:else}
+						更新
+					{/if}
+				</button>
+			</div>
+
+			{#if modelFetchError}
+				<p class="text-sm text-red-600">{modelFetchError}</p>
+			{/if}
+
 			<p class="text-sm text-gray-600">
-				チャットで使用するAIモデルを選択します。選択は自動的に保存されます。
+				チャットで使用するAIモデルを選択します。右のボタンでGoogleから最新のモデル一覧を取得・保存できます。
 			</p>
 		</div>
 		<!-- システムプロンプト -->
@@ -225,7 +293,7 @@
 					bind:checked={$appSettings.apiErrorHandling.loopApiKeys}
 					class="h-4 w-4 rounded"
 				/>
-				<label for="loop-keys" class="text-sm">429エラーのときにAPIキーをループする</label>
+				<label for="loop-keys" class="text-sm">429エラーのときにAPIキーを変更</label>
 			</div>
 			<div class="flex items-center space-x-2">
 				<input
@@ -234,7 +302,7 @@
 					bind:checked={$appSettings.apiErrorHandling.exponentialBackoff}
 					class="h-4 w-4 rounded"
 				/>
-				<label for="exp-backoff" class="text-sm">指数関数的バックオフを行う</label>
+				<label for="exp-backoff" class="text-sm">リトライ（指数関数的バックオフ）</label>
 			</div>
 			<div
 				class="ml-6 space-x-2"

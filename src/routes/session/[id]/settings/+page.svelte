@@ -91,6 +91,9 @@
 						status.mode = 'set';
 					}
 				});
+				if (typeof sessionToUpdate.hideFirstUserMessage === 'undefined') {
+					sessionToUpdate.hideFirstUserMessage = false;
+				}
 			}
 			return allSessions;
 		});
@@ -128,6 +131,17 @@
 			return allSessions;
 		});
 	}
+	function toggleHideFirstUserMessage(event: Event) {
+		const isChecked = (event.target as HTMLInputElement).checked;
+		sessions.update((allSessions) => {
+			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
+			if (sessionToUpdate) {
+				sessionToUpdate.hideFirstUserMessage = isChecked;
+				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
+			}
+			return allSessions;
+		});
+	}
 </script>
 
 <div class="flex h-screen flex-col p-4">
@@ -144,8 +158,22 @@
 
 	{#if $currentSession}
 		<div class="space-y-6">
-			<h1 class=" font-bold">ユーザー文章の最初を非表示チェックボックス（メモ）</h1>
-
+			<label class="block cursor-pointer rounded-lg border border-gray-200 p-4">
+				<div class="space-y-2">
+					<div class="flex items-center space-x-2">
+						<input
+							type="checkbox"
+							class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+							checked={$currentSession.hideFirstUserMessage || false}
+							on:change={toggleHideFirstUserMessage}
+						/>
+						<span class="text-lg font-semibold"> 最初のユーザーメッセージを隠す </span>
+					</div>
+					<p class="text-sm text-gray-600">
+						会話のきっかけとなる最初の入力をチャット画面に表示しないようにします。
+					</p>
+				</div>
+			</label>
 			<ImportExportSettings />
 			<!-- モード選択 -->
 			<StandardMode {currentSession} onModeChange={handleSessionModeChange} />

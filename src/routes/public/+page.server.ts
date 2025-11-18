@@ -1,4 +1,5 @@
-// --- 修正箇所 (ここから) ---
+// src/routes/public/[id]/+page.server.ts
+
 // createPoolの代わりに共有プールdbをインポート
 import { db } from '$lib/server/db';
 // --- 修正箇所 (ここまで) ---

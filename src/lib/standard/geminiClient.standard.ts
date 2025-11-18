@@ -139,7 +139,6 @@ export async function callGeminiApiOnClient(
 			const errorBody = await response.json();
 			lastError = errorBody; // 最後のエラーとして保持
 
-			// ▼▼▼【変更箇所】429エラーかつキー切り替え設定が有効な場合の特別処理 ▼▼▼
 			if (
 				response.status === 429 &&
 				appSettings.apiErrorHandling.loopApiKeys &&
@@ -172,12 +171,10 @@ export async function callGeminiApiOnClient(
 				await new Promise((resolve) => setTimeout(resolve, waitTime));
 				continue; // 次の試行へ
 			} else if (retryableStatuses.includes(response.status) && attempt === maxAttempts - 1) {
-				// ▼▼▼【変更箇所 1】▼▼▼
 				// 最後のリトライ試行がリトライ対象エラーだった場合、ここでは何もせずループを抜けさせる
 				// lastErrorには既にエラー情報が格納されている
 				break;
 			} else {
-				// ▼▼▼【変更箇所 2】▼▼▼
 				// リトライ対象外のエラーだった場合は、即座にエラーを返して終了する
 				// (これは元のロジックと同じ挙動)
 				const errorMessage = errorBody.error?.message || '不明なAPIエラーです。';

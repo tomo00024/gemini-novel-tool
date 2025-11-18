@@ -1,11 +1,9 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { put } from '@vercel/blob';
-// `sql`の代わりに`createPool`をインポートする
-import { createPool } from '@vercel/postgres'; // ← 変更
+import { createPool } from '@vercel/postgres';
 import { v4 as uuidv4 } from 'uuid';
-// POSTGRES_URLもインポートする
-import { BLOB_READ_WRITE_TOKEN, POSTGRES_URL } from '$env/static/private'; // ← 変更
+import { BLOB_READ_WRITE_TOKEN, POSTGRES_URL } from '$env/static/private';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const session = await locals.auth();
@@ -35,7 +33,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const finalFileName = `${title || 'untitled'}.json`;
 		const fileId = uuidv4();
 
-		// ★★★ ここからが修正箇所 ★★★
 		// 環境変数から読み込んだ接続文字列を使って、データベース接続プールを作成
 		const db = createPool({
 			connectionString: POSTGRES_URL
@@ -54,7 +51,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				${expiresAt}, ${uploaderId}, 'public'
 			)
 		`;
-		// ★★★ 修正箇所ここまで ★★★
 
 		return json(
 			{

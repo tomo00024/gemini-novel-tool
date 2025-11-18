@@ -86,7 +86,6 @@
 			return;
 		}
 
-		// ▼▼▼ ストアを更新し、次回のために作者名を記憶させる ▼▼▼
 		appSettings.update((settings) => ({
 			...settings,
 			lastUsedAuthorName: event.detail.authorName || ''
@@ -110,7 +109,6 @@
 				throw new Error(error.message || 'アップロードに失敗しました。');
 			}
 
-			// ★ 変更点 1: アップロード成功後、ローカルのセッションタイトルも更新する
 			sessions.update((currentSessions) =>
 				currentSessions.map((session) => {
 					if (session.id === sessionToPublishId) {
@@ -148,7 +146,6 @@
 </script>
 
 <div class="flex h-screen flex-col p-4">
-	<!-- ... (変更なし) ... -->
 	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-xl font-bold text-gray-700">履歴画面</h1>
 		<div class="flex items-center gap-4">
@@ -230,7 +227,6 @@
 	{/if}
 </div>
 
-<!-- ... (公開範囲選択モーダルの部分は変更なし) ... -->
 {#if isModalOpen}
 	<!-- svelte-ignore a11y-no-static-element-interactions, a11y-click-events-have-key-events -->
 	<div
@@ -311,7 +307,6 @@
 	</div>
 {/if}
 
-<!-- ★ 変更点 2: PublishModalに `initialTitle` を渡す -->
 {#if isPublishModalOpen && sessionToPublishId && publishScope}
 	{@const sessionToPublish = $sessions.find((s) => s.id === sessionToPublishId)}
 	{#if sessionToPublish}
@@ -324,7 +319,6 @@
 	{/if}
 {/if}
 
-<!-- ... (データ連携モーダルの部分は変更なし) ... -->
 {#if isDataLinkModalOpen}
 	<!-- svelte-ignore a11y-no-static-element-interactions, a11y-click-events-have-key-events -->
 	<div

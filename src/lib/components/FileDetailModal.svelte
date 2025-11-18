@@ -10,15 +10,61 @@
 
 	export let session: AuthSession | null = null;
 	export let file: any;
-	// ▼▼▼ ここにデバッグコードを追加 ▼▼▼
-	console.log('--- Modal Component Props ---');
-	console.log('File Prop:', file);
-	console.log('Session Prop:', session);
-	console.log('File Uploader ID:', file?.uploaderId);
-	console.log('Session User ID:', session?.user?.id);
-	console.log('Comparison Result (isOwner):', session?.user?.id === file?.uploaderId);
-	// ▲▲▲ ここまで ▲▲▲
+
 	const dispatch = createEventDispatcher();
+
+	let isEditing = false; // 編集モードの状態
+	let isSaving = false; // 保存処理中の状態
+	let editableFile = { ...file }; // 編集用のファイルオブジェクトのコピー
+
+	function handleEditClick() {
+		// 編集ボタンが押されたら、現在のファイル情報で編集用オブジェクトを初期化
+		editableFile = { ...file };
+		isEditing = true;
+	}
+
+	function handleCancelEdit() {
+		// キャンセルされたら編集モードを終了
+		isEditing = false;
+	}
+
+	async function handleUpdate() {
+		if (isSaving) return;
+		isSaving = true;
+
+		try {
+			const response = await fetch(`/api/files/${file.id}`, {
+				method: 'PATCH', // 部分更新なのでPATCHメソッドを使用
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					title: editableFile.title,
+					authorName: editableFile.authorName,
+					description: editableFile.description,
+					imageUrl: editableFile.imageUrl
+				})
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message || '更新に失敗しました。');
+			}
+
+			const updatedFile = await response.json();
+
+			alert('セッション情報を更新しました。');
+			// 親コンポーネントに変更を通知
+			dispatch('updated', updatedFile);
+			isEditing = false; // 編集モードを終了
+			closeModal(); // モーダルを閉じる
+		} catch (err: any) {
+			console.error('Update failed:', err);
+			alert(`エラーが発生しました: ${err.message}`);
+		} finally {
+			isSaving = false;
+		}
+	}
 
 	let dialogElement: HTMLElement;
 	let isImporting = false;
@@ -104,7 +150,7 @@
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') {
+		if (event.key === 'Escape' && !isEditing) {
 			closeModal();
 		}
 	}
@@ -119,10 +165,6 @@
 
 	onMount(() => {
 		document.body.style.overflow = 'hidden';
-
-		// モーダルが表示されたら、ダイアログ自体にフォーカスを当てる
-		// これにより、スクリーンリーダーがモーダルの内容を読み上げ始め、
-		// キーボード操作の起点がモーダル内に移る。
 		if (dialogElement) {
 			dialogElement.focus();
 		}
@@ -141,8 +183,8 @@
 	role="button"
 	tabindex="-1"
 	class="bg-opacity-60 fixed inset-0 z-50 flex items-center justify-center bg-black"
-	on:click={closeModal}
-	on:keydown={(e) => e.key === 'Enter' && closeModal()}
+	on:click={() => !isEditing && closeModal()}
+	on:keydown={(e) => e.key === 'Enter' && !isEditing && closeModal()}
 	transition:fade={{ duration: 150 }}
 >
 	<div
@@ -157,99 +199,171 @@
 		on:keydown|stopPropagation
 	>
 		<!-- 画像ヘッダー -->
-		{#if file.imageUrl}
-			<img
-				src={extractImageUrl(file.imageUrl)}
-				alt="{file.title}のサムネイル"
-				class="h-64 w-full rounded-t-lg object-cover"
-			/>
+		{#if !isEditing}
+			{#if file.imageUrl}
+				<img
+					src={extractImageUrl(file.imageUrl)}
+					alt="{file.title}のサムネイル"
+					class="h-64 w-full rounded-t-lg object-cover"
+				/>
+			{/if}
 		{/if}
 
 		<!-- コンテンツエリア -->
 		<div class="flex flex-col p-6">
-			<!-- タイトル -->
-			<h2 id="modal-title" class="mb-2 text-2xl font-bold text-gray-900">{file.title}</h2>
-
-			<!-- メタ情報 -->
-			<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
-				<span>👤 {file.authorName}</span>
-				<span>★ {file.starCount}</span>
-				<span>↓ {file.downloadCount}</span>
-				<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
-			</div>
-
-			<!-- タグ -->
-			{#if file.tags && file.tags.length > 0}
-				<div class="mb-4 flex flex-wrap gap-2">
-					{#each file.tags as tag}
-						<span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800">
-							{tag}
-						</span>
-					{/each}
+			{#if isEditing}
+				<h2 id="modal-title" class="mb-4 text-2xl font-bold text-gray-900">情報を編集</h2>
+				<div class="space-y-4">
+					<div>
+						<label for="title" class="block text-sm font-medium text-gray-700">タイトル *</label>
+						<input
+							type="text"
+							id="title"
+							bind:value={editableFile.title}
+							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+							required
+						/>
+					</div>
+					<div>
+						<label for="authorName" class="block text-sm font-medium text-gray-700">作者名</label>
+						<input
+							type="text"
+							id="authorName"
+							bind:value={editableFile.authorName}
+							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						/>
+					</div>
+					<div>
+						<label for="description" class="block text-sm font-medium text-gray-700">説明文</label>
+						<textarea
+							id="description"
+							bind:value={editableFile.description}
+							rows="4"
+							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						></textarea>
+					</div>
+					<div>
+						<label for="imageUrl" class="block text-sm font-medium text-gray-700">画像URL</label>
+						<input
+							type="url"
+							id="imageUrl"
+							bind:value={editableFile.imageUrl}
+							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						/>
+					</div>
 				</div>
-			{/if}
+			{:else}
+				<!-- タイトル -->
+				<h2 id="modal-title" class="mb-2 text-2xl font-bold text-gray-900">{file.title}</h2>
 
-			<!-- 説明 -->
-			<p id="modal-description" class="text-base text-gray-700">{file.description}</p>
+				<!-- メタ情報 -->
+				<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+					<span>👤 {file.authorName}</span>
+					<span>★ {file.starCount}</span>
+					<span>↓ {file.downloadCount}</span>
+					<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
+				</div>
+
+				<!-- タグ -->
+				{#if file.tags && file.tags.length > 0}
+					<div class="mb-4 flex flex-wrap gap-2">
+						{#each file.tags as tag}
+							<span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800">
+								{tag}
+							</span>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- 説明 -->
+				<p id="modal-description" class="text-base text-gray-700">{file.description}</p>
+			{/if}
 		</div>
 
 		<!-- フッター -->
 		<div class="sticky bottom-0 mt-auto rounded-b-lg border-t border-gray-200 bg-gray-50 p-4">
-			<!-- ボタンのコンテナを flex と justify-between に変更 -->
-			<div class="flex items-center justify-between">
-				<!-- 左側にオーナー用ボタンを配置 -->
-				<div>
-					{#if isOwner}
-						<button
-							on:click={handleDelete}
-							disabled={isDeleting}
-							class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-						>
-							{isDeleting ? '削除中...' : '削除する'}
-						</button>
-						<!-- ここに編集ボタンも将来的に追加できます -->
-					{/if}
-				</div>
-
-				<!-- 右側に通常のボタンを配置 -->
+			{#if isEditing}
+				<!-- --- 編集モードのフッター --- -->
 				<div class="flex justify-end gap-3">
 					<button
-						on:click={closeModal}
+						on:click={handleCancelEdit}
 						class="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
 					>
-						閉じる
+						キャンセル
 					</button>
 					<button
-						on:click={handleImport}
-						disabled={isImporting}
+						on:click={handleUpdate}
+						disabled={!editableFile.title || isSaving}
 						class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
 					>
-						{isImporting ? '読み込み中...' : 'このセッションを読み込む'}
+						{isSaving ? '保存中...' : '保存する'}
 					</button>
 				</div>
-			</div>
+			{:else}
+				<!-- --- 表示モードのフッター --- -->
+				<div class="flex items-center justify-between">
+					<!-- 左側にオーナー用ボタンを配置 -->
+					<div>
+						{#if isOwner}
+							<button
+								on:click={handleDelete}
+								disabled={isDeleting}
+								class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+							>
+								{isDeleting ? '削除中...' : '削除'}
+							</button>
+							<!-- 編集ボタン -->
+							<button
+								on:click={handleEditClick}
+								class="ml-2 rounded-md bg-yellow-500 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-600"
+							>
+								編集
+							</button>
+						{/if}
+					</div>
+
+					<!-- 右側に通常のボタンを配置 -->
+					<div class="flex justify-end gap-3">
+						<button
+							on:click={closeModal}
+							class="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+						>
+							閉じる
+						</button>
+						<button
+							on:click={handleImport}
+							disabled={isImporting}
+							class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{isImporting ? '読み込み中...' : 'このセッションを読み込む'}
+						</button>
+					</div>
+				</div>
+			{/if}
 		</div>
 
 		<!-- 右上の閉じるボタン -->
-		<button
-			on:click={closeModal}
-			class="bg-opacity-50 hover:bg-opacity-75 absolute top-4 right-4 rounded-full bg-gray-800 p-2 text-white"
-			aria-label="閉じる"
-		>
-			<svg
-				class="h-5 w-5"
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
+		{#if !isEditing}
+			<button
+				on:click={closeModal}
+				class="bg-opacity-50 hover:bg-opacity-75 absolute top-4 right-4 rounded-full bg-gray-800 p-2 text-white"
+				aria-label="閉じる"
 			>
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M6 18L18 6M6 6l12 12"
-				/>
-			</svg>
-		</button>
+				<svg
+					class="h-5 w-5"
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M6 18L18 6M6 6l12 12"
+					/>
+				</svg>
+			</button>
+		{/if}
 	</div>
 </div>

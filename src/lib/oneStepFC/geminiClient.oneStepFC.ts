@@ -73,7 +73,7 @@ function buildOneStepFCTool(context: ConversationContext) {
 		{
 			functionDeclarations: [
 				{
-					name: 'generateResponseAndState', // 関数名を役割がわかるように変更
+					name: 'generateResponseAndState',
 					description:
 						'ユーザーへの応答テキストと、それに伴う内部状態の変化（好感度など）をまとめて一度に生成します。',
 					parameters: {
@@ -168,7 +168,7 @@ function parseOneStepFCResponse(data: GeminiApiResponse): OneStepFCChatResponse 
  * @param userInput - ユーザーからの最新の入力
  * @returns {Promise<ChatResponse>} - 生成された応答と好感度の変動値を含むオブジェクト
  */
-export async function callGeminiApiWithOneStepFC( // 関数名を役割がわかるように変更
+export async function callGeminiApiWithOneStepFC(
 	apiKey: string,
 	model: string,
 	appSettings: AppSettings,
@@ -194,13 +194,11 @@ export async function callGeminiApiWithOneStepFC( // 関数名を役割がわか
 		if (!response.ok) {
 			const errorBody = await response.json();
 			console.error('Gemini API Error (OneStepFC):', errorBody.error.message);
-			// ▼▼▼【変更】エラー時も metadata を含める ▼▼▼
 			return {
 				responseText: `APIエラーが発生しました: ${errorBody.error.message}`,
 				goodwillFluctuation: 0,
 				metadata: { error: errorBody }
 			};
-			// ▲▲▲【変更ここまで】▲▲▲
 		}
 
 		const data = (await response.json()) as GeminiApiResponse;
@@ -208,12 +206,10 @@ export async function callGeminiApiWithOneStepFC( // 関数名を役割がわか
 	} catch (error) {
 		console.error('Network or other error calling Gemini API (OneStepFC):', error);
 		const errorMessage = error instanceof Error ? error.message : '不明なエラー';
-		// ▼▼▼【変更】エラー時も metadata を含める ▼▼▼
 		return {
 			responseText: `通信エラーが発生しました: ${errorMessage}`,
 			goodwillFluctuation: 0,
 			metadata: { error: String(error) }
 		};
-		// ▲▲▲【変更ここまで】▲▲▲
 	}
 }

@@ -49,7 +49,6 @@ export const defaultGameViewSettings: GameViewSettings = {
 	}
 };
 
-// ▼▼▼【ここから追加】AppSettings の各項目のデフォルト値 ▼▼▼
 /**
  * UI設定のデフォルト値
  */
@@ -77,7 +76,7 @@ export const defaultAssistSettings: AssistSettings = {
 	summarizeOnTokenOverflow: false,
 	tokenThreshold: 3000
 };
-// ▲▲▲【ここまで追加】
+
 /**
  * 生成設定のデフォルト値
  */

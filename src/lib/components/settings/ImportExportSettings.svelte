@@ -146,7 +146,6 @@
 			bind:value={inputText}
 		></textarea>
 
-		<!-- ▼▼▼【変更】ボタンのスタイルを統一 -->
 		<div class="flex flex-wrap items-center justify-between gap-4">
 			<div class="flex items-center gap-2">
 				<button

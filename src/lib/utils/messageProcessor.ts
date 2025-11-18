@@ -7,7 +7,7 @@ export type PageData = {
 	text: string;
 	backgroundUrl?: string;
 	characterUrl?: string;
-	ichimaiEUrl?: string; // ★ 一枚絵のURLプロパティを追加
+	ichimaiEUrl?: string;
 };
 
 /**
@@ -42,7 +42,6 @@ export function processMessageIntoPages(
 	const finalPages: PageData[] = [];
 	const commandRegex = /({{\s*[^:]+?\s*:\s*.+?\s*}})/g;
 
-	// ★ 'ie' (一枚絵) を一時保存するプロパティを追加
 	let pendingCommands: { bg?: string; char?: string; ie?: string } = {};
 	const statusUpdates: Record<string, string> = {};
 
@@ -54,7 +53,7 @@ export function processMessageIntoPages(
 			text: text,
 			backgroundUrl: pendingCommands.bg,
 			characterUrl: pendingCommands.char,
-			ichimaiEUrl: pendingCommands.ie // ★ ページデータに一枚絵のURLをセット
+			ichimaiEUrl: pendingCommands.ie
 		});
 		// ページを確定したら、そのページに紐づく画像コマンドはクリアする
 		pendingCommands = {};
@@ -77,7 +76,6 @@ export function processMessageIntoPages(
 					const type = typeStr.trim();
 					const value = valueStr.trim();
 
-					// ★ 「一枚絵」コマンドの解析ロジックを追加
 					if (type === '背景' || type === '人物' || type === '一枚絵') {
 						const path = value
 							.split('|')
@@ -87,7 +85,7 @@ export function processMessageIntoPages(
 						const finalUrl = `${imageBaseUrl}/${path}${ext}`;
 						if (type === '背景') pendingCommands.bg = finalUrl;
 						else if (type === '人物') pendingCommands.char = finalUrl;
-						else if (type === '一枚絵') pendingCommands.ie = finalUrl; // ★ 一枚絵URLを一時保存
+						else if (type === '一枚絵') pendingCommands.ie = finalUrl;
 					} else {
 						// 上記以外はすべてステータス更新として扱う
 						statusUpdates[type] = value;
@@ -96,7 +94,7 @@ export function processMessageIntoPages(
 				continue;
 			}
 
-			// テキストのページ分割処理 (変更なし)
+			// テキストのページ分割処理
 			const characters = part.split('');
 			for (let i = 0; i < characters.length; i++) {
 				tempContent += characters[i];

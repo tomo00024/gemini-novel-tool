@@ -34,7 +34,6 @@
 		event: Event
 	) {
 		const input = event.target as HTMLInputElement;
-		// ▼▼▼【変更】編集中は0やNaNを許容するため、`|| 100` のフォールバックを削除
 		const newValue = field === 'scale' ? input.valueAsNumber : input.value;
 
 		sessions.update((allSessions) => {
@@ -50,7 +49,6 @@
 		});
 	}
 
-	// ▼▼▼【追加】カーソルが外れたときに値を検証・修正する関数
 	function handleSizingBlur(target: 'background' | 'character' | 'ichimaiE', event: Event) {
 		const input = event.target as HTMLInputElement;
 		const currentValue = input.valueAsNumber;
@@ -170,7 +168,6 @@
 							<!-- 倍率指定の入力欄 (対応するラジオボタンが選択されている時のみ表示) -->
 							{#if sizing.mode === 'scale'}
 								<div class="flex items-center gap-2">
-									<!-- ▼▼▼【変更】on:blurイベントを追加し、min属性を削除 -->
 									<input
 										type="number"
 										class="input input-bordered w-24"

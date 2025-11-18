@@ -16,9 +16,7 @@
 	let editingTitle = '';
 	let inputElement: HTMLInputElement;
 
-	// ▼▼▼【追加】textarea要素をバインドするための変数を宣言 ▼▼▼
 	let textareaElement: HTMLTextAreaElement;
-	// ▲▲▲【追加】ここまで ▲▲▲
 
 	/**
 	 * 編集モードを開始する
@@ -61,16 +59,14 @@
 		target.style.height = `${target.scrollHeight}px`; // 内容に合わせた高さに再設定
 	}
 
-	// ▼▼▼【追加】userInputが空になったら、textareaの高さをリセットするリアクティブ処理 ▼▼▼
 	$: if (userInput === '' && textareaElement) {
 		textareaElement.style.height = 'auto';
 	}
-	// ▲▲▲【追加】ここまで ▲▲▲
 </script>
 
 <div class="flex h-[100dvh] flex-col overflow-hidden p-4">
 	<div class="flex-shrink-0">
-		<!-- ヘッダーブロック (変更なし) -->
+		<!-- ヘッダーブロック  -->
 		<div class="mb-4 flex items-center gap-4">
 			<a
 				href="{base}/"
@@ -116,14 +112,13 @@
 		</div>
 	</div>
 
-	<!-- コンテンツ表示エリア (変更なし) -->
+	<!-- コンテンツ表示エリア-->
 	<div class="mb-4 flex-1 overflow-y-auto">
 		<slot />
 	</div>
 
 	<div class="flex-shrink-0 px-4">
 		<form on:submit|preventDefault class="flex items-end gap-2">
-			<!-- ▼▼▼【変更】bind:this を追加 ▼▼▼ -->
 			<textarea
 				bind:this={textareaElement}
 				rows="1"
@@ -132,7 +127,6 @@
 				placeholder={isLoading ? '送信中...' : 'メッセージを入力...'}
 				class="input flex-1 rounded-lg border border-gray-600 text-gray-200"
 			></textarea>
-			<!-- ▲▲▲【変更】ここまで ▲▲▲ -->
 			<button
 				type="button"
 				on:click={handleSubmit}
@@ -150,7 +144,6 @@
 </div>
 
 <style>
-	/* スタイルブロックは変更なし */
 	.input {
 		padding: 0.5rem;
 	}

@@ -42,11 +42,6 @@ export const load: PageServerLoad = async ({ locals }) => {
             ORDER BY
                 uploadedat DESC;
         `;
-		// ▼▼▼ ここにデバッグコードを追加 ▼▼▼
-		console.log('--- Server-side Data ---');
-		console.log('Session User ID:', session?.user?.id);
-		console.log('First File Data:', result.rows[0]); // 最初のファイル情報を見てみる
-		// ▲▲▲ ここまで ▲▲▲
 		return {
 			files: result.rows,
 			session // セッション情報をページに渡す

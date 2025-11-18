@@ -150,9 +150,7 @@ function _findPotentialUrlLines(responseText: string, rule: ImageCorrectionRule)
 		if (isValid) {
 			validatedLines.push(line);
 		} else {
-			// --- ▼▼▼ デバッグログを追加 ▼▼▼ ---
 			console.log('  - FINAL VERDICT: Line REJECTED');
-			// --- ▲▲▲ ここまで ▲▲▲ ---
 		}
 	}
 	return validatedLines;

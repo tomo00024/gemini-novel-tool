@@ -3,7 +3,6 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { appSettings } from '$lib/stores';
 
-	// busy状態のみを親から受け取るように変更
 	export let busy = false;
 	export let initialTitle = '';
 

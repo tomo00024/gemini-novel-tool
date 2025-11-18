@@ -404,7 +404,6 @@
 			{/if}
 		</div>
 
-		<!-- ▼▼▼データ管理 (ログイン状態に応じてUIを制御) ▼▼▼ -->
 		<div class="space-y-3">
 			<h2 class="block text-lg font-medium">データ管理</h2>
 

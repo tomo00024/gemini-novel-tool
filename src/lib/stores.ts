@@ -36,7 +36,6 @@ const defaultAppSettings: AppSettings = {
 // 2. localStorageから初期値を読み込む
 const storedAppSettingsJSON = browser ? localStorage.getItem(APP_SETTINGS_KEY) : null;
 
-// ▼▼▼【変更】データ移行処理を削除し、シンプルなマージ処理のみに修正 ▼▼▼
 let initialAppSettings: AppSettings = defaultAppSettings;
 
 if (storedAppSettingsJSON) {

@@ -3,10 +3,9 @@
 	import { base } from '$app/paths';
 	import FileDetailModal from '$lib/components/FileDetailModal.svelte';
 
-	import type { PageData } from '../api/import/$types';
+	import type { PageData } from './$types'; // PageDataのインポートパスを修正
 
 	export let data: PageData;
-	console.log('--- Page Component Data ---', data); // ▼▼▼ ここに追加 ▼▼▼
 
 	// モーダル表示のための状態変数
 	let selectedFile: any = null;
@@ -29,6 +28,18 @@
 		const deletedFileId = event.detail;
 		// 削除されたファイルをリストから除外してUIを更新
 		data.files = data.files.filter((file) => file.id !== deletedFileId);
+	}
+
+	// --- 更新イベントを受け取るハンドラの追加 ---
+	function handleFileUpdated(event: CustomEvent<any>) {
+		const updatedFile = event.detail;
+		// data.files配列から更新されたファイルを見つけて置き換える
+		data.files = data.files.map((file) => {
+			if (file.id === updatedFile.id) {
+				return updatedFile; // 新しいデータに置き換え
+			}
+			return file;
+		});
 	}
 
 	/**
@@ -132,5 +143,6 @@
 		session={data.session}
 		on:close={closeModal}
 		on:deleted={handleFileDeleted}
+		on:updated={handleFileUpdated}
 	/>
 {/if}

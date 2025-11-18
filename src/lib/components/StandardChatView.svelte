@@ -16,7 +16,7 @@
 	let textareaElement: HTMLTextAreaElement;
 
 	let activeMenuId: string | null = null;
-	// ▼▼▼【追加】コピー状態を管理する変数 ▼▼▼
+
 	let copiedLogId: string | null = null;
 	let expandedMetadataLogId: string | null = null;
 
@@ -43,7 +43,6 @@
 		}
 	}
 
-	// ▼▼▼【追加】クリップボードにテキストをコピーする関数 ▼▼▼
 	async function handleCopy(logId: string, textToCopy: string) {
 		try {
 			await navigator.clipboard.writeText(textToCopy);
@@ -183,7 +182,6 @@
 						class:menu-active={activeMenuId === log.id}
 						on:click|stopPropagation
 					>
-						<!-- ▼▼▼【追加】コピーボタン ▼▼▼ -->
 						<button class="menu-button" on:click={() => handleCopy(log.id, log.text)}>
 							{#if copiedLogId === log.id}
 								コピーしました！
@@ -191,7 +189,6 @@
 								コピー
 							{/if}
 						</button>
-						<!-- ▲▲▲【追加】ここまで ▲▲▲ -->
 
 						<!-- 編集ボタン -->
 						<button class="menu-button" on:click={(event) => handleStartEditing(log, event)}>

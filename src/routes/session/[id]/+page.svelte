@@ -75,8 +75,6 @@
 		}
 	}
 
-	// --- ▼▼▼【ここから追加】プロンプト生成のためのヘルパー関数群 ▼▼▼ ---
-
 	/**
 	 * ダイスロール設定に基づき、ダイスロールを実行し、指示ブロック文字列を生成する関数
 	 * @param diceRolls ダイスロール設定の配列
@@ -216,10 +214,8 @@
 		return finalParts.join('\n');
 	}
 
-	// --- ▲▲▲【ここまで追加】プロンプト生成のためのヘルパー関数群 ▲▲▲ ---
 
 	function buildConversationHistory(allLogs: Log[], targetLogId: string): Log[] {
-		// (この関数に変更はありません)
 		const history: Log[] = [];
 		const logMap = new Map(allLogs.map((log) => [log.id, log]));
 		const targetLog = logMap.get(targetLogId);
@@ -244,7 +240,6 @@
 		featureSettings: FeatureSettings,
 		triggersToUpdateAfterSuccess: Trigger[] | undefined
 	) {
-		// (この関数に変更はありません)
 		isLoading = true;
 		try {
 			let currentAppSettings = get(appSettings);
@@ -359,7 +354,6 @@
 		}
 	}
 
-	// --- ▼▼▼【ここから修正】handleSubmit 関数 ▼▼▼ ---
 	async function handleSubmit() {
 		if (isLoading || !userInput.trim() || !$currentSession) return;
 		if (!$activeApiKey || !$model) {
@@ -380,14 +374,14 @@
 		// 2. 最終的なプロンプトを組み立てる
 		const finalUserInput = buildFinalUserInput(currentUserInput, [diceBlock, triggerBlock]);
 
-		// --- ユーザーメッセージのログ保存処理 (変更なし) ---
+		// --- ユーザーメッセージのログ保存処理---
 		const now = new Date().toISOString();
 		const allLogs = $currentSession.logs;
 		const logMap = new Map(allLogs.map((log) => [log.id, log]));
 
 		let lastLog: Log | null = null;
 		if (allLogs.length > 0) {
-			// (アクティブな会話の末尾を見つけるロジック - 変更なし)
+			// (アクティブな会話の末尾を見つけるロジック)
 			let currentLog = allLogs.find((log) => log.parentId === null);
 			if (currentLog) {
 				lastLog = currentLog;
@@ -446,7 +440,6 @@
 		);
 	}
 
-	// --- ▼▼▼【ここから修正】handleRetry 関数 ▼▼▼ ---
 	async function handleRetry(userMessageId: string) {
 		if (isLoading || !$currentSession) return;
 		if (!$activeApiKey || !$model) {
@@ -482,7 +475,6 @@
 	}
 
 	function handleUpdateTitle(event: CustomEvent<{ title: string }>): void {
-		// (この関数に変更はありません)
 		const newTitle = event.detail.title;
 		if (!$currentSession || !newTitle) return;
 

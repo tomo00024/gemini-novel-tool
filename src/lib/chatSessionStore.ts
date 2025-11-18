@@ -56,7 +56,6 @@ function createChatSessionStore() {
 			});
 		},
 
-		// ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 修正箇所 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 		saveEditing: () => {
 			const state = get(chatSessionStore);
 			if (!state.session || !state.editingMessageId) return;

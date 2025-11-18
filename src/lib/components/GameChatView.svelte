@@ -41,12 +41,10 @@
 		const s = sizing ?? defaultGameViewSettings.sizing![target];
 		let style = '';
 
-		// ▼▼▼【ここが修正点】▼▼▼
 		// 'max-w-none' と 'max-h-none' を追加し、フレームワークによる
 		// 暗黙的なサイズ制限(max-width: 100%など)を無効化します。
 		// これにより、画像の比率が崩れることを防ぎます。
 		let cssClass = 'absolute max-w-none max-h-none';
-		// ▲▲▲【修正ここまで】▲▲▲
 
 		switch (s.mode) {
 			case 'fit-width':

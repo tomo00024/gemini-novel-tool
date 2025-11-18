@@ -3,7 +3,6 @@
 // ===================================================================
 // 1. 各機能が使用する、固有の設定とデータの型を定義する
 // ===================================================================
-// ▲▲▲【変更なし】ここから上の内容は変更ありません
 
 /**
  * 好感度機能 (Function Calling) の設定とデータ
@@ -64,7 +63,6 @@ export interface Trigger {
 	lastEvaluationResult?: boolean; // 'on-threshold-cross' で使用: 前回の評価結果
 }
 /**
- * ▼▼▼【変更箇所】▼▼▼
  * ダイスロール機能の設定
  * 複数の設定を管理できるようidを追加
  */
@@ -80,7 +78,6 @@ export interface DiceRoll {
 // ===================================================================
 
 /**
- * ▼▼▼【ここから追加】▼▼▼
  * 画像URL補正機能のルールを格納する型
  */
 export interface ImageCorrectionRule {
@@ -124,7 +121,6 @@ export interface ApiKey {
 	key: string;
 }
 
-// ▼▼▼【ここから追加】AppSettings内の詳細な型定義 ▼▼▼
 /**
  * UI設定
  */
@@ -152,7 +148,7 @@ export interface AssistSettings {
 	summarizeOnTokenOverflow: boolean;
 	tokenThreshold: number;
 }
-// ▲▲▲【ここまで追加】
+
 /**
  * AIモデルの生成設定
  */

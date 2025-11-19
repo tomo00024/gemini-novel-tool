@@ -2,12 +2,15 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
-	import { createEventDispatcher, tick } from 'svelte';
+	import { beforeNavigate } from '$app/navigation';
+	import { createEventDispatcher, tick, onMount, onDestroy } from 'svelte';
 
 	export let userInput: string;
 	export let isLoading: boolean;
 	export let handleSubmit: () => Promise<void>;
 	export let sessionTitle: string;
+
+	$: currentSessionId = $page.params.id;
 
 	const sessionId = $page.params.id;
 	const dispatch = createEventDispatcher();
@@ -17,6 +20,10 @@
 	let inputElement: HTMLInputElement;
 
 	let textareaElement: HTMLTextAreaElement;
+
+	// スクロール制御用
+	let scrollContainer: HTMLDivElement;
+	let saveTimeout: any;
 
 	async function startEditing() {
 		isEditing = true;
@@ -50,7 +57,74 @@
 	$: if (userInput === '' && textareaElement) {
 		textareaElement.style.height = 'auto';
 	}
+
+	// =================================================================
+	// スクロール位置保存・復元ロジック
+	// =================================================================
+
+	function getStorageKey(id: string) {
+		return `chat_scroll_pos_${id}`;
+	}
+
+	function saveScrollPosition() {
+		if (!scrollContainer || !currentSessionId) return;
+
+		const key = getStorageKey(currentSessionId);
+		const scrollTop = scrollContainer.scrollTop;
+
+		try {
+			sessionStorage.setItem(key, scrollTop.toString());
+		} catch (e) {
+			console.error(e);
+		}
+	}
+
+	function handleScroll() {
+		if (saveTimeout) clearTimeout(saveTimeout);
+		// 連打防止：スクロールが止まってから保存
+		saveTimeout = setTimeout(() => {
+			saveScrollPosition();
+		}, 500);
+	}
+
+	// 画面遷移直前（DOMが消える前）に保存
+	beforeNavigate(() => {
+		if (saveTimeout) clearTimeout(saveTimeout);
+		saveScrollPosition();
+	});
+
+	async function restoreScrollPosition() {
+		if (!currentSessionId) return;
+		await tick();
+
+		const key = getStorageKey(currentSessionId);
+		const savedPos = sessionStorage.getItem(key);
+
+		if (savedPos === null || !scrollContainer) return;
+
+		const targetPos = parseInt(savedPos, 10);
+		if (targetPos >= 0) {
+			scrollContainer.scrollTop = targetPos;
+		}
+	}
+
+	onMount(() => {
+		restoreScrollPosition();
+		// 画像読み込み等によるレイアウトズレ対策（念のため）
+		setTimeout(() => restoreScrollPosition(), 300);
+	});
+
+	onDestroy(() => {
+		if (saveTimeout) clearTimeout(saveTimeout);
+	});
+
+	// リロード対策
+	function handleBeforeUnload() {
+		saveScrollPosition();
+	}
 </script>
+
+<svelte:window on:beforeunload={handleBeforeUnload} />
 
 <div class="flex h-[100dvh] flex-col overflow-hidden p-4">
 	<div class="flex-shrink-0">
@@ -100,8 +174,8 @@
 		</div>
 	</div>
 
-	<!-- コンテンツ表示エリア-->
-	<div class="mb-4 flex-1 overflow-y-auto">
+	<!-- コンテンツ表示エリア -->
+	<div bind:this={scrollContainer} on:scroll={handleScroll} class="mb-4 flex-1 overflow-y-auto">
 		<slot />
 	</div>
 

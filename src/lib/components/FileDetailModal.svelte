@@ -43,7 +43,8 @@
 					title: editableFile.title,
 					authorName: editableFile.authorName,
 					description: editableFile.description,
-					imageUrl: editableFile.imageUrl
+					imageUrl: editableFile.imageUrl,
+					model: editableFile.model
 				})
 			});
 
@@ -221,8 +222,18 @@
 							type="text"
 							id="title"
 							bind:value={editableFile.title}
-							class="mt-1 block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 							required
+						/>
+					</div>
+					<div>
+						<label for="model" class="block text-sm font-medium text-gray-300">モデル</label>
+						<input
+							type="text"
+							id="model"
+							bind:value={editableFile.model}
+							placeholder="gemini-1.5-pro など"
+							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 					<div>
@@ -231,7 +242,7 @@
 							type="text"
 							id="authorName"
 							bind:value={editableFile.authorName}
-							class="mt-1 block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 					<div>
@@ -240,7 +251,7 @@
 							id="description"
 							bind:value={editableFile.description}
 							rows="4"
-							class="mt-1 block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						></textarea>
 					</div>
 					<div>
@@ -249,7 +260,7 @@
 							type="url"
 							id="imageUrl"
 							bind:value={editableFile.imageUrl}
-							class="mt-1 block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 				</div>
@@ -259,6 +270,11 @@
 
 				<!-- メタ情報 -->
 				<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400">
+					{#if file.model}
+						<span class="flex items-center gap-1" title="使用モデル">
+							🤖 {file.model.replace(/^models\//, '')}
+						</span>
+					{/if}
 					<span>👤 {file.authorName}</span>
 					<span>★ {file.starCount}</span>
 					<span>↓ {file.downloadCount}</span>

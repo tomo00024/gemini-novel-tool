@@ -34,7 +34,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	// 検証済みの安全なデータを取得
-	const { sessionData, title, description, imageUrl, expiresAt, authorName } =
+	const { sessionData, title, description, imageUrl, expiresAt, authorName, model } =
 		validationResult.data;
 
 	const fileContent = JSON.stringify(sessionData);
@@ -72,12 +72,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				INSERT INTO files (
 					id, title, description, image_url, author_name,
 					file_name, blob_url, pathname, content_type, size_bytes,
-					expires_at, uploader_id, visibility
+					expires_at, uploader_id, visibility, model
 				) VALUES (
 					${fileId}, ${title}, ${description}, ${imageUrl}, ${authorName},
 					${finalFileName},
                     ${blob.url}, ${blob.pathname}, ${blob.contentType}, ${fileSize},
-					${expiresAt}, ${uploaderId}, 'public'
+					${expiresAt}, ${uploaderId}, 'public', ${model}
 				)
 			`;
 

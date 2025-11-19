@@ -124,6 +124,11 @@
 								<div class="mt-3 flex items-center justify-between">
 									<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
 										<span>👤 {file.authorName}</span>
+										{#if file.model}
+											<span class="flex items-center gap-1" title="使用モデル">
+												🤖 {file.model.replace(/^models\//, '')}
+											</span>
+										{/if}
 										<span>★ {file.starCount}</span>
 										<span>↓ {file.downloadCount}</span>
 										<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>

@@ -22,6 +22,13 @@ export const uploadSchema = z.object({
 	// authorName: 必須、1文字以上、100文字以下
 	authorName: z.string().max(50, { message: '作者名は100文字以内で入力してください。' }),
 
+	// ▼ 追加: モデル情報の検証定義
+	model: z
+		.string()
+		.max(100, { message: 'モデル名は100文字以内で入力してください。' })
+		.optional()
+		.nullable(),
+
 	// expiresAt: 任意、有効な日付・時刻形式の文字列
 	expiresAt: z
 		.string()

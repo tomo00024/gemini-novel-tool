@@ -1,5 +1,67 @@
 @import 'tailwindcss';
+
+@theme {
+	--color-app-bg: var(--bg-app);
+	--color-text-base: var(--text-base);
+
+	--color-bubble-ai-bg: var(--bubble-ai-bg);
+	--color-bubble-ai-text: var(--bubble-ai-text);
+
+	--color-bubble-user-bg: var(--bubble-user-bg);
+	--color-bubble-user-text: var(--bubble-user-text);
+
+	--color-btn-primary-bg: var(--btn-primary-bg);
+	--color-btn-primary-text: var(--btn-primary-text);
+	--color-btn-primary-hover-bg: var(--btn-primary-hover-bg);
+
+	--color-btn-secondary-bg: var(--btn-secondary-bg);
+	--color-btn-secondary-text: var(--btn-secondary-text);
+
+	--color-btn-menu-bg: var(--btn-menu-bg);
+	--color-btn-menu-text: var(--btn-menu-text);
+	--color-btn-menu-border: var(--btn-menu-border);
+	--color-btn-menu-hover-bg: var(--btn-menu-hover-bg);
+	--color-btn-menu-hover-border: var(--btn-menu-hover-border);
+
+	--color-border-base: var(--border-color);
+	--color-code-bg: var(--code-bg);
+	--color-code-text: var(--code-text);
+}
+
+:root {
+	/* アプリケーション全体の背景とテキスト */
+	--bg-app: #171817;
+	--text-base: #374151;
+
+	/* AIのチャットバブル */
+	--bubble-ai-bg: #f3f3f3;
+	--bubble-ai-text: #3d3d3d;
+
+	/* ユーザーのチャットバブル */
+	--bubble-user-bg: #133a0e;
+	--bubble-user-text: #e5e7eb;
+
+	/* プライマリーボタン */
+	--btn-primary-bg: #133a0e;
+	--btn-primary-text: #ffffff;
+	--btn-primary-hover-bg: #0d2c0b;
+
+	/* セカンダリーボタン / メニューボタン */
+	--btn-secondary-bg: #e5e7eb;
+	--btn-secondary-text: #374151;
+	--btn-menu-bg: #f9fafb;
+	--btn-menu-text: #374151;
+	--btn-menu-border: #e5e7eb;
+	--btn-menu-hover-bg: #f3f4f6;
+	--btn-menu-hover-border: #d1d5db;
+
+	/* ボーダーとその他 */
+	--border-color: #d1d5db;
+	--code-bg: #e5e7eb;
+	--code-text: #374151;
+}
+
 body {
-	background-color: #171817;
-	color: #374151;
+	background-color: var(--bg-app);
+	color: var(--text-base);
 }

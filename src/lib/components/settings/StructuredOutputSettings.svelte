@@ -5,6 +5,10 @@
 	import { derived } from 'svelte/store';
 	import type { Session } from '$lib/types';
 	import type { Readable } from 'svelte/store';
+	import Section from '$lib/components/ui/Section.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	export let currentSession: Readable<Session | undefined>;
 	export let onModeChange: (event: Event) => void;
@@ -71,72 +75,72 @@
 	}
 </script>
 
-<div class="rounded-lg border p-4">
-	<label class="flex cursor-pointer items-center justify-between">
+<Section title="構造化出力モード（非推奨・試験版）">
+	<label
+		class="flex cursor-pointer items-center justify-between rounded-lg border border-gray-600 p-4 hover:bg-gray-800"
+	>
 		<div>
-			<h2 class="text-lg font-semibold">構造化出力モード（非推奨・試験版）</h2>
-			<p class="text-sm text-gray-600">AIの応答に特定のデータ構造を含めるように指示します。</p>
+			<p class="text-sm text-gray-400">AIの応答に特定のデータ構造を含めるように指示します。</p>
 		</div>
 		<input
 			type="radio"
 			name="session-mode"
 			value="oneStepFC"
+			class="h-4 w-4"
 			checked={$apiMode === 'oneStepFC'}
 			on:change={onModeChange}
 		/>
 	</label>
 
 	{#if $apiMode === 'oneStepFC'}
-		<div class="mt-4 space-y-4 border-t pt-4">
+		<div class="mt-4 space-y-4 border-t border-gray-600 pt-4">
 			<div>
-				<label for="goodwill-desc" class="mb-2 block font-medium">AIへの指示 (description)</label>
-				<textarea
+				<Textarea
 					id="goodwill-desc"
-					class="textarea w-full rounded border p-2"
+					label="AIへの指示 (description)"
 					placeholder="例: キャラクターの好感度の増減を2から-2までの5段階評価"
 					value={$goodwill?.descriptionForAI || ''}
 					on:input={handleDescriptionChange}
-				></textarea>
+				/>
 			</div>
 			<div>
-				<h3 class="mb-2 font-medium">好感度によるAIの応答変化ルール</h3>
+				<h3 class="mb-2 font-medium text-gray-200">好感度によるAIの応答変化ルール</h3>
 				<div class="space-y-3">
 					{#if $goodwill}
 						{#each $goodwill.thresholds as threshold, i (i)}
-							<div class="flex items-start gap-2 rounded-md border bg-gray-50 p-2">
+							<div class="flex items-start gap-2 rounded-md border border-gray-600 bg-gray-800 p-2">
 								<div class="flex-none">
-									<label for="level-{i}" class="text-sm font-bold">Level</label>
-									<input
+									<Input
 										id="level-{i}"
 										type="number"
-										class="input input-bordered w-24"
+										label="Level"
+										class="w-24"
 										value={threshold.level}
 										on:input={(e) => handleThresholdChange(i, 'level', e)}
 									/>
 								</div>
 								<div class="flex-grow">
-									<label for="prompt-{i}" class="text-sm font-bold">追加プロンプト</label>
-									<textarea
+									<Textarea
 										id="prompt-{i}"
-										class="textarea textarea-bordered h-20 w-full"
+										label="追加プロンプト"
+										class="h-20 w-full"
 										placeholder="このレベルの時にAIに追加される指示"
 										value={threshold.prompt_addon}
 										on:input={(e) => handleThresholdChange(i, 'prompt_addon', e)}
-									></textarea>
+									/>
 								</div>
-								<button
-									class="btn btn-sm btn-circle btn-ghost mt-6"
+								<Button
+									variant="danger"
+									class="mt-8 rounded-full px-2 py-1 text-xs"
 									on:click={() => removeThreshold(i)}
-									aria-label="Remove threshold {i}">✕</button
+									title="Remove threshold {i}">✕</Button
 								>
 							</div>
 						{/each}
 					{/if}
-					<button class="btn btn-sm btn-outline btn-primary mt-2" on:click={addThreshold}
-						>+ ルールを追加</button
-					>
+					<Button variant="primary" on:click={addThreshold}>+ ルールを追加</Button>
 				</div>
 			</div>
 		</div>
 	{/if}
-</div>
+</Section>

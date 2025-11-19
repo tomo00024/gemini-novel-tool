@@ -2,14 +2,17 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import FileDetailModal from '$lib/components/FileDetailModal.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
 
-	import type { PageData } from './$types'; // PageDataのインポートパスを修正
+	import type { PageData } from './$types';
 
 	export let data: PageData;
 
 	// モーダル表示のための状態変数
 	let selectedFile: any = null;
 	let isModalOpen = false;
+	let searchQuery = '';
 
 	// カードがクリックされたときにモーダルを開く関数
 	function openModal(file: any) {
@@ -55,85 +58,83 @@
 	}
 </script>
 
-<div class="mx-auto max-w-4xl p-4 sm:p-6">
-	<div class="mb-6">
-		<div class="flex items-center justify-between">
-			<h1 class="text-2xl font-bold text-gray-800">公開セッション</h1>
-			<a
-				href="{base}/"
-				class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-			>
-				履歴画面
+<div class="flex h-screen flex-col bg-app-bg p-4 text-gray-200">
+	<div class="mx-auto w-full max-w-3xl flex-1 overflow-y-auto pb-20">
+		<!-- ヘッダー -->
+		<div class="mb-6 flex items-center justify-between">
+			<h1 class="text-xl font-bold text-gray-200">公開セッション</h1>
+			<a href="{base}/">
+				<Button variant="secondary">履歴画面</Button>
 			</a>
 		</div>
-		<p class="mt-1 text-gray-600">
-			他のユーザーが公開したセッションを読み込みます
-		</p>
-	</div>
+		<p class="mb-6 text-gray-400">他のユーザーが公開したセッションを読み込みます</p>
 
-	<div class="mb-6">
-		<input
-			type="search"
-			placeholder="キーワードで検索..."
-			class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-		/>
-	</div>
+		<div class="mb-6">
+			<Input
+				type="search"
+				bind:value={searchQuery}
+				placeholder="キーワードで検索..."
+				class="w-full"
+			/>
+		</div>
 
-	<div class="space-y-4">
-		{#if data.files.length === 0}
-			<div class="py-16 text-center text-gray-500">まだ公開されているセッションがありません。</div>
-		{:else}
-			{#each data.files as file (file.id)}
-				<!-- カード全体をクリック可能にし、モーダルを開くようにする -->
-				<!-- svelte-ignore a11y-no-static-element-interactions -->
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<div
-					class="cursor-pointer rounded-lg border bg-white p-4 transition-shadow hover:shadow-md"
-					on:click={() => openModal(file)}
-				>
-					<div class="flex flex-row gap-4">
-						{#if file.imageUrl}
-							<div class="flex-shrink-0">
-								<img
-									src={extractImageUrl(file.imageUrl)}
-									alt="{file.title}のサムネイル"
-									class="h-32 w-full rounded-md object-cover sm:h-full sm:w-40"
-								/>
-							</div>
-						{/if}
-
-						<div class="flex flex-grow flex-col">
-							<h3 class="text-lg font-semibold text-gray-800">{file.title}</h3>
-
-							{#if file.tags && file.tags.length > 0}
-								<div class="mt-2 flex flex-wrap gap-2">
-									{#each file.tags as tag}
-										<span
-											class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700"
-										>
-											{tag}
-										</span>
-									{/each}
+		<div class="space-y-4">
+			{#if data.files.length === 0}
+				<div class="py-16 text-center text-gray-500">
+					まだ公開されているセッションがありません。
+				</div>
+			{:else}
+				{#each data.files as file (file.id)}
+					<!-- カード全体をクリック可能にし、モーダルを開くようにする -->
+					<!-- svelte-ignore a11y-no-static-element-interactions -->
+					<!-- svelte-ignore a11y-click-events-have-key-events -->
+					<div
+						class="cursor-pointer rounded-lg border border-gray-700 bg-transparent p-4 transition hover:bg-gray-800/50"
+						on:click={() => openModal(file)}
+					>
+						<div class="flex flex-row gap-4">
+							{#if file.imageUrl}
+								<div class="flex-shrink-0">
+									<img
+										src={extractImageUrl(file.imageUrl)}
+										alt="{file.title}のサムネイル"
+										class="h-24 w-24 rounded-md object-cover sm:h-28 sm:w-28"
+									/>
 								</div>
 							{/if}
 
-							<p class="mt-2 flex-grow text-sm text-gray-600">{file.description}</p>
+							<div class="flex flex-grow flex-col overflow-hidden">
+								<h3 class="truncate text-lg font-semibold text-gray-200">{file.title}</h3>
 
-							<!-- メタ情報とボタンのレイアウトを調整 -->
-							<div class="mt-3 flex items-center justify-between">
-								<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
-									<span>👤 {file.authorName}</span>
-									<span>★ {file.starCount}</span>
-									<span>↓ {file.downloadCount}</span>
-									<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
+								{#if file.tags && file.tags.length > 0}
+									<div class="mt-2 flex flex-wrap gap-2">
+										{#each file.tags as tag}
+											<span
+												class="rounded-full bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-300"
+											>
+												{tag}
+											</span>
+										{/each}
+									</div>
+								{/if}
+
+								<p class="mt-2 line-clamp-2 flex-grow text-sm text-gray-400">{file.description}</p>
+
+								<!-- メタ情報 -->
+								<div class="mt-3 flex items-center justify-between">
+									<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+										<span>👤 {file.authorName}</span>
+										<span>★ {file.starCount}</span>
+										<span>↓ {file.downloadCount}</span>
+										<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
+									</div>
 								</div>
-								<!-- カード内のダウンロードボタンを削除 -->
 							</div>
 						</div>
 					</div>
-				</div>
-			{/each}
-		{/if}
+				{/each}
+			{/if}
+		</div>
 	</div>
 </div>
 

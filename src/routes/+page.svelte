@@ -7,30 +7,29 @@
 	import { onDestroy } from 'svelte';
 	import { tick } from 'svelte';
 	import PublishModal from '$lib/components/PublishModal.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	// --- UIの状態管理用変数 ---
 	let isUploadMode = false;
 	let isPublishModalOpen = false;
 	let isSubmitting = false;
-	let isDataLinkModalOpen = false;
 	let sessionToPublishId: string | null = null;
-	// `contentScope    ` は PublishModal 内で管理されるため、このページでは不要
-	let dataLinkModalElement: HTMLDivElement;
 
 	// --- キーボードイベントハンドラ ---
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
-			isPublishModalOpen = false;
-			closeDataLinkModal();
+			// モーダルが開いていれば閉じる
+			if (isPublishModalOpen) {
+				isPublishModalOpen = false;
+			} else if (isUploadMode) {
+				// モーダルが閉じていてアップロードモードなら、モードを解除（背景クリックと同じ挙動）
+				isUploadMode = false;
+			}
 		}
 	}
 
-	$: if (isPublishModalOpen || isDataLinkModalOpen) {
+	$: if (isPublishModalOpen || isUploadMode) {
 		window.addEventListener('keydown', handleKeydown);
-		tick().then(() => {
-			// PublishModal側でフォーカス管理するため、ここでのフォーカス処理は不要
-			if (isDataLinkModalOpen) dataLinkModalElement?.focus();
-		});
 	} else {
 		window.removeEventListener('keydown', handleKeydown);
 	}
@@ -52,10 +51,6 @@
 		sessions.update((currentSessions) => currentSessions.filter((session) => session.id !== id));
 	}
 
-	function toggleUploadMode(): void {
-		isUploadMode = !isUploadMode;
-	}
-
 	function openPublishModal(id: string): void {
 		sessionToPublishId = id;
 		isPublishModalOpen = true;
@@ -65,7 +60,6 @@
 	 * 最終的なアップロードを実行する関数
 	 */
 	async function handleFinalPublish(event: CustomEvent) {
-		// contentScope     は event.detail から受け取る
 		const { contentScope } = event.detail;
 		if (!sessionToPublishId || !contentScope) return;
 
@@ -96,27 +90,18 @@
 				const errorResponse = await response.json();
 				let errorMessage = errorResponse.message || 'アップロードに失敗しました。';
 
-				// Zodからの詳細なエラー情報(errorsオブジェクト)があれば、メッセージに追加する
 				if (errorResponse.errors) {
-					// errorResponse.errors は { title: ["エラー1"], description: ["エラー2"] } のような形
-					const detailedErrors = Object.values(errorResponse.errors)
-						.flat() // 配列をフラット化 (例: [['A'], ['B']] -> ['A', 'B'])
-						.join('\n'); // 各エラーメッセージを改行で連結
-
-					// 詳細なエラーメッセージが1つでもあれば、errorMessageに追加
+					const detailedErrors = Object.values(errorResponse.errors).flat().join('\n');
 					if (detailedErrors) {
 						errorMessage += `\n\n詳細:\n${detailedErrors}`;
 					}
 				}
-
-				// 構築した詳細なエラーメッセージをスローする
 				throw new Error(errorMessage);
 			}
 
 			sessions.update((currentSessions) =>
 				currentSessions.map((session) => {
 					if (session.id === sessionToPublishId) {
-						// 新しいタイトルでセッションオブジェクトを更新
 						return { ...session, title: event.detail.title };
 					}
 					return session;
@@ -135,128 +120,156 @@
 		}
 	}
 
-	function openDataLinkModal(): void {
-		isDataLinkModalOpen = true;
-	}
-
-	function closeDataLinkModal(): void {
-		isDataLinkModalOpen = false;
-	}
-
-	function handleUploadSelect(): void {
-		closeDataLinkModal();
-		isUploadMode = true;
+	// 背景クリック時の処理
+	function handleBackgroundClick() {
+		if (isUploadMode) {
+			isUploadMode = false;
+		}
 	}
 </script>
 
-<div class="flex h-screen flex-col p-4">
-	<!-- ヘッダー部分は変更なし -->
-	<div class="mb-6 flex items-center justify-between">
-		<h1 class="text-xl font-bold text-gray-700">履歴画面</h1>
-		<div class="flex items-center gap-4">
-			{#if isUploadMode}
-				<button
-					on:click={() => (isUploadMode = false)}
-					class="rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-				>
-					戻る
-				</button>
-			{:else}
-				<button
-					on:click={openDataLinkModal}
-					class="rounded bg-gray-500 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-600"
-				>
-					公開サーバー
-				</button>
-			{/if}
-			<a
-				href="{base}/settings"
-				class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-				>アプリ設定</a
-			>
-			<button
-				on:click={handleNewSession}
-				class="rounded bg-[#133a0e] px-3 py-2 text-sm font-semibold text-white hover:bg-[#0d2c0b]"
-				>新規セッション</button
-			>
-		</div>
-	</div>
-
-	<!-- アップロードモードの案内文も変更なし -->
-	{#if isUploadMode}
-		<div class="mb-4 rounded-lg bg-blue-100 p-3 text-center text-sm text-blue-800">
-			公開したいセッションを選択してください。
-		</div>
-	{/if}
-
-	<!-- セッションリストの部分も変更なし -->
-	{#if $sessions.length === 0}
-		<p class="text-gray-500">
-			まだセッションがありません。「新しいセッションを開始」ボタンから始めましょう。
-		</p>
-	{:else}
-		<ul class="space-y-3">
-			{#each [...$sessions].sort((a, b) => new Date(b.lastUpdatedAt).getTime() - new Date(a.lastUpdatedAt).getTime()) as session (session.id)}
+<!-- 
+    【修正箇所】
+    a11y警告を抑制します。Escapeキーで同等の操作(キャンセル)を提供しているため問題ありません。
+-->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="flex h-screen flex-col bg-app-bg p-4 text-gray-200" on:click={handleBackgroundClick}>
+	<div class="mx-auto w-full max-w-3xl flex-1 overflow-y-auto pb-20">
+		<!-- ヘッダー -->
+		<div class="mb-6 flex items-center justify-between">
+			<h1 class="text-xl font-bold text-gray-200">履歴画面</h1>
+			<div class="flex items-center gap-4">
 				{#if isUploadMode}
-					<!-- アップロードモード: on:click で直接 openPublishModal を呼ぶ -->
-					<li>
-						<button
-							type="button"
-							class="flex w-full cursor-pointer items-center justify-between rounded-lg bg-white p-4 text-left shadow transition hover:bg-gray-50"
-							on:click={() => openPublishModal(session.id)}
+					<Button
+						variant="secondary"
+						on:click={(e) => {
+							e.stopPropagation();
+							isUploadMode = false;
+						}}
+					>
+						戻る
+					</Button>
+				{:else}
+					<a href="{base}/public" on:click|stopPropagation>
+						<Button variant="secondary">探す</Button>
+					</a>
+
+					<Button
+						variant="secondary"
+						on:click={(e) => {
+							e.stopPropagation();
+							isUploadMode = true;
+						}}
+					>
+						投稿
+					</Button>
+				{/if}
+
+				<a href="{base}/settings" on:click|stopPropagation>
+					<Button variant="secondary">アプリ設定</Button>
+				</a>
+
+				<Button
+					variant="primary"
+					on:click={(e) => {
+						e.stopPropagation();
+						handleNewSession();
+					}}
+				>
+					新規セッション
+				</Button>
+			</div>
+		</div>
+
+		<!-- アップロードモードの案内文 -->
+		{#if isUploadMode}
+			<!-- 
+                【修正箇所】
+                案内文をクリックしてもモード解除されないように stopPropagation が必要です。
+                インタラクティブ要素ではないため警告が出ますが、意図的なので抑制します。
+            -->
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<div class="mb-4 text-center font-bold text-gray-200" on:click|stopPropagation>
+				公開したいセッションを選択してください。
+			</div>
+		{/if}
+
+		<!-- セッションリスト -->
+		{#if $sessions.length === 0}
+			<p class="text-gray-500">
+				まだセッションがありません。「新しいセッションを開始」ボタンから始めましょう。
+			</p>
+		{:else}
+			<ul class="space-y-3">
+				{#each [...$sessions].sort((a, b) => new Date(b.lastUpdatedAt).getTime() - new Date(a.lastUpdatedAt).getTime()) as session (session.id)}
+					{#if isUploadMode}
+						<!-- アップロードモード -->
+						<li>
+							<button
+								type="button"
+								class="flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-700 bg-transparent p-4 text-left transition hover:bg-gray-800/50"
+								on:click|stopPropagation={() => openPublishModal(session.id)}
+							>
+								<div class="flex-grow overflow-hidden">
+									<div class="truncate text-lg font-semibold text-gray-200">{session.title}</div>
+									<div class="mt-1 text-sm text-gray-400">
+										最終更新: {new Date(session.lastUpdatedAt).toLocaleString('ja-JP')}
+									</div>
+								</div>
+								<div class="ml-4 flex-shrink-0">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="h-5 w-5 text-gray-400"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+											clip-rule="evenodd"
+										/>
+									</svg>
+								</div>
+							</button>
+						</li>
+					{:else}
+						<!-- 通常モード -->
+						<li
+							class="flex items-center justify-between rounded-lg border border-gray-700 bg-transparent p-4 transition hover:bg-gray-800/50"
 						>
-							<div class="flex-grow overflow-hidden">
-								<div class="truncate text-lg font-semibold text-gray-800">{session.title}</div>
-								<div class="mt-1 text-sm text-gray-600">
+							<!-- 
+                                【修正箇所】
+                                通常モードでは背景クリックイベント(handleBackgroundClick)は何もしないため、
+                                li で stopPropagation する必要はありません。削除してa11y警告を解消します。
+                            -->
+							<a href="{base}/session/{session.id}" class="flex-grow overflow-hidden">
+								<div class="truncate text-lg font-semibold text-gray-200">{session.title}</div>
+								<div class="mt-1 text-sm text-gray-400">
 									最終更新: {new Date(session.lastUpdatedAt).toLocaleString('ja-JP')}
 								</div>
-							</div>
-							<div class="ml-4 flex-shrink-0">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									class="h-5 w-5 text-gray-400"
-									viewBox="0 0 20 20"
-									fill="currentColor"
+							</a>
+							<div class="ml-4 flex flex-shrink-0 items-center gap-2">
+								<Button
+									variant="danger"
+									class="px-3 py-2 text-sm"
+									on:click={(e) => {
+										e.stopPropagation();
+										handleDeleteSession(session.id);
+									}}
+									title="このセッションを削除"
 								>
-									<path
-										fill-rule="evenodd"
-										d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-										clip-rule="evenodd"
-									/>
-								</svg>
+									削除
+								</Button>
 							</div>
-						</button>
-					</li>
-				{:else}
-					<!-- 通常モード: 変更なし -->
-					<li class="flex items-center justify-between rounded-lg bg-white p-4 shadow">
-						<a href="{base}/session/{session.id}" class="flex-grow overflow-hidden">
-							<div class="truncate text-lg font-semibold text-gray-800">{session.title}</div>
-							<div class="mt-1 text-sm text-gray-600">
-								最終更新: {new Date(session.lastUpdatedAt).toLocaleString('ja-JP')}
-							</div>
-						</a>
-						<div class="ml-4 flex flex-shrink-0 items-center gap-2">
-							<button
-								on:click|stopPropagation={(e) => {
-									e.preventDefault();
-									handleDeleteSession(session.id);
-								}}
-								class="rounded bg-red-200 px-3 py-2 text-sm font-semibold text-red-800 hover:bg-red-300"
-								title="このセッションを削除"
-							>
-								削除
-							</button>
-						</div>
-					</li>
-				{/if}
-			{/each}
-		</ul>
-	{/if}
+						</li>
+					{/if}
+				{/each}
+			</ul>
+		{/if}
+	</div>
 </div>
-
-<!-- 削除: 公開範囲を選択するための中間モーダルは不要になったので完全に削除します -->
-<!-- {#if isModalOpen} ... {/if} -->
 
 <!-- 統合されたPublishModalを呼び出す -->
 {#if isPublishModalOpen && sessionToPublishId}
@@ -269,63 +282,4 @@
 			on:close={() => (isPublishModalOpen = false)}
 		/>
 	{/if}
-{/if}
-
-<!-- データ連携モーダル（アップロード/ダウンロード選択）は変更なし -->
-{#if isDataLinkModalOpen}
-	<!-- svelte-ignore a11y-no-static-element-interactions, a11y-click-events-have-key-events -->
-	<div
-		class="bg-opacity-60 fixed inset-0 z-50 flex items-center justify-center bg-black"
-		on:click={closeDataLinkModal}
-	>
-		<div
-			bind:this={dataLinkModalElement}
-			tabindex="-1"
-			class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl outline-none"
-			on:click|stopPropagation
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="data-link-modal-title"
-		>
-			<h2 id="data-link-modal-title" class="text-xl font-bold text-gray-800">公開サーバー</h2>
-			<p class="mt-2 text-sm text-gray-600">どの操作を実行しますか？</p>
-
-			<div class="mt-4 space-y-4">
-				<button
-					on:click={handleUploadSelect}
-					class="flex w-full cursor-pointer items-start rounded-lg border p-4 text-left transition hover:bg-gray-50"
-				>
-					<div class="mr-4 text-2xl">↑</div>
-					<div>
-						<span class="font-semibold text-gray-800">アップロード</span>
-						<p class="mt-1 text-sm text-gray-600">
-							公開したいセッションを選択して、サーバーに保存します。※アップロードにはGoogle認証が必要です。
-						</p>
-					</div>
-				</button>
-
-				<a
-					href="{base}/public"
-					class="flex w-full cursor-pointer items-start rounded-lg border p-4 text-left transition hover:bg-gray-50"
-				>
-					<div class="mr-4 text-2xl">↓</div>
-					<div>
-						<span class="font-semibold text-gray-800">ダウンロード</span>
-						<p class="mt-1 text-sm text-gray-600">
-							サーバーに保存されているセッションを選び、アプリに読み込みます。
-						</p>
-					</div>
-				</a>
-			</div>
-
-			<div class="mt-6 flex justify-end gap-3">
-				<button
-					on:click={closeDataLinkModal}
-					class="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-				>
-					キャンセル
-				</button>
-			</div>
-		</div>
-	</div>
 {/if}

@@ -16,8 +16,8 @@ interface GeminiApiResponse {
 }
 
 /**
- * Gemini APIに渡す対話履歴(`contents`)を準備します。
- *
+ * Gemini APIに渡す対話履歴(contents)を準備します。
+ * ユーザー入力、ダミーユーザープロンプト、ダミーモデルプロンプトを結合します。
  */
 function prepareGeminiContents(
 	appSettings: AppSettings,
@@ -40,12 +40,21 @@ function prepareGeminiContents(
 		});
 	}
 
+	// --- 追加: ダミーモデルプロンプトの実装 ---
+	// AIの応答の書き出しを指定（Pre-fill）します。
+	// これを配列の最後に role: 'model' として置くことで、AIはこの続きを生成します。
+	if (appSettings.dummyModelPrompt.isEnabled && appSettings.dummyModelPrompt.text.trim()) {
+		contents.push({
+			role: 'model',
+			parts: [{ text: appSettings.dummyModelPrompt.text }]
+		});
+	}
+
 	return contents;
 }
 
 /**
  * Gemini APIからのレスポンスを解析し、ChatResponse形式に変換します。
- *
  */
 function parseGeminiResponse(data: GeminiApiResponse): Omit<StandardChatResponse, 'requestBody'> {
 	// parts配列全体を取得します。もし存在しない場合は空の配列とします。
@@ -68,6 +77,7 @@ function parseGeminiResponse(data: GeminiApiResponse): Omit<StandardChatResponse
 
 	return { responseText, metadata: data };
 }
+
 export async function callGeminiApiOnClient(
 	apiKey: string,
 	model: string,
@@ -96,19 +106,26 @@ export async function callGeminiApiOnClient(
 		(generationConfig as any).thinkingBudget = generationSettings.thinkingBudget;
 	}
 
-	// まずは必須のプロパティでrequestBodyのベースを定義します。
-	// 型アノテーションを追加して、TypeScriptがプロパティを認識できるようにします。
+	// --- 変更: リクエストボディの型定義と構築 ---
+	// systemInstruction を含められるように型を拡張します。
 	const requestBody: {
 		contents: typeof contents;
 		safetySettings: typeof geminiModelConfig.safetySettings;
-		generationConfig?: typeof generationConfig; // generationConfigはオプショナル
+		generationConfig?: typeof generationConfig;
+		systemInstruction?: { parts: { text: string }[] }; // システムプロンプト用
 	} = {
 		contents,
 		safetySettings: geminiModelConfig.safetySettings
 	};
 
-	// generationConfigオブジェクトに何かしらのキーが含まれている（＝空ではない）場合のみ、
-	// requestBodyにgenerationConfigプロパティを追加します。
+	// --- 追加: システムプロンプトの実装 ---
+	if (appSettings.systemPrompt.isEnabled && appSettings.systemPrompt.text.trim()) {
+		requestBody.systemInstruction = {
+			parts: [{ text: appSettings.systemPrompt.text }]
+		};
+	}
+
+	// generationConfigオブジェクトに何かしらのキーが含まれている場合のみ追加
 	if (Object.keys(generationConfig).length > 0) {
 		requestBody.generationConfig = generationConfig;
 	}
@@ -124,20 +141,30 @@ export async function callGeminiApiOnClient(
 			const response = await fetch(API_URL, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(requestBody) // 最終的なrequestBodyを送信
+				body: JSON.stringify(requestBody)
 			});
 
 			if (response.ok) {
 				const data = (await response.json()) as GeminiApiResponse;
+				const parsedResponse = parseGeminiResponse(data);
+
+				// --- 追加: ダミーモデルプロンプトの結合処理 ---
+				// ダミーモデルプロンプトを使用した場合、APIは「続き」しか返さないことが多いため、
+				// UI表示用にダミーテキストと生成テキストを結合します。
+				if (appSettings.dummyModelPrompt.isEnabled && appSettings.dummyModelPrompt.text.trim()) {
+					parsedResponse.responseText =
+						appSettings.dummyModelPrompt.text + parsedResponse.responseText;
+				}
+
 				return {
-					...parseGeminiResponse(data),
+					...parsedResponse,
 					requestBody: requestBody
 				};
 			}
 
 			// OKではない場合、エラーハンドリング
 			const errorBody = await response.json();
-			lastError = errorBody; // 最後のエラーとして保持
+			lastError = errorBody;
 
 			if (
 				response.status === 429 &&
@@ -145,85 +172,72 @@ export async function callGeminiApiOnClient(
 				appSettings.apiKeys &&
 				appSettings.apiKeys.length >= 2
 			) {
-				// UI層にキー切り替えを促すための特別なレスポンスを返す
 				return {
-					responseText: '', // レスポンスがないことを示す
+					responseText: '',
 					metadata: { error: errorBody, requiresApiKeyLoop: true },
 					requestBody: requestBody
 				};
 			}
-			// リトライ対象のステータスコードかチェック
-			const retryableStatuses = [500, 502, 503]; // 元のコードのまま
+
+			const retryableStatuses = [500, 502, 503];
 			if (
 				exponentialBackoff &&
 				retryableStatuses.includes(response.status) &&
-				attempt < maxAttempts - 1 // 最後の試行では待機しない
+				attempt < maxAttempts - 1
 			) {
 				const backoffTime = initialWaitTime * 2 ** attempt;
-				const jitter = Math.random() * 500; // 最大500msのゆらぎを追加
+				const jitter = Math.random() * 500;
 				const waitTime = backoffTime + jitter;
 
 				console.log(
-					`Attempt ${attempt + 1} failed with status ${
-						response.status
+					`Attempt ${attempt + 1} failed with status ${response.status
 					}. Retrying in ${waitTime.toFixed(0)}ms...`
 				);
 				await new Promise((resolve) => setTimeout(resolve, waitTime));
-				continue; // 次の試行へ
+				continue;
 			} else if (retryableStatuses.includes(response.status) && attempt === maxAttempts - 1) {
-				// 最後のリトライ試行がリトライ対象エラーだった場合、ここでは何もせずループを抜けさせる
-				// lastErrorには既にエラー情報が格納されている
 				break;
 			} else {
-				// リトライ対象外のエラーだった場合は、即座にエラーを返して終了する
-				// (これは元のロジックと同じ挙動)
 				const errorMessage = errorBody.error?.message || '不明なAPIエラーです。';
 				const errorCode = errorBody.error?.code || response.status;
 				const errorStatus = errorBody.error?.status || '';
 				const userFacingMessage = `APIエラーが発生しました (${errorCode} ${errorStatus}): ${errorMessage}`;
 				console.error('Gemini API Error:', userFacingMessage);
 				return {
-					responseText: userFacingMessage, // 組み立てたメッセージを返す
+					responseText: userFacingMessage,
 					metadata: { error: errorBody },
 					requestBody: requestBody
 				};
 			}
 		} catch (error) {
-			lastError = error; // ネットワークエラーなどを保持
-
+			lastError = error;
 			if (exponentialBackoff && attempt < maxAttempts - 1) {
 				const backoffTime = initialWaitTime * 2 ** attempt;
 				const jitter = Math.random() * 500;
 				const waitTime = backoffTime + jitter;
 
 				console.warn(
-					`Attempt ${
-						attempt + 1
+					`Attempt ${attempt + 1
 					} failed with a network error. Retrying in ${waitTime.toFixed(0)}ms...`,
 					error
 				);
 				await new Promise((resolve) => setTimeout(resolve, waitTime));
-				continue; // 次の試行へ
+				continue;
 			}
 		}
 	}
 
-	// ループがすべて失敗した場合
 	console.error('All retry attempts failed. Last error:', lastError);
 	let finalErrorMessage: string;
 
-	// lastErrorがAPIからのエラーレスポンスか、ネットワークエラーかを判定
 	if (lastError?.error?.message) {
-		// APIからのエラーの場合
 		const message = lastError.error.message;
 		const code = lastError.error.code;
 		const status = lastError.error.status;
 		finalErrorMessage = `APIエラー (${code} ${status}): ${message}`;
 	} else if (lastError instanceof Error) {
-		// ネットワークエラーなどの場合
 		finalErrorMessage = `通信エラー: ${lastError.message}`;
 	} else {
-		// その他の予期せぬエラー
 		finalErrorMessage = '不明なエラーが発生しました。';
 	}
 

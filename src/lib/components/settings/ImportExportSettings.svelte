@@ -4,6 +4,9 @@
 	import { page } from '$app/stores';
 	import { sessions } from '$lib/stores';
 	import { derived } from 'svelte/store';
+	import Section from '$lib/components/ui/Section.svelte';
+	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	const sessionId = derived(page, ($page) => $page.params.id);
 	const currentSession = derived([sessions, sessionId], ([$sessions, $sessionId]) =>
@@ -128,46 +131,34 @@
 	$: isApplyButtonDisabled = !!parseError || !inputText;
 </script>
 
-<div class="rounded-lg border p-4">
-	<div class="space-y-4">
-		<div>
-			<h2 class="text-lg font-semibold">設定のインポート/エクスポート</h2>
-			{#if parseError}
-				<p class="text-sm text-red-600">{parseError}</p>
-			{/if}
-			<p class="mt-1 text-sm text-gray-600">
-				現在のセッション設定を出力したり、テキストを貼り付けて設定を読み込んだりできます。
-			</p>
+<Section title="設定のインポート/エクスポート">
+	{#if parseError}
+		<p class="text-sm text-red-500">{parseError}</p>
+	{/if}
+	<p class="text-sm text-gray-400">
+		現在のセッション設定を出力したり、テキストを貼り付けて設定を読み込んだりできます。
+	</p>
+
+	<Textarea
+		rows={8}
+		placeholder="設定データ（JSON または b64::で始まるBase64文字列）をここに貼り付けてください。"
+		bind:value={inputText}
+		class="font-mono text-xs"
+	/>
+
+	<div class="flex flex-wrap items-center justify-between gap-4">
+		<div class="flex items-center gap-2">
+			<Button on:click={exportAsJson}>JSONで出力</Button>
+			<Button on:click={exportAsBase64}>難読化して出力</Button>
 		</div>
 
-		<textarea
-			class="textarea textarea-bordered h-48 w-full font-mono text-xs"
-			placeholder="設定データ（JSON または b64::で始まるBase64文字列）をここに貼り付けてください。"
-			bind:value={inputText}
-		></textarea>
-
-		<div class="flex flex-wrap items-center justify-between gap-4">
-			<div class="flex items-center gap-2">
-				<button
-					class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-					on:click={exportAsJson}>JSONで出力</button
-				>
-				<button
-					class="rounded bg-gray-300 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-400"
-					on:click={exportAsBase64}>難読化して出力</button
-				>
-			</div>
-
-			<div class="flex items-center gap-2">
-				{#if copySuccess}
-					<span class="text-sm text-green-600">クリップボードにコピーしました！</span>
-				{/if}
-				<button
-					class="rounded bg-[#133a0e] px-3 py-2 text-sm font-semibold text-white hover:bg-[#0d2c0b] disabled:cursor-not-allowed disabled:opacity-50"
-					on:click={importSettings}
-					disabled={isApplyButtonDisabled}>設定を適用</button
-				>
-			</div>
+		<div class="flex items-center gap-2">
+			{#if copySuccess}
+				<span class="text-sm text-green-400">クリップボードにコピーしました！</span>
+			{/if}
+			<Button variant="primary" on:click={importSettings} disabled={isApplyButtonDisabled}>
+				設定を適用
+			</Button>
 		</div>
 	</div>
-</div>
+</Section>

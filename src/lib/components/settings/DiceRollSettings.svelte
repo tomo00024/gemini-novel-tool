@@ -4,6 +4,10 @@
 	import { sessions } from '$lib/stores';
 	import { derived } from 'svelte/store';
 	import { generateUUID } from '$lib/utils';
+	import Section from '$lib/components/ui/Section.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	const sessionId = derived(page, ($page) => $page.params.id);
 	const currentSession = derived([sessions, sessionId], ([$sessions, $sessionId]) =>
@@ -67,81 +71,83 @@
 	}
 </script>
 
-<div class="space-y-4">
-	<div>
-		<h3 class="font-medium">ダイスロール設定</h3>
-		<p class="mb-3 text-xs text-gray-600">常時ダイスロールを同時に送信します。</p>
-	</div>
+<Section title="ダイスロール設定">
+	<p class="mb-3 text-xs text-gray-400">常時ダイスロールを同時に送信します。</p>
 
 	<!-- ダイスロール設定のリスト -->
 	<div class="space-y-4">
 		{#if $currentSession?.diceRolls}
 			{#each $currentSession.diceRolls as diceRoll (diceRoll.id)}
-				<div class="space-y-3 rounded-lg border bg-gray-50 p-3">
+				<div class="space-y-3 rounded-lg border border-gray-600 bg-transparent p-4">
 					<div class="flex items-center justify-between">
-						<h4 class="font-semibold">ダイスロール</h4>
-						<button
-							class="rounded bg-gray-200 px-2 py-1 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+						<h4 class="font-semibold text-gray-200">ダイスロール</h4>
+						<Button
+							variant="danger"
+							class="px-2 py-1 text-xs"
 							on:click={() => removeDiceRoll(diceRoll.id)}
 							aria-label="Remove dice roll"
 						>
 							✕
-						</button>
+						</Button>
 					</div>
 
 					<!-- 指示文章 -->
 					<div>
-						<label
-							for="instructionText-{diceRoll.id}"
-							class="mb-1 block text-sm font-medium text-gray-700">指示文章</label
-						>
-						<textarea
+						<Textarea
 							id="instructionText-{diceRoll.id}"
-							class="textarea textarea-bordered w-full"
+							label="指示文章"
+							class="w-full"
 							placeholder="例: 必要時に値を使用してください"
-							rows="1"
+							rows={1}
 							value={diceRoll.instructionText}
 							on:input={(e) =>
-								handleDiceRollChange(diceRoll.id, 'instructionText', e.currentTarget.value)}
-						></textarea>
+								handleDiceRollChange(
+									diceRoll.id,
+									'instructionText',
+									(e.target as HTMLTextAreaElement).value
+								)}
+						/>
 					</div>
 
 					<div class="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
-						<label class="flex items-center gap-2">
-							<span class="text-sm font-medium text-gray-700">ダイスの数</span>
-							<input
+						<div class="flex items-center gap-2">
+							<Input
 								type="number"
 								id="diceCount-{diceRoll.id}"
+								label="ダイスの数"
 								min="1"
-								class="input input-bordered input-sm w-24"
+								class="w-24"
 								value={diceRoll.diceCount}
 								on:input={(e) =>
-									handleDiceRollChange(diceRoll.id, 'diceCount', e.currentTarget.value)}
+									handleDiceRollChange(
+										diceRoll.id,
+										'diceCount',
+										(e.target as HTMLInputElement).value
+									)}
 							/>
-						</label>
-						<label class="flex items-center gap-2">
-							<span class="text-sm font-medium text-gray-700">ダイスの面</span>
-							<input
+						</div>
+						<div class="flex items-center gap-2">
+							<Input
 								type="number"
 								id="diceType-{diceRoll.id}"
+								label="ダイスの面"
 								min="1"
 								placeholder="例: 6, 100"
-								class="input input-bordered input-sm w-24"
+								class="w-24"
 								value={diceRoll.diceType}
 								on:input={(e) =>
-									handleDiceRollChange(diceRoll.id, 'diceType', e.currentTarget.value)}
+									handleDiceRollChange(
+										diceRoll.id,
+										'diceType',
+										(e.target as HTMLInputElement).value
+									)}
 							/>
-						</label>
+						</div>
 					</div>
 				</div>
 			{/each}
 		{/if}
 	</div>
 
-	<button
-		class="mt-3 rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-		on:click={addDiceRoll}
-	>
-		+ ダイスロールを追加
-	</button>
-</div>
+	<Button class="mt-4" on:click={addDiceRoll}>+ ダイスロールを追加</Button>
+</Section>

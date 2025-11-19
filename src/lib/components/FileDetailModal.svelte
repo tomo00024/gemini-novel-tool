@@ -7,6 +7,7 @@
 	import type { Session } from '$lib/types';
 	import { generateUUID } from '$lib/utils';
 	import type { Session as AuthSession } from '@auth/sveltekit';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	export let session: AuthSession | null = null;
 	export let file: any;
@@ -182,7 +183,7 @@
 <div
 	role="button"
 	tabindex="-1"
-	class="bg-opacity-60 fixed inset-0 z-50 flex items-center justify-center bg-black"
+	class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
 	on:click={() => !isEditing && closeModal()}
 	on:keydown={(e) => e.key === 'Enter' && !isEditing && closeModal()}
 	transition:fade={{ duration: 150 }}
@@ -190,7 +191,7 @@
 	<div
 		bind:this={dialogElement}
 		tabindex="-1"
-		class="relative mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-y-auto rounded-lg bg-white shadow-xl outline-none"
+		class="relative mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-y-auto rounded-lg bg-app-bg shadow-xl outline-none"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="modal-title"
@@ -204,7 +205,7 @@
 				<img
 					src={extractImageUrl(file.imageUrl)}
 					alt="{file.title}のサムネイル"
-					class="h-64 w-full rounded-t-lg object-cover"
+					class="h-64 w-full rounded-t-lg object-cover opacity-90"
 				/>
 			{/if}
 		{/if}
@@ -212,52 +213,52 @@
 		<!-- コンテンツエリア -->
 		<div class="flex flex-col p-6">
 			{#if isEditing}
-				<h2 id="modal-title" class="mb-4 text-2xl font-bold text-gray-900">情報を編集</h2>
+				<h2 id="modal-title" class="mb-4 text-2xl font-bold text-gray-200">情報を編集</h2>
 				<div class="space-y-4">
 					<div>
-						<label for="title" class="block text-sm font-medium text-gray-700">タイトル *</label>
+						<label for="title" class="block text-sm font-medium text-gray-300">タイトル *</label>
 						<input
 							type="text"
 							id="title"
 							bind:value={editableFile.title}
-							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 							required
 						/>
 					</div>
 					<div>
-						<label for="authorName" class="block text-sm font-medium text-gray-700">作者名</label>
+						<label for="authorName" class="block text-sm font-medium text-gray-300">作者名</label>
 						<input
 							type="text"
 							id="authorName"
 							bind:value={editableFile.authorName}
-							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 					<div>
-						<label for="description" class="block text-sm font-medium text-gray-700">説明文</label>
+						<label for="description" class="block text-sm font-medium text-gray-300">説明文</label>
 						<textarea
 							id="description"
 							bind:value={editableFile.description}
 							rows="4"
-							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						></textarea>
 					</div>
 					<div>
-						<label for="imageUrl" class="block text-sm font-medium text-gray-700">画像URL</label>
+						<label for="imageUrl" class="block text-sm font-medium text-gray-300">画像URL</label>
 						<input
 							type="url"
 							id="imageUrl"
 							bind:value={editableFile.imageUrl}
-							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 				</div>
 			{:else}
 				<!-- タイトル -->
-				<h2 id="modal-title" class="mb-2 text-2xl font-bold text-gray-900">{file.title}</h2>
+				<h2 id="modal-title" class="mb-2 text-2xl font-bold text-gray-100">{file.title}</h2>
 
 				<!-- メタ情報 -->
-				<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+				<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400">
 					<span>👤 {file.authorName}</span>
 					<span>★ {file.starCount}</span>
 					<span>↓ {file.downloadCount}</span>
@@ -268,7 +269,7 @@
 				{#if file.tags && file.tags.length > 0}
 					<div class="mb-4 flex flex-wrap gap-2">
 						{#each file.tags as tag}
-							<span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800">
+							<span class="rounded-full bg-gray-700 px-3 py-1 text-xs font-medium text-gray-300">
 								{tag}
 							</span>
 						{/each}
@@ -276,25 +277,29 @@
 				{/if}
 
 				<!-- 説明 -->
-				<p id="modal-description" class="text-base text-gray-700">{file.description}</p>
+				<p id="modal-description" class="text-base leading-relaxed text-gray-300">
+					{file.description}
+				</p>
 			{/if}
 		</div>
 
 		<!-- フッター -->
-		<div class="sticky bottom-0 mt-auto rounded-b-lg border-t border-gray-200 bg-gray-50 p-4">
+		<div
+			class="sticky bottom-0 mt-auto rounded-b-lg border-t border-gray-700 bg-app-bg/95 p-4 backdrop-blur"
+		>
 			{#if isEditing}
 				<!-- --- 編集モードのフッター --- -->
 				<div class="flex justify-end gap-3">
 					<button
 						on:click={handleCancelEdit}
-						class="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+						class="rounded-md border border-gray-600 bg-transparent px-4 py-2 text-sm font-semibold text-gray-300 transition hover:bg-gray-800"
 					>
 						キャンセル
 					</button>
 					<button
 						on:click={handleUpdate}
 						disabled={!editableFile.title || isSaving}
-						class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+						class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{isSaving ? '保存中...' : '保存する'}
 					</button>
@@ -303,19 +308,19 @@
 				<!-- --- 表示モードのフッター --- -->
 				<div class="flex items-center justify-between">
 					<!-- 左側にオーナー用ボタンを配置 -->
-					<div>
+					<div class="flex gap-2">
 						{#if isOwner}
 							<button
 								on:click={handleDelete}
 								disabled={isDeleting}
-								class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+								class="rounded-md bg-red-900/50 px-4 py-2 text-sm font-semibold text-red-200 hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-50"
 							>
 								{isDeleting ? '削除中...' : '削除'}
 							</button>
-							<!-- 編集ボタン -->
+							<!-- 編集ボタン: 指定のみどり (#133a0e) に変更 -->
 							<button
 								on:click={handleEditClick}
-								class="ml-2 rounded-md bg-yellow-500 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-600"
+								class="rounded-md bg-[#133a0e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0d2c0b]"
 							>
 								編集
 							</button>
@@ -326,17 +331,13 @@
 					<div class="flex justify-end gap-3">
 						<button
 							on:click={closeModal}
-							class="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+							class="rounded-md border border-gray-600 bg-transparent px-4 py-2 text-sm font-semibold text-gray-300 transition hover:bg-gray-800"
 						>
 							閉じる
 						</button>
-						<button
-							on:click={handleImport}
-							disabled={isImporting}
-							class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-						>
+						<Button variant="blue" on:click={handleImport} disabled={isImporting}>
 							{isImporting ? '読み込み中...' : '読み込む'}
-						</button>
+						</Button>
 					</div>
 				</div>
 			{/if}
@@ -346,7 +347,7 @@
 		{#if !isEditing}
 			<button
 				on:click={closeModal}
-				class="bg-opacity-50 hover:bg-opacity-75 absolute top-4 right-4 rounded-full bg-gray-800 p-2 text-white"
+				class="absolute top-4 right-4 rounded-full bg-black/50 p-2 text-gray-300 transition hover:bg-black/75 hover:text-white"
 				aria-label="閉じる"
 			>
 				<svg

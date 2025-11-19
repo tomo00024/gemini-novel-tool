@@ -5,6 +5,11 @@
 	import { derived } from 'svelte/store';
 	import type { Trigger, StatusUpdate } from '$lib/types';
 	import { generateUUID } from '$lib/utils';
+	import Section from '$lib/components/ui/Section.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
+	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	const sessionId = derived(page, ($page) => $page.params.id);
 	const currentSession = derived([sessions, sessionId], ([$sessions, $sessionId]) =>
@@ -172,164 +177,180 @@
 	}
 </script>
 
-<div class="space-y-4">
-	<h3 class="font-medium">トリガー設定</h3>
-	<p class="mb-3 text-xs text-gray-600">上から順に条件が判定・実行されます。</p>
+<Section title="トリガー設定">
+	<p class="mb-3 text-xs text-gray-400">上から順に条件が判定・実行されます。</p>
 
 	<!-- トリガーのリスト -->
-	<div class="space-y-4">
+	<div class="space-y-6">
 		{#if $currentSession?.triggers}
 			{#each $currentSession.triggers as trigger, index (trigger.id)}
-				<div class="space-y-3 rounded-lg border bg-gray-50 p-3">
+				<div class="rounded-lg border border-gray-700 bg-transparent p-4">
 					<!-- ヘッダー (トリガー名 + 操作ボタン) -->
-					<div class="flex items-center justify-between">
+					<div class="mb-4 flex items-center justify-between border-b border-gray-700 pb-2">
 						<div class="flex items-center gap-2">
 							<span class="text-sm font-semibold text-gray-500">#{index + 1}</span>
-							<h4 class="font-semibold">トリガー条件</h4>
+							<h4 class="font-semibold text-gray-200">トリガー条件</h4>
 						</div>
 						<div class="flex items-center gap-1">
-							<button
-								class="btn btn-xs btn-ghost px-1"
+							<Button
+								variant="secondary"
+								class="px-2 py-1 text-xs"
 								disabled={index === 0}
-								on:click={() => moveTrigger(index, 'up')}>↑</button
+								on:click={() => moveTrigger(index, 'up')}>↑</Button
 							>
-							<button
-								class="btn btn-xs btn-ghost px-1"
+							<Button
+								variant="secondary"
+								class="px-2 py-1 text-xs"
 								disabled={index === ($currentSession.triggers?.length || 0) - 1}
-								on:click={() => moveTrigger(index, 'down')}>↓</button
+								on:click={() => moveTrigger(index, 'down')}>↓</Button
 							>
-							<div class="divider divider-horizontal mx-1 h-4 self-center"></div>
-							<button
-								class="rounded bg-gray-200 px-2 py-1 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+							<div
+								class="divider divider-horizontal mx-2 h-4 w-[1px] self-center bg-gray-700"
+							></div>
+							<Button
+								variant="danger"
+								class="px-2 py-1 text-xs"
 								on:click={() => removeTrigger(trigger.id)}
 								aria-label="Remove trigger"
 							>
 								✕
-							</button>
+							</Button>
 						</div>
 					</div>
 
 					<!-- 条件 (If) -->
-					<div class="space-y-2 rounded-md border bg-white p-2">
-						<p class="text-sm font-semibold">If (もし)</p>
-						<div class="space-y-3">
+					<div class="mb-4 space-y-2">
+						<p class="text-sm font-semibold text-gray-400">If (もし)</p>
+						<div class="space-y-3 pl-2">
 							{#each trigger.conditions as condition, j (condition.id)}
 								<div class="space-y-2">
 									<div class="flex flex-wrap items-center gap-2">
-										<select
-											class="select select-bordered select-sm min-w-[120px] flex-1"
-											value={condition.statusId}
-											on:change={(e) =>
-												handleConditionChange(
-													trigger.id,
-													condition.id,
-													'statusId',
-													e.currentTarget.value
-												)}
-										>
-											<option disabled value="">ステータス</option>
-											{#if $currentSession.customStatuses}
-												{#each $currentSession.customStatuses as status}
-													<option value={status.id}>{status.name}</option>
-												{/each}
-											{/if}
-										</select>
+										<div class="min-w-[120px] flex-1">
+											<Select
+												value={condition.statusId}
+												class="w-full"
+												on:change={(e) =>
+													handleConditionChange(
+														trigger.id,
+														condition.id,
+														'statusId',
+														(e.target as HTMLSelectElement).value
+													)}
+											>
+												<option disabled value="">ステータス</option>
+												{#if $currentSession.customStatuses}
+													{#each $currentSession.customStatuses as status}
+														<option value={status.id}>{status.name}</option>
+													{/each}
+												{/if}
+											</Select>
+										</div>
 
-										<select
-											class="select select-bordered select-sm w-20"
-											value={condition.operator}
-											on:change={(e) =>
-												handleConditionChange(
-													trigger.id,
-													condition.id,
-													'operator',
-													e.currentTarget.value
-												)}
-										>
-											<option value="==">==</option>
-											<option value=">=">&gt;=</option>
-											<option value=">">&gt;</option>
-											<option value="<=">&lt;=</option>
-											<option value="<">&lt;</option>
-										</select>
+										<div class="w-24">
+											<Select
+												value={condition.operator}
+												class="w-full"
+												on:change={(e) =>
+													handleConditionChange(
+														trigger.id,
+														condition.id,
+														'operator',
+														(e.target as HTMLSelectElement).value
+													)}
+											>
+												<option value="==">==</option>
+												<option value=">=">&gt;=</option>
+												<option value=">">&gt;</option>
+												<option value="<=">&lt;=</option>
+												<option value="<">&lt;</option>
+											</Select>
+										</div>
 
-										<input
+										<Input
 											type="number"
-											class="input input-bordered input-sm w-20"
+											class="w-24"
 											value={condition.value}
 											on:input={(e) =>
 												handleConditionChange(
 													trigger.id,
 													condition.id,
 													'value',
-													e.currentTarget.value
+													(e.target as HTMLInputElement).value
 												)}
 										/>
 
 										{#if trigger.conditions.length > 1}
-											<button
-												class="rounded bg-gray-200 px-2 py-1 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+											<Button
+												variant="danger"
+												class="px-2 py-2"
 												on:click={() => removeCondition(trigger, condition.id)}
 											>
 												✕
-											</button>
+											</Button>
 										{/if}
 									</div>
 
 									{#if j < trigger.conditions.length - 1}
 										<div class="flex justify-center">
-											<select
-												class="select select-bordered select-xs w-20 text-center"
-												value={trigger.conjunctions[j]}
-												on:change={(e) =>
-													handleConjunctionChange(
-														trigger.id,
-														j,
-														e.currentTarget.value as 'AND' | 'OR'
-													)}
-											>
-												<option value="AND">AND</option>
-												<option value="OR">OR</option>
-											</select>
+											<div class="w-24">
+												<Select
+													class="text-center"
+													value={trigger.conjunctions[j]}
+													on:change={(e) =>
+														handleConjunctionChange(
+															trigger.id,
+															j,
+															(e.target as HTMLSelectElement).value as 'AND' | 'OR'
+														)}
+												>
+													<option value="AND">AND</option>
+													<option value="OR">OR</option>
+												</Select>
+											</div>
 										</div>
 									{/if}
 								</div>
 							{/each}
 						</div>
-						<button
-							class="mt-1 rounded bg-gray-200 px-2 py-1 text-xs font-semibold text-gray-800 hover:bg-gray-300"
+						<Button
+							variant="secondary"
+							class="mt-2 px-3 py-1 text-xs"
 							on:click={() => addCondition(trigger)}
 						>
 							+ 条件を追加
-						</button>
+						</Button>
 					</div>
 
 					<!-- 実行内容 (Then) -->
-					<div class="space-y-2 rounded-md border bg-white p-2">
+					<div class="space-y-2 border-t border-gray-700 pt-4">
 						<div class="flex items-center justify-between">
-							<p class="text-sm font-semibold">Then (ならば)</p>
+							<p class="text-sm font-semibold text-gray-400">Then (ならば)</p>
 						</div>
 
 						<!-- タブ切り替え -->
-						<div class="tabs tabs-boxed bg-gray-100 p-1">
+						<div class="flex overflow-hidden rounded-lg border border-gray-700">
 							<button
-								class="tab h-8 min-h-0 flex-1 text-xs {!activeTabMap[trigger.id] ||
-								activeTabMap[trigger.id] === 'response'
-									? 'tab-active bg-white shadow-sm'
-									: ''}"
+								class="flex-1 py-2 text-xs font-medium transition-colors {!activeTabMap[
+									trigger.id
+								] || activeTabMap[trigger.id] === 'response'
+									? 'bg-gray-700 text-white'
+									: 'bg-transparent text-gray-400 hover:bg-gray-800 hover:text-gray-200'}"
 								on:click={() => toggleTab(trigger.id, 'response')}
 							>
 								💬 AI応答
 							</button>
+							<div class="w-[1px] bg-gray-700"></div>
 							<button
-								class="tab h-8 min-h-0 flex-1 text-xs {activeTabMap[trigger.id] === 'status'
-									? 'tab-active bg-white shadow-sm'
-									: ''}"
+								class="flex-1 py-2 text-xs font-medium transition-colors {activeTabMap[
+									trigger.id
+								] === 'status'
+									? 'bg-gray-700 text-white'
+									: 'bg-transparent text-gray-400 hover:bg-gray-800 hover:text-gray-200'}"
 								on:click={() => toggleTab(trigger.id, 'status')}
 							>
 								⚡ ステータス
 								{#if trigger.statusUpdates && trigger.statusUpdates.length > 0}
-									<span class="badge badge-xs ml-1 bg-gray-600 text-white"
+									<span class="ml-1 rounded-full bg-gray-600 px-1.5 py-0.5 text-[10px] text-white"
 										>{trigger.statusUpdates.length}</span
 									>
 								{/if}
@@ -339,91 +360,117 @@
 						<!-- タブ内容: AI応答 -->
 						<div
 							class={!activeTabMap[trigger.id] || activeTabMap[trigger.id] === 'response'
-								? 'block space-y-2'
+								? 'block space-y-3 pt-2'
 								: 'hidden'}
 						>
 							<div class="flex items-center justify-between">
-								<span class="text-xs text-gray-500">実行タイミング:</span>
-								<select
-									class="select select-bordered select-xs"
-									value={trigger.executionType}
-									on:change={(e) =>
-										handleTriggerChange(trigger.id, 'executionType', e.currentTarget.value)}
-								>
-									<option value="once">一度だけ</option>
-									<option value="persistent">条件合致中ずっと</option>
-									<option value="on-threshold-cross">毎回(閾値をまたぐ時)</option>
-								</select>
+								<span class="text-xs text-gray-400">実行タイミング:</span>
+								<div class="w-48">
+									<Select
+										value={trigger.executionType}
+										class="text-xs"
+										on:change={(e) =>
+											handleTriggerChange(
+												trigger.id,
+												'executionType',
+												(e.target as HTMLSelectElement).value
+											)}
+									>
+										<option value="once">一度だけ</option>
+										<option value="persistent">条件合致中ずっと</option>
+										<option value="on-threshold-cross">毎回(閾値をまたぐ時)</option>
+									</Select>
+								</div>
 							</div>
-							<textarea
-								class="textarea textarea-bordered w-full text-sm"
-								rows="2"
+							<Textarea
+								class="w-full text-sm"
+								rows={2}
 								placeholder="AIへの追加指示（例: プレイヤーがダメージを受けた描写をして）"
 								value={trigger.responseText}
 								on:input={(e) =>
-									handleTriggerChange(trigger.id, 'responseText', e.currentTarget.value)}
-							></textarea>
+									handleTriggerChange(
+										trigger.id,
+										'responseText',
+										(e.target as HTMLTextAreaElement).value
+									)}
+							/>
 						</div>
 
 						<!-- タブ内容: ステータス -->
-						<div class={activeTabMap[trigger.id] === 'status' ? 'block space-y-2' : 'hidden'}>
+						<div class={activeTabMap[trigger.id] === 'status' ? 'block space-y-3 pt-2' : 'hidden'}>
 							{#if trigger.statusUpdates && trigger.statusUpdates.length > 0}
 								{#each trigger.statusUpdates as update, k}
 									<div class="flex items-center gap-2">
-										<select
-											class="select select-bordered select-sm min-w-[100px] flex-1"
-											value={update.targetStatusId}
-											on:change={(e) =>
+										<div class="min-w-[100px] flex-1">
+											<Select
+												value={update.targetStatusId}
+												class="w-full"
+												on:change={(e) =>
+													handleStatusUpdateChange(
+														trigger.id,
+														k,
+														'targetStatusId',
+														(e.target as HTMLSelectElement).value
+													)}
+											>
+												<option disabled value="">対象</option>
+												{#if $currentSession.customStatuses}
+													{#each $currentSession.customStatuses as status}
+														<option value={status.id}>{status.name}</option>
+													{/each}
+												{/if}
+											</Select>
+										</div>
+
+										<div class="w-20">
+											<Select
+												value={update.operation}
+												class="w-full"
+												on:change={(e) =>
+													handleStatusUpdateChange(
+														trigger.id,
+														k,
+														'operation',
+														(e.target as HTMLSelectElement).value
+													)}
+											>
+												<option value="set">=</option>
+												<option value="add">+</option>
+												<option value="sub">-</option>
+											</Select>
+										</div>
+
+										<Input
+											type="number"
+											class="w-20"
+											value={update.value}
+											on:input={(e) =>
 												handleStatusUpdateChange(
 													trigger.id,
 													k,
-													'targetStatusId',
-													e.currentTarget.value
+													'value',
+													(e.target as HTMLInputElement).value
 												)}
-										>
-											<option disabled value="">対象</option>
-											{#if $currentSession.customStatuses}
-												{#each $currentSession.customStatuses as status}
-													<option value={status.id}>{status.name}</option>
-												{/each}
-											{/if}
-										</select>
-
-										<select
-											class="select select-bordered select-sm w-[70px]"
-											value={update.operation}
-											on:change={(e) =>
-												handleStatusUpdateChange(trigger.id, k, 'operation', e.currentTarget.value)}
-										>
-											<option value="set">=</option>
-											<option value="add">+</option>
-											<option value="sub">-</option>
-										</select>
-
-										<input
-											type="number"
-											class="input input-bordered input-sm w-16"
-											value={update.value}
-											on:input={(e) =>
-												handleStatusUpdateChange(trigger.id, k, 'value', e.currentTarget.value)}
 										/>
-										<button
-											class="rounded bg-gray-200 px-2 py-1 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+										<Button
+											variant="danger"
+											class="px-2 py-2"
 											on:click={() => removeStatusUpdate(trigger.id, k)}
 										>
 											✕
-										</button>
+										</Button>
 									</div>
 								{/each}
 							{:else}
-								<p class="py-2 text-center text-xs text-gray-400">設定なし</p>
+								<p class="py-2 text-center text-xs text-gray-500">設定なし</p>
 							{/if}
-							<button
-								class="mt-1 w-full rounded bg-gray-100 py-1 text-xs text-gray-600 hover:bg-gray-200"
+							<Button
+								variant="secondary"
+								class="mt-1 py-1 text-xs"
 								on:click={() => addStatusUpdate(trigger.id)}
 							>
 								+ ステータス変動を追加
-							</button>
+							</Button>
 						</div>
 					</div>
 				</div>
@@ -431,10 +478,5 @@
 		{/if}
 	</div>
 
-	<button
-		class="mt-3 rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-		on:click={addTrigger}
-	>
-		+ トリガーを追加
-	</button>
-</div>
+	<Button class="mt-4" on:click={addTrigger}>+ トリガーを追加</Button>
+</Section>

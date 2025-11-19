@@ -11,6 +11,11 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 
+	// UI Components
+	import Section from '$lib/components/ui/Section.svelte';
+	import Toggle from '$lib/components/ui/Toggle.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+
 	// 各モードの設定コンポーネントをインポート
 	import StandardMode from '$lib/components/settings/StandardMode.svelte';
 	import GameModeSettings from '$lib/components/settings/GameModeSettings.svelte';
@@ -131,12 +136,18 @@
 			return allSessions;
 		});
 	}
-	function toggleHideFirstUserMessage(event: Event) {
-		const isChecked = (event.target as HTMLInputElement).checked;
+
+	// Toggleコンポーネント用のバインド変数
+	let hideFirstUserMessage = false;
+	$: if ($currentSession) {
+		hideFirstUserMessage = $currentSession.hideFirstUserMessage || false;
+	}
+
+	function updateHideFirstUserMessage() {
 		sessions.update((allSessions) => {
 			const sessionToUpdate = allSessions.find((s) => s.id === $page.params.id);
 			if (sessionToUpdate) {
-				sessionToUpdate.hideFirstUserMessage = isChecked;
+				sessionToUpdate.hideFirstUserMessage = hideFirstUserMessage;
 				sessionToUpdate.lastUpdatedAt = new Date().toISOString();
 			}
 			return allSessions;
@@ -144,7 +155,7 @@
 	}
 </script>
 
-<div class="flex h-screen flex-col p-4">
+<div class="flex h-screen flex-col bg-app-bg p-4 text-gray-200">
 	<!-- ヘッダー部分 -->
 	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-xl font-bold">セッション設定</h1>
@@ -152,39 +163,35 @@
 			href="{base}/session/{$sessionId}"
 			class="rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
 		>
-			セッションに戻る
+			セッション画面
 		</a>
 	</div>
 
 	{#if $currentSession}
-		<div class="space-y-6">
-			<label class="block cursor-pointer rounded-lg border border-gray-200 p-4">
-				<div class="space-y-2">
-					<div class="flex items-center space-x-2">
-						<input
-							type="checkbox"
-							class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-							checked={$currentSession.hideFirstUserMessage || false}
-							on:change={toggleHideFirstUserMessage}
-						/>
-						<span class="text-lg font-semibold"> 最初のユーザーメッセージを隠す </span>
-					</div>
-					<p class="text-sm text-gray-600">
-						会話のきっかけとなる最初の入力をチャット画面に表示しないようにします。
-					</p>
-				</div>
-			</label>
-			<ImportExportSettings />
-			<!-- モード選択 -->
-			<StandardMode {currentSession} onModeChange={handleSessionModeChange} />
-			<GameModeSettings {currentSession} onModeChange={handleSessionModeChange} />
-			<StructuredOutputSettings {currentSession} onModeChange={handleSessionModeChange} />
-			<FunctionCallingSettings {currentSession} onModeChange={handleSessionModeChange} />
+		<div class="flex-1 overflow-y-auto">
+			<div class="mx-auto max-w-3xl space-y-8 pb-20">
+				<Section title="メッセージ設定">
+					<Toggle
+						id="hide-first-user-message"
+						label="最初のユーザーメッセージを隠す"
+						bind:checked={hideFirstUserMessage}
+						on:change={updateHideFirstUserMessage}
+					/>
+				</Section>
 
-			<!-- 汎用設定 -->
-			<DiceRollSettings />
-			<StatusSettings />
-			<TriggerSettings />
+				<!-- モード選択 -->
+				<StandardMode {currentSession} onModeChange={handleSessionModeChange} />
+				<GameModeSettings {currentSession} onModeChange={handleSessionModeChange} />
+				<StructuredOutputSettings {currentSession} onModeChange={handleSessionModeChange} />
+				<FunctionCallingSettings {currentSession} onModeChange={handleSessionModeChange} />
+
+				<!-- 汎用設定 -->
+				<DiceRollSettings />
+				<StatusSettings />
+				<TriggerSettings />
+
+				<ImportExportSettings />
+			</div>
 		</div>
 	{:else}
 		<p>セッション情報を読み込んでいます...</p>

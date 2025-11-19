@@ -185,6 +185,10 @@ export interface AppSettings {
 		isEnabled: boolean;
 		text: string;
 	};
+	dummyModelPrompt: {
+		isEnabled: boolean;
+		text: string;
+	};
 	ui: UiSettings;
 	apiErrorHandling: ApiErrorHandlingSettings;
 	assist: AssistSettings;

@@ -4,6 +4,11 @@
 	import { sessions } from '$lib/stores';
 	import { derived } from 'svelte/store';
 	import { generateUUID } from '$lib/utils';
+	import Section from '$lib/components/ui/Section.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Toggle from '$lib/components/ui/Toggle.svelte';
+
 	const sessionId = derived(page, ($page) => $page.params.id);
 	const session = derived([sessions, sessionId], ([$sessions, $sessionId]) =>
 		$sessions.find((s) => s.id === $sessionId)
@@ -85,89 +90,79 @@
 	}
 </script>
 
-<div class="space-y-4">
-	<h3 class="font-medium">ステータス設定</h3>
-	<div>
-		<p class="mb-3 text-xs text-gray-600">
-			AIに `&#123;&#123;ステータス名: 値&#125;&#125;`
-			のように指示すると、各ステータスで設定された計算方法で値が変動します。
-		</p>
-		<div class="space-y-3">
-			{#if $session?.customStatuses}
-				{#each $session.customStatuses as status (status.id)}
-					<div
-						class="grid grid-cols-[1fr_1fr_auto] items-center gap-x-3 gap-y-1 rounded-md border bg-gray-50 p-2"
-					>
+<Section title="ステータス設定">
+	<p class="mb-3 text-xs text-gray-400">
+		AIに `&#123;&#123;ステータス名: 値&#125;&#125;`
+		のように指示すると、各ステータスで設定された計算方法で値が変動します。
+	</p>
+	<div class="space-y-4">
+		{#if $session?.customStatuses}
+			{#each $session.customStatuses as status (status.id)}
+				<div class="rounded-lg border border-gray-700 bg-transparent p-4">
+					<div class="grid grid-cols-[1fr_1fr_auto] items-center gap-3">
 						<!-- 行 1: 入力欄 -->
-						<input
+						<Input
 							type="text"
-							class="input input-bordered w-full"
+							class="w-full"
 							placeholder="ステータス名"
 							value={status.name}
 							on:input={(e) => handleCustomStatusChange(status.id, 'name', e)}
 						/>
-						<input
+						<Input
 							type="text"
-							class="input input-bordered w-full"
+							class="w-full"
 							placeholder="現在の値"
 							value={status.currentValue}
 							on:input={(e) => handleCustomStatusChange(status.id, 'currentValue', e)}
 						/>
-						<button
-							class="rounded bg-gray-200 px-2 py-1 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+						<Button
+							variant="danger"
+							class="px-2 py-2"
 							on:click={() => removeCustomStatus(status.id)}
 							aria-label="Remove status {status.name}"
 						>
 							✕
-						</button>
+						</Button>
+					</div>
 
-						<!-- 行 2: オプション -->
-						<div
-							class="col-span-full mt-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pl-1"
-						>
-							<div class="flex items-center gap-4">
-								<span class="text-xs text-gray-600">計算:</span>
-								<label class="flex cursor-pointer items-center gap-1.5">
-									<input
-										type="radio"
-										name="mode-{status.id}"
-										value="add"
-										checked={status.mode === 'add'}
-										on:change={() => handleCustomStatusModeChange(status.id, 'add')}
-									/>
-									<span class="text-sm">加算</span>
-								</label>
-								<label class="flex cursor-pointer items-center gap-1.5">
-									<input
-										type="radio"
-										name="mode-{status.id}"
-										value="set"
-										checked={status.mode === 'set'}
-										on:change={() => handleCustomStatusModeChange(status.id, 'set')}
-									/>
-									<span class="text-sm">上書き</span>
-								</label>
-							</div>
+					<!-- 行 2: オプション -->
+					<div
+						class="mt-3 flex flex-wrap items-center justify-between gap-4 border-t border-gray-700 pt-3"
+					>
+						<div class="flex items-center gap-4">
+							<span class="text-xs text-gray-500">計算:</span>
 							<label class="flex cursor-pointer items-center gap-2">
 								<input
-									type="checkbox"
-									class="checkbox checkbox-sm"
-									checked={status.isVisible}
-									on:change={(e) =>
-										handleCustomStatusVisibilityChange(status.id, e.currentTarget.checked)}
+									type="radio"
+									name="mode-{status.id}"
+									value="add"
+									class="h-4 w-4 text-blue-500 focus:ring-blue-500"
+									checked={status.mode === 'add'}
+									on:change={() => handleCustomStatusModeChange(status.id, 'add')}
 								/>
-								<span class="text-sm">画面に表示する</span>
+								<span class="text-sm text-gray-300">加算</span>
+							</label>
+							<label class="flex cursor-pointer items-center gap-2">
+								<input
+									type="radio"
+									name="mode-{status.id}"
+									value="set"
+									class="h-4 w-4 text-blue-500 focus:ring-blue-500"
+									checked={status.mode === 'set'}
+									on:change={() => handleCustomStatusModeChange(status.id, 'set')}
+								/>
+								<span class="text-sm text-gray-300">上書き</span>
 							</label>
 						</div>
+						<Toggle
+							label="画面に表示する"
+							checked={status.isVisible}
+							on:change={(e) => handleCustomStatusVisibilityChange(status.id, e.detail.checked)}
+						/>
 					</div>
-				{/each}
-			{/if}
-		</div>
-		<button
-			class="mt-3 rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
-			on:click={addCustomStatus}
-		>
-			+ ステータスを追加
-		</button>
+				</div>
+			{/each}
+		{/if}
 	</div>
-</div>
+	<Button class="mt-4" on:click={addCustomStatus}>+ ステータスを追加</Button>
+</Section>

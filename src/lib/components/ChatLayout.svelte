@@ -18,9 +18,6 @@
 
 	let textareaElement: HTMLTextAreaElement;
 
-	/**
-	 * 編集モードを開始する
-	 */
 	async function startEditing() {
 		isEditing = true;
 		editingTitle = sessionTitle;
@@ -29,9 +26,6 @@
 		inputElement?.select();
 	}
 
-	/**
-	 * タイトルの変更を保存する
-	 */
 	function saveTitle() {
 		if (editingTitle.trim() && editingTitle !== sessionTitle) {
 			dispatch('updateTitle', { title: editingTitle.trim() });
@@ -39,9 +33,6 @@
 		isEditing = false;
 	}
 
-	/**
-	 * キーボード操作をハンドルする
-	 */
 	function handleKeyDown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
 			saveTitle();
@@ -50,13 +41,10 @@
 		}
 	}
 
-	/**
-	 * Textareaの高さを内容に応じて自動調整する
-	 */
 	function adjustTextareaHeight(e: Event) {
 		const target = e.currentTarget as HTMLTextAreaElement;
-		target.style.height = 'auto'; // 高さを一旦リセット
-		target.style.height = `${target.scrollHeight}px`; // 内容に合わせた高さに再設定
+		target.style.height = 'auto';
+		target.style.height = `${target.scrollHeight}px`;
 	}
 
 	$: if (userInput === '' && textareaElement) {
@@ -72,7 +60,7 @@
 				href="{base}/"
 				class="flex-shrink-0 rounded bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
 			>
-				履歴に戻る
+				履歴画面
 			</a>
 			<div class="min-w-0 flex-1">
 				{#if isEditing}
@@ -124,13 +112,20 @@
 				rows="1"
 				bind:value={userInput}
 				on:input={adjustTextareaHeight}
+				on:keydown={(e) => {
+					if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+						e.preventDefault();
+						handleSubmit();
+					}
+				}}
 				placeholder={isLoading ? '送信中...' : 'メッセージを入力...'}
-				class="input flex-1 rounded-lg border border-gray-600 text-gray-200"
+				class="flex-1 resize-none overflow-y-auto rounded-lg border border-gray-600 p-2 leading-normal text-gray-200"
+				style="max-height: 25vh;"
 			></textarea>
 			<button
 				type="button"
 				on:click={handleSubmit}
-				class="btn btn-primary"
+				class="cursor-pointer rounded-lg border-none bg-btn-primary-bg px-4 py-2 text-btn-primary-text transition-colors duration-200 hover:bg-btn-primary-hover-bg disabled:cursor-not-allowed disabled:opacity-50"
 				disabled={isLoading || !userInput.trim()}
 			>
 				{#if isLoading}
@@ -142,33 +137,3 @@
 		</form>
 	</div>
 </div>
-
-<style>
-	.input {
-		padding: 0.5rem;
-	}
-	.btn {
-		padding: 0.5rem 1rem;
-		border: none;
-		border-radius: 0.5rem;
-		cursor: pointer;
-		transition: background-color 0.2s;
-	}
-	.btn-primary {
-		background-color: #133a0e;
-		color: white;
-	}
-	.btn-primary:not(:disabled):hover {
-		background-color: #0d2c0b;
-	}
-	.btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-	textarea.input {
-		resize: none;
-		overflow-y: auto;
-		line-height: 1.5;
-		max-height: 25vh;
-	}
-</style>

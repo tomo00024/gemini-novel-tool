@@ -1,5 +1,3 @@
-// src/lib/stores.ts
-
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import type { AppSettings, Session } from './types';
@@ -14,16 +12,21 @@ import {
 const APP_SETTINGS_KEY = 'app_settings';
 const SESSIONS_KEY = 'sessions';
 
-// 1. デフォルトのアプリケーション設定を定義する (APIキーの複数管理に対応)
+// 1. デフォルトのアプリケーション設定を定義する
 const defaultAppSettings: AppSettings = {
 	apiKeys: [],
 	activeApiKeyId: null,
 	model: availableModels[0],
+	// 新機能: デフォルト値を明示
 	systemPrompt: {
 		isEnabled: false,
 		text: ''
 	},
 	dummyUserPrompt: {
+		isEnabled: false,
+		text: ''
+	},
+	dummyModelPrompt: {
 		isEnabled: false,
 		text: ''
 	},
@@ -39,20 +42,60 @@ const storedAppSettingsJSON = browser ? localStorage.getItem(APP_SETTINGS_KEY) :
 let initialAppSettings: AppSettings = defaultAppSettings;
 
 if (storedAppSettingsJSON) {
-	const parsedSettings = JSON.parse(storedAppSettingsJSON);
-	// 読み込んだ設定にデフォルト値をマージして、将来新しい設定項目が追加されても欠落しないようにする
-	// ネストされたオブジェクトも個別にマージすることで、より安全に更新を適用する
-	initialAppSettings = {
-		...defaultAppSettings,
-		...parsedSettings,
-		ui: { ...defaultAppSettings.ui, ...(parsedSettings.ui || {}) },
-		apiErrorHandling: {
-			...defaultAppSettings.apiErrorHandling,
-			...(parsedSettings.apiErrorHandling || {})
-		},
-		assist: { ...defaultAppSettings.assist, ...(parsedSettings.assist || {}) },
-		generation: { ...defaultAppSettings.generation, ...(parsedSettings.generation || {}) }
-	};
+	try {
+		const parsedSettings = JSON.parse(storedAppSettingsJSON);
+
+		// 3. 安全なマージ処理
+		// スプレッド構文 (...) だけでなく、ネストされたオブジェクトごとに
+		// (parsedSettings.xxx || {}) を使ってデフォルト値と合成します。
+		// これにより、古い設定データに新しい項目(systemPrompt等)がなくても、
+		// defaultAppSettingsの値が確実に使われるようになります。
+		initialAppSettings = {
+			...defaultAppSettings,
+			...parsedSettings,
+
+			// UI設定のマージ
+			ui: {
+				...defaultAppSettings.ui,
+				...(parsedSettings.ui || {})
+			},
+			// APIエラーハンドリング設定のマージ
+			apiErrorHandling: {
+				...defaultAppSettings.apiErrorHandling,
+				...(parsedSettings.apiErrorHandling || {})
+			},
+			// アシスト設定のマージ
+			assist: {
+				...defaultAppSettings.assist,
+				...(parsedSettings.assist || {})
+			},
+			// 生成設定のマージ
+			generation: {
+				...defaultAppSettings.generation,
+				...(parsedSettings.generation || {})
+			},
+
+			// --- 追加機能の安全なマージ ---
+			// ここが重要: localStorageにデータがない(undefined)場合、空オブジェクト {} にフォールバックし、
+			// 結果として ...defaultAppSettings.systemPrompt が採用されます。
+			systemPrompt: {
+				...defaultAppSettings.systemPrompt,
+				...(parsedSettings.systemPrompt || {})
+			},
+			dummyUserPrompt: {
+				...defaultAppSettings.dummyUserPrompt,
+				...(parsedSettings.dummyUserPrompt || {})
+			},
+			dummyModelPrompt: {
+				...defaultAppSettings.dummyModelPrompt,
+				...(parsedSettings.dummyModelPrompt || {})
+			}
+		};
+	} catch (e) {
+		console.error('Failed to parse app settings from local storage:', e);
+		// パースエラー時はデフォルトを使用
+		initialAppSettings = defaultAppSettings;
+	}
 }
 
 export const appSettings = writable<AppSettings>(initialAppSettings);

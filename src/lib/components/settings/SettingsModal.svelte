@@ -57,10 +57,10 @@
 						<button
 							type="button"
 							on:click={() => (activeCategory = category.id)}
-							class="rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none {activeCategory ===
+							class="rounded px-3 py-1.5 text-sm font-medium focus:outline-none {activeCategory ===
 							category.id
-								? 'bg-stone-200 text-text-off'
-								: 'bg-white/5 text-text-off hover:bg-white/10'}"
+								? 'bg-btn-primary-bg text-text-main'
+								: 'text-text-off hover:bg-white/10'}"
 							style="-webkit-tap-highlight-color: transparent;"
 						>
 							{category.label}

@@ -34,7 +34,7 @@
 	}
 </script>
 
-<div class="flex h-full flex-col text-gray-200">
+<div class="flex h-full flex-col text-stone-200">
 	<!-- 新規セッションボタン -->
 	<div class="mb-4">
 		<Button variant="primary" class="w-full justify-center" on:click={handleNewSession}>
@@ -45,27 +45,27 @@
 	<!-- セッションリスト -->
 	<div class="flex-1">
 		{#if $sessions.length === 0}
-			<p class="mt-4 text-center text-gray-500">履歴はありません。</p>
+			<p class="mt-4 text-center text-stone-500">履歴はありません。</p>
 		{:else}
 			<ul class="space-y-2">
 				{#each [...$sessions].sort((a, b) => new Date(b.lastUpdatedAt).getTime() - new Date(a.lastUpdatedAt).getTime()) as session (session.id)}
 					<li>
 						<div
-							class="group flex cursor-pointer items-center justify-between rounded-lg border border-gray-700 bg-transparent p-3 transition hover:bg-gray-800/50"
+							class="group flex cursor-pointer items-center justify-between rounded-lg border border-stone-700 bg-transparent p-3 transition hover:bg-stone-800/50"
 							on:click={() => handleSessionClick(session.id)}
 							on:keydown={(e) => e.key === 'Enter' && handleSessionClick(session.id)}
 							role="button"
 							tabindex="0"
 						>
 							<div class="flex-grow overflow-hidden">
-								<div class="truncate font-semibold text-gray-200">{session.title}</div>
-								<div class="mt-0.5 text-xs text-gray-400">
+								<div class="truncate font-semibold text-stone-200">{session.title}</div>
+								<div class="mt-0.5 text-xs text-stone-400">
 									{new Date(session.lastUpdatedAt).toLocaleString('ja-JP')}
 								</div>
 							</div>
 							<div class="ml-2">
 								<button
-									class="rounded p-1 text-gray-500 hover:bg-red-900/30 hover:text-red-400"
+									class="rounded p-1 text-stone-500 hover:bg-red-900/30 hover:text-red-400"
 									on:click={(e) => handleDeleteSession(session.id, e)}
 									title="削除"
 								>

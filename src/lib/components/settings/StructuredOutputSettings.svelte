@@ -76,7 +76,7 @@
 
 <Section title="構造化出力モード（非推奨・試験版）">
 	{#if $apiMode === 'oneStepFC'}
-		<div class="mt-4 space-y-4 border-t border-gray-600 pt-4">
+		<div class="mt-4 space-y-4 border-t border-stone-600 pt-4">
 			<div>
 				<Textarea
 					id="goodwill-desc"
@@ -87,11 +87,11 @@
 				/>
 			</div>
 			<div>
-				<h3 class="mb-2 font-medium text-gray-200">好感度によるAIの応答変化ルール</h3>
+				<h3 class="mb-2 font-medium text-stone-200">好感度によるAIの応答変化ルール</h3>
 				<div class="space-y-3">
 					{#if $goodwill}
 						{#each $goodwill.thresholds as threshold, i (i)}
-							<div class="flex items-start gap-2 rounded-md border border-gray-600 bg-gray-800 p-2">
+							<div class="flex items-start gap-2 rounded-md border border-stone-600 bg-stone-800 p-2">
 								<div class="flex-none">
 									<Input
 										id="level-{i}"

@@ -214,62 +214,62 @@
 		<!-- コンテンツエリア -->
 		<div class="flex flex-col p-6">
 			{#if isEditing}
-				<h2 id="modal-title" class="mb-4 text-2xl font-bold text-gray-200">情報を編集</h2>
+				<h2 id="modal-title" class="mb-4 text-2xl font-bold text-stone-200">情報を編集</h2>
 				<div class="space-y-4">
 					<div>
-						<label for="title" class="block text-sm font-medium text-gray-300">タイトル *</label>
+						<label for="title" class="block text-sm font-medium text-stone-300">タイトル *</label>
 						<input
 							type="text"
 							id="title"
 							bind:value={editableFile.title}
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-stone-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 							required
 						/>
 					</div>
 					<div>
-						<label for="model" class="block text-sm font-medium text-gray-300">モデル</label>
+						<label for="model" class="block text-sm font-medium text-stone-300">モデル</label>
 						<input
 							type="text"
 							id="model"
 							bind:value={editableFile.model}
 							placeholder="gemini-1.5-pro など"
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-stone-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 					<div>
-						<label for="authorName" class="block text-sm font-medium text-gray-300">作者名</label>
+						<label for="authorName" class="block text-sm font-medium text-stone-300">作者名</label>
 						<input
 							type="text"
 							id="authorName"
 							bind:value={editableFile.authorName}
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-stone-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 					<div>
-						<label for="description" class="block text-sm font-medium text-gray-300">説明文</label>
+						<label for="description" class="block text-sm font-medium text-stone-300">説明文</label>
 						<textarea
 							id="description"
 							bind:value={editableFile.description}
 							rows="4"
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-stone-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						></textarea>
 					</div>
 					<div>
-						<label for="imageUrl" class="block text-sm font-medium text-gray-300">画像URL</label>
+						<label for="imageUrl" class="block text-sm font-medium text-stone-300">画像URL</label>
 						<input
 							type="url"
 							id="imageUrl"
 							bind:value={editableFile.imageUrl}
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-stone-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 				</div>
 			{:else}
 				<!-- タイトル -->
-				<h2 id="modal-title" class="mb-2 text-2xl font-bold text-gray-100">{file.title}</h2>
+				<h2 id="modal-title" class="mb-2 text-2xl font-bold text-stone-100">{file.title}</h2>
 
 				<!-- メタ情報 -->
-				<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400">
+				<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-400">
 					{#if file.model}
 						<span class="flex items-center gap-1" title="使用モデル">
 							🤖 {file.model.replace(/^models\//, '')}
@@ -285,7 +285,7 @@
 				{#if file.tags && file.tags.length > 0}
 					<div class="mb-4 flex flex-wrap gap-2">
 						{#each file.tags as tag}
-							<span class="rounded-full bg-gray-700 px-3 py-1 text-xs font-medium text-gray-300">
+							<span class="rounded-full bg-stone-700 px-3 py-1 text-xs font-medium text-stone-300">
 								{tag}
 							</span>
 						{/each}
@@ -293,7 +293,7 @@
 				{/if}
 
 				<!-- 説明 -->
-				<p id="modal-description" class="text-base leading-relaxed text-gray-300">
+				<p id="modal-description" class="text-base leading-relaxed text-stone-300">
 					{file.description}
 				</p>
 			{/if}
@@ -344,7 +344,7 @@
 		{#if !isEditing}
 			<button
 				on:click={closeModal}
-				class="absolute top-4 right-4 rounded-full bg-black/50 p-2 text-gray-300 transition hover:bg-black/75 hover:text-white"
+				class="absolute top-4 right-4 rounded-full bg-black/50 p-2 text-stone-300 transition hover:bg-black/75 hover:text-white"
 				aria-label="閉じる"
 			>
 				<svg

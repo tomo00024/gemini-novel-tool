@@ -10,7 +10,7 @@
 </script>
 
 <Section title="通常モード">
-	<div class="mt-4 border-t border-gray-600 pt-4">
-		<p class="text-sm text-gray-400">標準的なチャットモードです。</p>
+	<div class="mt-4 border-t border-stone-600 pt-4">
+		<p class="text-sm text-stone-400">標準的なチャットモードです。</p>
 	</div>
 </Section>

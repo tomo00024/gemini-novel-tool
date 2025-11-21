@@ -72,23 +72,36 @@
 </script>
 
 <Section title="ダイスロール設定">
-	<p class="mb-3 text-xs text-gray-400">常時ダイスロールを同時に送信します。</p>
+	<p class="mb-3 text-xs text-stone-400">常時ダイスロールを同時に送信します。</p>
 
 	<!-- ダイスロール設定のリスト -->
 	<div class="space-y-4">
 		{#if $currentSession?.diceRolls}
 			{#each $currentSession.diceRolls as diceRoll (diceRoll.id)}
-				<div class="space-y-3 rounded-lg border border-gray-600 bg-transparent p-4">
+				<div class="space-y-3 rounded-lg border border-stone-600 bg-transparent p-4">
 					<div class="flex items-center justify-between">
-						<h4 class="font-semibold text-gray-200">ダイスロール</h4>
-						<Button
-							variant="danger"
-							class="px-2 py-1 text-xs"
+						<h4 class="font-semibold text-stone-200">ダイスロール</h4>
+						<button
+							type="button"
+							class="rounded-md p-1 text-stone-400 hover:bg-stone-800 hover:text-stone-100 focus:ring-2 focus:ring-stone-500 focus:outline-none"
 							on:click={() => removeDiceRoll(diceRoll.id)}
 							aria-label="Remove dice roll"
 						>
-							✕
-						</Button>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-5 w-5"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M6 18L18 6M6 6l12 12"
+								/>
+							</svg>
+						</button>
 					</div>
 
 					<!-- 指示文章 -->

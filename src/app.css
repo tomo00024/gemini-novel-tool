@@ -30,35 +30,54 @@
 
 :root {
 	/* アプリケーション全体の背景とテキスト */
-	--bg-app: #171817;
-	--text-base: #374151;
+	--bg-app: #171717;
+	/* Stone 900 */
+	--text-base: #e7e5e4;
+	/* Stone 200 */
 
 	/* AIのチャットバブル */
-	--bubble-ai-bg: #f3f3f3;
-	--bubble-ai-text: #3d3d3d;
+	--bubble-ai-bg: #f5f5f4;
+	/* Stone 100 */
+	--bubble-ai-text: #44403c;
+	/* Stone 700 */
 
 	/* ユーザーのチャットバブル */
 	--bubble-user-bg: #133a0e;
-	--bubble-user-text: #e5e7eb;
+	/* Green */
+	--bubble-user-text: #e7e5e4;
+	/* Stone 200 */
 
-	/* プライマリーボタン (Gray 200 base) */
-	--btn-primary-bg: #e5e7eb;
-	--btn-primary-text: #1f2937;
-	--btn-primary-hover-bg: #d1d5db;
+	/* プライマリーボタン (Stone 200 base) */
+	--btn-primary-bg: #e7e5e4;
+	/* Stone 200 */
+	--btn-primary-text: #1c1917;
+	/* Stone 900 */
+	--btn-primary-hover-bg: #d6d3d1;
+	/* Stone 300 */
 
 	/* セカンダリーボタン / メニューボタン */
-	--btn-secondary-bg: #e5e7eb;
-	--btn-secondary-text: #374151;
-	--btn-menu-bg: #f9fafb;
-	--btn-menu-text: #374151;
-	--btn-menu-border: #e5e7eb;
-	--btn-menu-hover-bg: #f3f4f6;
-	--btn-menu-hover-border: #d1d5db;
+	--btn-secondary-bg: #e7e5e4;
+	/* Stone 200 */
+	--btn-secondary-text: #44403c;
+	/* Stone 700 */
+	--btn-menu-bg: #fafaf9;
+	/* Stone 50 */
+	--btn-menu-text: #44403c;
+	/* Stone 700 */
+	--btn-menu-border: #e7e5e4;
+	/* Stone 200 */
+	--btn-menu-hover-bg: #f5f5f4;
+	/* Stone 100 */
+	--btn-menu-hover-border: #d6d3d1;
+	/* Stone 300 */
 
 	/* ボーダーとその他 */
-	--border-color: #d1d5db;
-	--code-bg: #e5e7eb;
-	--code-text: #374151;
+	--border-color: #d6d3d1;
+	/* Stone 300 */
+	--code-bg: #e7e5e4;
+	/* Stone 200 */
+	--code-text: #44403c;
+	/* Stone 700 */
 }
 
 body {

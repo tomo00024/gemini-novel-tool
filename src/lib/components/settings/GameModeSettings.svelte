@@ -79,10 +79,10 @@
 
 <Section title="ゲーム風モード">
 	{#if $currentSession?.viewMode === 'game' && $session?.gameViewSettings}
-		<div class="mt-4 space-y-6 border-t border-gray-600 pt-4">
+		<div class="mt-4 space-y-6 border-t border-stone-600 pt-4">
 			<!-- 画像設定 -->
 			<div class="space-y-4">
-				<h3 class="font-medium text-gray-200">画像ベース設定</h3>
+				<h3 class="font-medium text-stone-200">画像ベース設定</h3>
 				<Input
 					id="image-base-url"
 					label="画像ベースURL"
@@ -101,17 +101,17 @@
 
 			<!-- 画像サイズ設定 -->
 			<div class="space-y-6">
-				<h3 class="font-medium text-gray-200">画像サイズ設定</h3>
+				<h3 class="font-medium text-stone-200">画像サイズ設定</h3>
 
 				{#each sizingTargets as targetInfo}
 					{@const sizing =
 						$session.gameViewSettings.sizing?.[targetInfo.key] ??
 						defaultGameViewSettings.sizing![targetInfo.key]}
-					<div class="rounded border border-gray-600 p-3">
-						<p class="mb-2 font-semibold text-gray-200">{targetInfo.label}</p>
+					<div class="rounded border border-stone-600 p-3">
+						<p class="mb-2 font-semibold text-stone-200">{targetInfo.label}</p>
 						<div class="space-y-2">
 							<!-- ラジオボタン -->
-							<div class="flex flex-wrap gap-x-4 gap-y-2 text-gray-300">
+							<div class="flex flex-wrap gap-x-4 gap-y-2 text-stone-300">
 								<label class="flex items-center gap-1">
 									<input
 										type="radio"
@@ -159,7 +159,7 @@
 										on:input={(e) => handleSizingChange(targetInfo.key, 'scale', e)}
 										on:blur={(e) => handleSizingBlur(targetInfo.key, e)}
 									/>
-									<span class="text-sm text-gray-400">%</span>
+									<span class="text-sm text-stone-400">%</span>
 								</div>
 							{/if}
 						</div>

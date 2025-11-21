@@ -188,13 +188,13 @@
 		>
 			<!-- Header -->
 			<div
-				class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700"
+				class="flex items-center justify-between border-b border-stone-200 p-6 dark:border-stone-700"
 			>
-				<h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">バックアップから復元</h2>
+				<h2 class="text-2xl font-bold text-stone-800 dark:text-stone-100">バックアップから復元</h2>
 				<!-- Close Button -->
 				<button
 					on:click={close}
-					class="rounded-full bg-black/10 p-2 text-gray-500 transition hover:bg-black/20 hover:text-gray-700 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-white"
+					class="rounded-full bg-black/10 p-2 text-stone-500 transition hover:bg-black/20 hover:text-stone-700 dark:bg-white/10 dark:text-stone-300 dark:hover:bg-white/20 dark:hover:text-white"
 					aria-label="閉じる"
 				>
 					<svg
@@ -217,28 +217,28 @@
 			<!-- Content -->
 			<div class="flex flex-1 overflow-hidden">
 				<!-- Sidebar: Backup List -->
-				<div class="w-1/3 overflow-y-auto border-r border-gray-200 bg-gray-50 dark:border-gray-700">
+				<div class="w-1/3 overflow-y-auto border-r border-stone-200 bg-stone-50 dark:border-stone-700">
 					{#if isLoadingList}
-						<div class="p-4 text-center text-gray-500">読み込み中...</div>
+						<div class="p-4 text-center text-stone-500">読み込み中...</div>
 					{:else if backups.length === 0}
-						<div class="p-4 text-center text-gray-500">バックアップが見つかりません</div>
+						<div class="p-4 text-center text-stone-500">バックアップが見つかりません</div>
 					{:else}
-						<div class="divide-y divide-gray-200 dark:divide-gray-700">
+						<div class="divide-y divide-stone-200 dark:divide-stone-700">
 							{#each backups as file}
 								<button
-									class="w-full p-4 text-left transition hover:bg-gray-100 dark:hover:bg-gray-800 {selectedBackupId ===
+									class="w-full p-4 text-left transition hover:bg-stone-100 dark:hover:bg-stone-800 {selectedBackupId ===
 									file.id
 										? 'bg-blue-50 dark:bg-blue-900/20'
 										: ''}"
 									on:click={() => selectBackup(file.id)}
 								>
-									<div class="font-medium text-gray-900 dark:text-gray-100">
+									<div class="font-medium text-stone-900 dark:text-stone-100">
 										{file.name.replace('gemini-backup-', '').replace('.json', '')}
 									</div>
-									<div class="mt-1 text-xs text-gray-500">
+									<div class="mt-1 text-xs text-stone-500">
 										{formatDate(file.modifiedTime)}
 									</div>
-									<div class="mt-1 text-xs text-gray-400">
+									<div class="mt-1 text-xs text-stone-400">
 										{formatSize(file.size)}
 									</div>
 								</button>
@@ -250,16 +250,16 @@
 				<!-- Main: Session List -->
 				<div class="flex-1 overflow-y-auto p-6">
 					{#if !selectedBackupId}
-						<div class="flex h-full items-center justify-center text-gray-500">
+						<div class="flex h-full items-center justify-center text-stone-500">
 							左のリストからバックアップを選択してください
 						</div>
 					{:else if isLoadingContent}
-						<div class="flex h-full items-center justify-center text-gray-500">
+						<div class="flex h-full items-center justify-center text-stone-500">
 							バックアップをダウンロード中...
 						</div>
 					{:else}
 						<div class="mb-4 flex items-center justify-between">
-							<div class="text-sm text-gray-500">
+							<div class="text-sm text-stone-500">
 								{selectedBackupSessions.length} 件のセッションが見つかりました
 							</div>
 							<Button size="sm" variant="secondary" on:click={toggleAll}>
@@ -270,19 +270,19 @@
 						<div class="space-y-2">
 							{#each selectedBackupSessions as session}
 								<label
-									class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 transition hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+									class="flex cursor-pointer items-start gap-3 rounded-lg border border-stone-200 p-3 transition hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-800"
 								>
 									<input
 										type="checkbox"
-										class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+										class="mt-1 h-4 w-4 rounded border-stone-300 text-blue-600 focus:ring-blue-500"
 										checked={selectedSessionIds.has(session.id)}
 										on:change={() => toggleSession(session.id)}
 									/>
 									<div class="min-w-0 flex-1">
-										<div class="truncate font-medium text-gray-900 dark:text-gray-100">
+										<div class="truncate font-medium text-stone-900 dark:text-stone-100">
 											{session.title || '無題のセッション'}
 										</div>
-										<div class="text-xs text-gray-500">
+										<div class="text-xs text-stone-500">
 											更新: {formatDate(session.lastUpdatedAt)} · メッセージ: {session.logs.length}
 										</div>
 									</div>
@@ -295,7 +295,7 @@
 
 			<!-- Footer -->
 			<div
-				class="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-app-bg/95 p-4 backdrop-blur dark:border-gray-700"
+				class="sticky bottom-0 flex items-center justify-end gap-3 border-t border-stone-200 bg-app-bg/95 p-4 backdrop-blur dark:border-stone-700"
 			>
 				<Button variant="secondary" on:click={close}>キャンセル</Button>
 				<Button

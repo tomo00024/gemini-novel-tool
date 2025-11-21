@@ -24,9 +24,9 @@
 	});
 </script>
 
-<div class="flex h-screen items-center justify-center bg-app-bg text-gray-200">
+<div class="flex h-screen items-center justify-center bg-app-bg text-stone-200">
 	<div class="flex flex-col items-center gap-4">
 		<LoadingIndicator size="lg" />
-		<p class="text-gray-400">セッションを読み込んでいます...</p>
+		<p class="text-stone-400">セッションを読み込んでいます...</p>
 	</div>
 </div>

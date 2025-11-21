@@ -5,6 +5,6 @@
 </script>
 
 <section class="space-y-4 {className}">
-	<h2 class="text-lg font-bold text-gray-200">{title}</h2>
+	<h2 class="text-lg font-bold text-stone-200">{title}</h2>
 	<slot />
 </section>

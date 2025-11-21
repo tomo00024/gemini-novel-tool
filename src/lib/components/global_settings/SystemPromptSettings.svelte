@@ -21,7 +21,7 @@
 		disabled={!$appSettings.systemPrompt.isEnabled}
 		class="max-w-md"
 	/>
-	<p class="text-sm text-gray-400">
+	<p class="text-sm text-stone-400">
 		AIへの基本的な指示を定義します。入力すると自動的に保存されます。
 	</p>
 </Section>
@@ -41,7 +41,7 @@
 		disabled={!$appSettings.dummyModelPrompt.isEnabled}
 		class="max-w-md"
 	/>
-	<p class="text-sm text-gray-400">
+	<p class="text-sm text-stone-400">
 		ユーザー入力の直後に続く、モデル側の直近の発言としてダミーで入力します。入力すると自動的に保存されます。
 	</p>
 </Section>
@@ -61,7 +61,7 @@
 		disabled={!$appSettings.dummyUserPrompt.isEnabled}
 		class="max-w-md"
 	/>
-	<p class="text-sm text-gray-400">
+	<p class="text-sm text-stone-400">
 		ユーザー入力の直後に続く、ユーザー側の直近の発言としてダミーで入力します。入力すると自動的に保存されます。
 	</p>
 </Section>

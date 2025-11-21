@@ -59,11 +59,11 @@
 		aria-labelledby="drawer-title"
 	>
 		<!-- Header -->
-		<div class="flex items-center justify-between border-b border-gray-700 px-4 py-3">
-			<h2 id="drawer-title" class="text-lg font-semibold text-gray-200">{title}</h2>
+		<div class="flex items-center justify-between border-b border-stone-700 px-4 py-2">
+			<h2 id="drawer-title" class="text-lg font-semibold text-stone-200">{title}</h2>
 			<button
 				on:click={close}
-				class="rounded-md p-1 text-gray-400 hover:bg-gray-800 hover:text-gray-100 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+				class="rounded-md p-1 text-stone-400 hover:bg-stone-800 hover:text-stone-100 focus:ring-2 focus:ring-stone-500 focus:outline-none"
 				aria-label="Close"
 			>
 				<svg

@@ -135,7 +135,7 @@
 	{#if parseError}
 		<p class="text-sm text-red-500">{parseError}</p>
 	{/if}
-	<p class="text-sm text-gray-400">
+	<p class="text-sm text-stone-400">
 		現在のセッション設定を出力したり、テキストを貼り付けて設定を読み込んだりできます。
 	</p>
 

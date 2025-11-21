@@ -257,9 +257,9 @@
 <svelte:window on:beforeunload={handleBeforeUnload} />
 
 <div class="flex h-[100dvh] flex-col overflow-hidden">
-	<div class="flex-shrink-0 p-4">
+	<div class="flex-shrink-0">
 		<!-- ヘッダーブロック  -->
-		<div class="mb-4 flex items-center gap-4">
+		<div class="gap-4border flex items-center border-b border-stone-100 px-4 py-2">
 			<!-- 左側: 空白 (以前の履歴ボタンは削除) -->
 
 			<!-- 中央: タイトル (編集可能) -->
@@ -271,13 +271,13 @@
 						bind:value={editingTitle}
 						on:keydown={handleKeyDown}
 						on:blur={saveTitle}
-						class="text-m w-full rounded-md border border-gray-400 bg-white px-2 py-1 font-bold text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+						class="w-full rounded-md border border-stone-400 bg-white px-2 py-0.5 text-lg font-semibold text-stone-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					/>
 				{:else}
 					<button
 						type="button"
 						on:click={startEditing}
-						class="text-m w-full truncate rounded-md px-2 py-1 text-left font-bold text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+						class="w-full truncate rounded-md px-2 py-0.5 text-left text-lg font-semibold text-stone-200 hover:bg-stone-100 hover:text-stone-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
 						title={sessionTitle}
 					>
 						{sessionTitle}
@@ -294,10 +294,10 @@
 					)}
 					{@const lastAiLog = [...logs].reverse().find((l) => l.speaker === 'ai' && l.tokenUsage)}
 					{@const lastResponseTokens = lastAiLog?.tokenUsage?.total || 0}
-					<div class="ml-2 flex flex-col gap-0.5 text-gray-400" title="Last / Total Tokens">
+					<div class="ml-2 flex flex-col gap-0.5 text-stone-400" title="Last / Total Tokens">
 						<!-- Last Response -->
 						<div class="flex items-center justify-end gap-1.5">
-							<span class="text-[9px] font-bold tracking-wider text-gray-500 uppercase">Last</span>
+							<span class="text-[9px] font-bold tracking-wider text-stone-500 uppercase">Last</span>
 							<span class="text-[10px] font-medium tabular-nums">
 								{lastResponseTokens > 999
 									? (lastResponseTokens / 1000).toFixed(1) + 'k'
@@ -306,7 +306,8 @@
 						</div>
 						<!-- Total Session -->
 						<div class="flex items-center justify-end gap-1.5">
-							<span class="text-[9px] font-bold tracking-wider text-gray-500 uppercase">Total</span>
+							<span class="text-[9px] font-bold tracking-wider text-stone-500 uppercase">Total</span
+							>
 							<span class="text-[10px] font-medium tabular-nums">
 								{sessionTotalTokens > 999
 									? (sessionTotalTokens / 1000).toFixed(1) + 'k'
@@ -319,7 +320,7 @@
 				<button
 					type="button"
 					on:click={openMenu}
-					class="rounded p-2 text-gray-600 hover:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+					class="rounded p-1 text-stone-600 hover:bg-stone-200 focus:ring-2 focus:ring-stone-400 focus:outline-none"
 					aria-label="Menu"
 				>
 					<svg
@@ -345,7 +346,7 @@
 	<div
 		bind:this={scrollContainer}
 		on:scroll={handleScroll}
-		class="mb-4 flex-1 overflow-y-auto px-4"
+		class="mb-4 flex-1 overflow-y-auto px-4 pt-4"
 	>
 		<slot />
 	</div>
@@ -364,21 +365,33 @@
 					}
 				}}
 				placeholder={isLoading ? '送信中...' : 'メッセージを入力...'}
-				class="flex-1 resize-none overflow-y-auto rounded-lg border border-gray-600 p-2 leading-normal text-gray-200"
+				class="flex-1 resize-none overflow-y-auto rounded-lg border border-stone-600 p-2 leading-normal text-stone-200"
 				style="max-height: 25vh;"
 			></textarea>
 			<button
 				type="button"
 				on:click={handleSubmit}
-				class="cursor-pointer rounded-lg border-none bg-btn-primary-bg px-4 py-2 text-btn-primary-text transition-colors duration-200 hover:bg-btn-primary-hover-bg disabled:cursor-not-allowed disabled:opacity-50"
+				class="flex h-10 w-10 items-center justify-center rounded-full border-none bg-btn-primary-bg text-btn-primary-text transition-all duration-200 hover:bg-btn-primary-hover-bg disabled:cursor-not-allowed disabled:opacity-50"
 				disabled={isLoading || !userInput.trim()}
+				aria-label="送信"
 			>
 				{#if isLoading}
-					<div class="flex h-6 w-8 items-center justify-center">
-						<LoadingIndicator size="sm" color="bg-gray-400" />
-					</div>
+					<LoadingIndicator size="sm" color="bg-stone-600" />
 				{:else}
-					送信
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="3"
+						stroke="currentColor"
+						class="h-5 w-5"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"
+						/>
+					</svg>
 				{/if}
 			</button>
 		</form>
@@ -391,35 +404,35 @@
 		<button
 			type="button"
 			on:click={handleOpenHistoryDrawer}
-			class="block w-full rounded-md px-4 py-3 text-left text-gray-700 hover:bg-gray-100"
+			class="block w-full rounded-md px-4 py-3 text-left text-stone-700 hover:bg-stone-100"
 		>
 			履歴画面
 		</button>
 		<button
 			type="button"
 			on:click={handleOpenFindModal}
-			class="block w-full rounded-md px-4 py-3 text-left text-gray-700 hover:bg-gray-100"
+			class="block w-full rounded-md px-4 py-3 text-left text-stone-700 hover:bg-stone-100"
 		>
 			探す
 		</button>
 		<button
 			type="button"
 			on:click={handleOpenPublishModal}
-			class="block w-full rounded-md px-4 py-3 text-left text-gray-700 hover:bg-gray-100"
+			class="block w-full rounded-md px-4 py-3 text-left text-stone-700 hover:bg-stone-100"
 		>
 			投稿
 		</button>
 		<button
 			type="button"
 			on:click={handleOpenSessionSettings}
-			class="block w-full rounded-md px-4 py-3 text-left text-gray-700 hover:bg-gray-100"
+			class="block w-full rounded-md px-4 py-3 text-left text-stone-700 hover:bg-stone-100"
 		>
 			セッション設定
 		</button>
 		<button
 			type="button"
 			on:click={handleOpenAppSettings}
-			class="block w-full rounded-md px-4 py-3 text-left text-gray-700 hover:bg-gray-100"
+			class="block w-full rounded-md px-4 py-3 text-left text-stone-700 hover:bg-stone-100"
 		>
 			アプリ設定
 		</button>

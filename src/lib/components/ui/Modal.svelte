@@ -79,14 +79,14 @@
 		>
 			<!-- Header -->
 			<div
-				class="flex flex-shrink-0 items-center justify-between border-b border-gray-700/50 px-4 py-3 sm:px-6"
+				class="flex flex-shrink-0 items-center justify-between border-b border-stone-700 px-4 py-2"
 			>
-				<h2 id="modal-title" class="text-lg font-bold text-gray-100">{title}</h2>
+				<h2 id="modal-title" class="text-lg font-semibold text-stone-200">{title}</h2>
 				<div class="flex items-center gap-2">
 					<slot name="header-extra" />
 					<button
 						on:click={close}
-						class="rounded-md p-1 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none"
+						class="rounded-md p-1 text-stone-400 hover:bg-stone-700 hover:text-white focus:outline-none"
 						aria-label="Close"
 					>
 						<svg
@@ -115,7 +115,7 @@
 			<!-- Footer (Optional) -->
 			{#if $$slots.footer}
 				<div
-					class="flex flex-shrink-0 items-center justify-end gap-3 border-t border-gray-700/50 bg-gray-900/30 px-4 py-3 sm:px-6"
+					class="flex flex-shrink-0 items-center justify-end gap-3 border-t border-stone-700/50 bg-stone-900/30 px-4 py-2 sm:px-6"
 				>
 					<slot name="footer" />
 				</div>

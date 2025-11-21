@@ -91,14 +91,14 @@
 </script>
 
 <Section title="ステータス設定">
-	<p class="mb-3 text-xs text-gray-400">
+	<p class="mb-3 text-xs text-stone-400">
 		AIに `&#123;&#123;ステータス名: 値&#125;&#125;`
 		のように指示すると、各ステータスで設定された計算方法で値が変動します。
 	</p>
 	<div class="space-y-4">
 		{#if $session?.customStatuses}
 			{#each $session.customStatuses as status (status.id)}
-				<div class="rounded-lg border border-gray-700 bg-transparent p-4">
+				<div class="rounded-lg border border-stone-700 bg-transparent p-4">
 					<div class="grid grid-cols-[1fr_1fr_auto] items-center gap-3">
 						<!-- 行 1: 入力欄 -->
 						<Input
@@ -115,19 +115,32 @@
 							value={status.currentValue}
 							on:input={(e) => handleCustomStatusChange(status.id, 'currentValue', e)}
 						/>
-						<Button
-							variant="danger"
-							class="px-2 py-2"
+						<button
+							type="button"
+							class="rounded-md p-1 text-stone-400 hover:bg-stone-800 hover:text-stone-100 focus:ring-2 focus:ring-stone-500 focus:outline-none"
 							on:click={() => removeCustomStatus(status.id)}
 							aria-label="Remove status {status.name}"
 						>
-							✕
-						</Button>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-5 w-5"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M6 18L18 6M6 6l12 12"
+								/>
+							</svg>
+						</button>
 					</div>
 
 					<!-- 行 2: オプション -->
 					<div
-						class="mt-3 flex flex-wrap items-center justify-between gap-4 border-t border-gray-700 pt-3"
+						class="mt-3 flex flex-wrap items-center justify-between gap-4 border-t border-stone-700 pt-3"
 					>
 						<Toggle
 							id="mode-{status.id}"

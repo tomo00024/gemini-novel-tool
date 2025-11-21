@@ -10,13 +10,13 @@
 
 <div class={className}>
 	{#if label}
-		<label for={id} class="mb-1 block text-lg font-bold text-gray-200">{label}</label>
+		<label for={id} class="mb-1 block text-lg font-bold text-stone-200">{label}</label>
 	{/if}
 	<select
 		{id}
 		bind:value
 		{disabled}
-		class="w-full rounded-lg border border-gray-600 bg-transparent px-3 py-2 text-gray-200 focus:outline-none disabled:opacity-50 [&>option]:text-gray-800"
+		class="w-full rounded-lg border border-stone-600 bg-transparent px-3 py-2 text-stone-200 focus:outline-none disabled:opacity-50 [&>option]:text-stone-800"
 		{...$$restProps}
 	>
 		{#if options && options.length > 0}

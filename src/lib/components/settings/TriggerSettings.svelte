@@ -178,18 +178,18 @@
 </script>
 
 <Section title="トリガー設定">
-	<p class="mb-3 text-xs text-gray-400">上から順に条件が判定・実行されます。</p>
+	<p class="mb-3 text-xs text-stone-400">上から順に条件が判定・実行されます。</p>
 
 	<!-- トリガーのリスト -->
 	<div class="space-y-6">
 		{#if $currentSession?.triggers}
 			{#each $currentSession.triggers as trigger, index (trigger.id)}
-				<div class="rounded-lg border border-gray-700 bg-transparent p-4">
+				<div class="rounded-lg border border-stone-700 bg-transparent p-4">
 					<!-- ヘッダー (トリガー名 + 操作ボタン) -->
-					<div class="mb-4 flex items-center justify-between border-b border-gray-700 pb-2">
+					<div class="mb-4 flex items-center justify-between border-b border-stone-700 pb-2">
 						<div class="flex items-center gap-2">
-							<span class="text-sm font-semibold text-gray-500">#{index + 1}</span>
-							<h4 class="font-semibold text-gray-200">トリガー条件</h4>
+							<span class="text-sm font-semibold text-stone-500">#{index + 1}</span>
+							<h4 class="font-semibold text-stone-200">トリガー条件</h4>
 						</div>
 						<div class="flex items-center gap-1">
 							<Button
@@ -205,22 +205,35 @@
 								on:click={() => moveTrigger(index, 'down')}>↓</Button
 							>
 							<div
-								class="divider divider-horizontal mx-2 h-4 w-[1px] self-center bg-gray-700"
+								class="divider divider-horizontal mx-2 h-4 w-[1px] self-center bg-stone-700"
 							></div>
-							<Button
-								variant="danger"
-								class="px-2 py-1 text-xs"
+							<button
+								type="button"
+								class="rounded-md p-1 text-stone-400 hover:bg-stone-800 hover:text-stone-100 focus:ring-2 focus:ring-stone-500 focus:outline-none"
 								on:click={() => removeTrigger(trigger.id)}
 								aria-label="Remove trigger"
 							>
-								✕
-							</Button>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="h-5 w-5"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M6 18L18 6M6 6l12 12"
+									/>
+								</svg>
+							</button>
 						</div>
 					</div>
 
 					<!-- 条件 (If) -->
 					<div class="mb-4 space-y-2">
-						<p class="text-sm font-semibold text-gray-400">If (もし)</p>
+						<p class="text-sm font-semibold text-stone-400">If (もし)</p>
 						<div class="space-y-3 pl-2">
 							{#each trigger.conditions as condition, j (condition.id)}
 								<div class="space-y-2">
@@ -280,13 +293,27 @@
 										/>
 
 										{#if trigger.conditions.length > 1}
-											<Button
-												variant="danger"
-												class="px-2 py-2"
+											<button
+												type="button"
+												class="rounded-md p-1 text-stone-400 hover:bg-stone-800 hover:text-stone-100 focus:ring-2 focus:ring-stone-500 focus:outline-none"
 												on:click={() => removeCondition(trigger, condition.id)}
+												aria-label="Remove condition"
 											>
-												✕
-											</Button>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="h-5 w-5"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M6 18L18 6M6 6l12 12"
+													/>
+												</svg>
+											</button>
 										{/if}
 									</div>
 
@@ -322,35 +349,35 @@
 					</div>
 
 					<!-- 実行内容 (Then) -->
-					<div class="space-y-2 border-t border-gray-700 pt-4">
+					<div class="space-y-2 border-t border-stone-700 pt-4">
 						<div class="flex items-center justify-between">
-							<p class="text-sm font-semibold text-gray-400">Then (ならば)</p>
+							<p class="text-sm font-semibold text-stone-400">Then (ならば)</p>
 						</div>
 
 						<!-- タブ切り替え -->
-						<div class="flex overflow-hidden rounded-lg border border-gray-700">
+						<div class="flex overflow-hidden rounded-lg border border-stone-700">
 							<button
 								class="flex-1 py-2 text-xs font-medium transition-colors {!activeTabMap[
 									trigger.id
 								] || activeTabMap[trigger.id] === 'response'
-									? 'bg-gray-700 text-white'
-									: 'bg-transparent text-gray-400 hover:bg-gray-800 hover:text-gray-200'}"
+									? 'bg-stone-700 text-white'
+									: 'bg-transparent text-stone-400 hover:bg-stone-800 hover:text-stone-200'}"
 								on:click={() => toggleTab(trigger.id, 'response')}
 							>
 								💬 AI応答
 							</button>
-							<div class="w-[1px] bg-gray-700"></div>
+							<div class="w-[1px] bg-stone-700"></div>
 							<button
 								class="flex-1 py-2 text-xs font-medium transition-colors {activeTabMap[
 									trigger.id
 								] === 'status'
-									? 'bg-gray-700 text-white'
-									: 'bg-transparent text-gray-400 hover:bg-gray-800 hover:text-gray-200'}"
+									? 'bg-stone-700 text-white'
+									: 'bg-transparent text-stone-400 hover:bg-stone-800 hover:text-stone-200'}"
 								on:click={() => toggleTab(trigger.id, 'status')}
 							>
 								⚡ ステータス
 								{#if trigger.statusUpdates && trigger.statusUpdates.length > 0}
-									<span class="ml-1 rounded-full bg-gray-600 px-1.5 py-0.5 text-[10px] text-white"
+									<span class="ml-1 rounded-full bg-stone-600 px-1.5 py-0.5 text-[10px] text-white"
 										>{trigger.statusUpdates.length}</span
 									>
 								{/if}
@@ -364,7 +391,7 @@
 								: 'hidden'}
 						>
 							<div class="flex items-center justify-between">
-								<span class="text-xs text-gray-400">実行タイミング:</span>
+								<span class="text-xs text-stone-400">実行タイミング:</span>
 								<div class="w-48">
 									<Select
 										value={trigger.executionType}
@@ -452,17 +479,31 @@
 													(e.target as HTMLInputElement).value
 												)}
 										/>
-										<Button
-											variant="danger"
-											class="px-2 py-2"
+										<button
+											type="button"
+											class="rounded-md p-1 text-stone-400 hover:bg-stone-800 hover:text-stone-100 focus:ring-2 focus:ring-stone-500 focus:outline-none"
 											on:click={() => removeStatusUpdate(trigger.id, k)}
+											aria-label="Remove status update"
 										>
-											✕
-										</Button>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												class="h-5 w-5"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M6 18L18 6M6 6l12 12"
+												/>
+											</svg>
+										</button>
 									</div>
 								{/each}
 							{:else}
-								<p class="py-2 text-center text-xs text-gray-500">設定なし</p>
+								<p class="py-2 text-center text-xs text-stone-500">設定なし</p>
 							{/if}
 							<Button
 								variant="secondary"

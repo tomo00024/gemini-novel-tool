@@ -62,7 +62,7 @@
 <Section title="トークン使用履歴">
 	<div class="space-y-6">
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-			<p class="text-sm text-gray-400">Gemini APIのトークン使用量を確認できます。（目安）</p>
+			<p class="text-sm text-stone-400">Gemini APIのトークン使用量を確認できます。（目安）</p>
 			<div class="w-full sm:w-48">
 				<Select bind:value={selectedRange}>
 					<option value="day">本日 (Day)</option>
@@ -75,32 +75,32 @@
 
 		<!-- 集計カード -->
 		{#if rangeStats}
-			<div class="rounded-lg border border-gray-600 bg-transparent p-4">
-				<div class="mb-3 text-sm font-medium text-gray-400">
-					集計期間: <span class="text-gray-200">{rangeStats.periodLabel}</span>
+			<div class="rounded-lg border border-stone-600 bg-transparent p-4">
+				<div class="mb-3 text-sm font-medium text-stone-400">
+					集計期間: <span class="text-stone-200">{rangeStats.periodLabel}</span>
 				</div>
 				<div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-					<div class="rounded-md bg-gray-700/50 p-3">
+					<div class="rounded-md bg-stone-700/50 p-3">
 						<div class="text-xs text-blue-400">合計トークン</div>
 						<div class="mt-1 text-xl font-bold text-blue-300">
 							{rangeStats.total.toLocaleString()}
 						</div>
 					</div>
-					<div class="rounded-md bg-gray-700/30 p-3">
-						<div class="text-xs text-gray-400">入力 (Prompt)</div>
-						<div class="mt-1 text-lg font-semibold text-gray-200">
+					<div class="rounded-md bg-stone-700/30 p-3">
+						<div class="text-xs text-stone-400">入力 (Prompt)</div>
+						<div class="mt-1 text-lg font-semibold text-stone-200">
 							{rangeStats.input.toLocaleString()}
 						</div>
 					</div>
-					<div class="rounded-md bg-gray-700/30 p-3">
-						<div class="text-xs text-gray-400">出力 (Response)</div>
-						<div class="mt-1 text-lg font-semibold text-gray-200">
+					<div class="rounded-md bg-stone-700/30 p-3">
+						<div class="text-xs text-stone-400">出力 (Response)</div>
+						<div class="mt-1 text-lg font-semibold text-stone-200">
 							{rangeStats.output.toLocaleString()}
 						</div>
 					</div>
-					<div class="rounded-md bg-gray-700/30 p-3">
-						<div class="text-xs text-gray-400">思考 (Thinking)</div>
-						<div class="mt-1 text-lg font-semibold text-gray-200">
+					<div class="rounded-md bg-stone-700/30 p-3">
+						<div class="text-xs text-stone-400">思考 (Thinking)</div>
+						<div class="mt-1 text-lg font-semibold text-stone-200">
 							{rangeStats.thinking.toLocaleString()}
 						</div>
 					</div>

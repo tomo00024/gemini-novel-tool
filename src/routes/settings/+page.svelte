@@ -30,9 +30,9 @@
 	});
 </script>
 
-<div class="flex h-screen flex-col bg-app-bg p-4 text-gray-200">
+<div class="flex h-screen flex-col bg-app-bg text-gray-200">
 	<!-- ヘッダー -->
-	<header class="mb-4 flex flex-shrink-0 items-center justify-between">
+	<header class="flex flex-shrink-0 items-center justify-between p-4">
 		<h1 class="text-lg font-bold">アプリ設定</h1>
 		<a
 			href={$returnPath.href}
@@ -43,7 +43,7 @@
 	</header>
 
 	<!-- コンテンツエリア -->
-	<div class="flex-1 overflow-y-auto">
+	<div class="flex-1 overflow-y-auto px-4">
 		<div class="mx-auto max-w-3xl space-y-8 pb-20">
 			<ApiKeySettings />
 			<AiModelSettings />

@@ -149,8 +149,8 @@
 
 <svelte:window on:beforeunload={handleBeforeUnload} />
 
-<div class="flex h-[100dvh] flex-col overflow-hidden p-4">
-	<div class="flex-shrink-0">
+<div class="flex h-[100dvh] flex-col overflow-hidden">
+	<div class="flex-shrink-0 p-4">
 		<!-- ヘッダーブロック  -->
 		<div class="mb-4 flex items-center gap-4">
 			<a
@@ -228,11 +228,15 @@
 	</div>
 
 	<!-- コンテンツ表示エリア -->
-	<div bind:this={scrollContainer} on:scroll={handleScroll} class="mb-4 flex-1 overflow-y-auto">
+	<div
+		bind:this={scrollContainer}
+		on:scroll={handleScroll}
+		class="mb-4 flex-1 overflow-y-auto px-4"
+	>
 		<slot />
 	</div>
 
-	<div class="flex-shrink-0 px-4">
+	<div class="flex-shrink-0 px-4 pb-4">
 		<form on:submit|preventDefault class="flex items-end gap-2">
 			<textarea
 				bind:this={textareaElement}

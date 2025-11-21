@@ -184,7 +184,7 @@
 <div
 	role="button"
 	tabindex="-1"
-	class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+	class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
 	on:click={() => !isEditing && closeModal()}
 	on:keydown={(e) => e.key === 'Enter' && !isEditing && closeModal()}
 	transition:fade={{ duration: 150 }}
@@ -192,7 +192,7 @@
 	<div
 		bind:this={dialogElement}
 		tabindex="-1"
-		class="relative mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-y-auto rounded-lg bg-app-bg shadow-xl outline-none"
+		class="relative flex h-full w-full flex-col overflow-y-auto bg-[#111]/95 shadow-2xl backdrop-blur-md outline-none sm:mx-4 sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-xl sm:border sm:border-white/10"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="modal-title"
@@ -206,7 +206,7 @@
 				<img
 					src={extractImageUrl(file.imageUrl)}
 					alt="{file.title}のサムネイル"
-					class="h-64 w-full rounded-t-lg object-cover opacity-90"
+					class="h-64 w-full object-cover opacity-90 sm:rounded-t-xl"
 				/>
 			{/if}
 		{/if}
@@ -222,7 +222,7 @@
 							type="text"
 							id="title"
 							bind:value={editableFile.title}
-							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 							required
 						/>
 					</div>
@@ -233,7 +233,7 @@
 							id="model"
 							bind:value={editableFile.model}
 							placeholder="gemini-1.5-pro など"
-							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 					<div>
@@ -242,7 +242,7 @@
 							type="text"
 							id="authorName"
 							bind:value={editableFile.authorName}
-							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 					<div>
@@ -251,7 +251,7 @@
 							id="description"
 							bind:value={editableFile.description}
 							rows="4"
-							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						></textarea>
 					</div>
 					<div>
@@ -260,7 +260,7 @@
 							type="url"
 							id="imageUrl"
 							bind:value={editableFile.imageUrl}
-							class="mt-1 block w-full rounded-lg border border-gray-600 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
 						/>
 					</div>
 				</div>
@@ -301,7 +301,7 @@
 
 		<!-- フッター -->
 		<div
-			class="sticky bottom-0 mt-auto rounded-b-lg border-t border-gray-700 bg-app-bg/95 p-4 backdrop-blur"
+			class="sticky bottom-0 mt-auto border-t border-white/10 bg-[#111]/95 p-4 backdrop-blur sm:rounded-b-xl"
 		>
 			{#if isEditing}
 				<!-- --- 編集モードのフッター --- -->

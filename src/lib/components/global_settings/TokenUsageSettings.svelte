@@ -64,7 +64,7 @@
 <Section title="トークン使用履歴">
 	<div class="space-y-6">
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-			<p class="text-sm text-gray-400">Gemini APIのトークン使用量を確認できます。</p>
+			<p class="text-sm text-gray-400">Gemini APIのトークン使用量を確認できます。（目安）</p>
 			<div class="w-full sm:w-48">
 				<Select bind:value={selectedRange}>
 					<option value="day">本日 (Day)</option>

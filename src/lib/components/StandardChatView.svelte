@@ -55,7 +55,7 @@
 		class="flex flex-col gap-6 pt-4 pb-32"
 		style="--chat-font-size: {$appSettings.ui.useCustomFontSize
 			? `${$appSettings.ui.chatFontSize}px`
-			: 'initial'}"
+			: 'initial'}; font-size: var(--chat-font-size);"
 	>
 		{#each paginatedLogs as log (log.id)}
 			<ChatBubble

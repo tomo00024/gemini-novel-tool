@@ -14,6 +14,9 @@
 	let isModalOpen = false;
 	let searchQuery = '';
 
+	// ストリーミングで読み込んだファイルを格納するローカル変数
+	let loadedFiles: any[] = [];
+
 	// カードがクリックされたときにモーダルを開く関数
 	function openModal(file: any) {
 		selectedFile = file;
@@ -30,14 +33,14 @@
 	function handleFileDeleted(event: CustomEvent<string>) {
 		const deletedFileId = event.detail;
 		// 削除されたファイルをリストから除外してUIを更新
-		data.files = data.files.filter((file) => file.id !== deletedFileId);
+		loadedFiles = loadedFiles.filter((file) => file.id !== deletedFileId);
 	}
 
 	// --- 更新イベントを受け取るハンドラの追加 ---
 	function handleFileUpdated(event: CustomEvent<any>) {
 		const updatedFile = event.detail;
-		// data.files配列から更新されたファイルを見つけて置き換える
-		data.files = data.files.map((file) => {
+		// loadedFiles配列から更新されたファイルを見つけて置き換える
+		loadedFiles = loadedFiles.map((file) => {
 			if (file.id === updatedFile.id) {
 				return updatedFile; // 新しいデータに置き換え
 			}
@@ -79,66 +82,103 @@
 		</div>
 
 		<div class="space-y-4">
-			{#if data.files.length === 0}
-				<div class="py-16 text-center text-gray-500">
-					まだ公開されているセッションがありません。
-				</div>
-			{:else}
-				{#each data.files as file (file.id)}
-					<!-- カード全体をクリック可能にし、モーダルを開くようにする -->
-					<!-- svelte-ignore a11y-no-static-element-interactions -->
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<div
-						class="cursor-pointer rounded-lg border border-gray-700 bg-transparent p-4 transition hover:bg-gray-800/50"
-						on:click={() => openModal(file)}
-					>
+			{#await data.streamed.files}
+				<!-- Skeleton Loading State -->
+				{#each Array(5) as _}
+					<div class="animate-pulse rounded-lg border border-gray-700 bg-gray-800/30 p-4">
 						<div class="flex flex-row gap-4">
-							{#if file.imageUrl}
-								<div class="flex-shrink-0">
-									<img
-										src={extractImageUrl(file.imageUrl)}
-										alt="{file.title}のサムネイル"
-										class="h-24 w-24 rounded-md object-cover sm:h-28 sm:w-28"
-									/>
+							<div class="h-24 w-24 flex-shrink-0 rounded-md bg-gray-700/50 sm:h-28 sm:w-28"></div>
+							<div class="flex flex-grow flex-col gap-3">
+								<div class="h-6 w-3/4 rounded bg-gray-700/50"></div>
+								<div class="flex gap-2">
+									<div class="h-5 w-16 rounded-full bg-gray-700/50"></div>
+									<div class="h-5 w-16 rounded-full bg-gray-700/50"></div>
 								</div>
-							{/if}
-
-							<div class="flex flex-grow flex-col overflow-hidden">
-								<h3 class="truncate text-lg font-semibold text-gray-200">{file.title}</h3>
-
-								{#if file.tags && file.tags.length > 0}
-									<div class="mt-2 flex flex-wrap gap-2">
-										{#each file.tags as tag}
-											<span
-												class="rounded-full bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-300"
-											>
-												{tag}
-											</span>
-										{/each}
-									</div>
-								{/if}
-
-								<p class="mt-2 line-clamp-2 flex-grow text-sm text-gray-400">{file.description}</p>
-
-								<!-- メタ情報 -->
-								<div class="mt-3 flex items-center justify-between">
-									<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
-										<span>👤 {file.authorName}</span>
-										{#if file.model}
-											<span class="flex items-center gap-1" title="使用モデル">
-												🤖 {file.model.replace(/^models\//, '')}
-											</span>
-										{/if}
-										<span>★ {file.starCount}</span>
-										<span>↓ {file.downloadCount}</span>
-										<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
-									</div>
+								<div class="h-4 w-full rounded bg-gray-700/50"></div>
+								<div class="mt-auto flex justify-between">
+									<div class="h-4 w-32 rounded bg-gray-700/50"></div>
 								</div>
 							</div>
 						</div>
 					</div>
 				{/each}
-			{/if}
+			{:then files}
+				<!-- データがロードされたらローカル変数にセットする（一度だけ） -->
+				{#if loadedFiles.length === 0 && files.length > 0}
+					<span class="hidden">{(loadedFiles = files) && ''}</span>
+				{/if}
+
+				<!-- 検索フィルタリング (簡易的) -->
+				<!-- 注意: 本格的な検索はサーバーサイドで行うべきだが、ここでは既存の動作を維持しつつ表示 -->
+
+				{#if loadedFiles.length === 0}
+					<div class="py-16 text-center text-gray-500">
+						まだ公開されているセッションがありません。
+					</div>
+				{:else}
+					{#each loadedFiles as file (file.id)}
+						<!-- カード全体をクリック可能にし、モーダルを開くようにする -->
+						<!-- svelte-ignore a11y-no-static-element-interactions -->
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<div
+							class="cursor-pointer rounded-lg border border-gray-700 bg-transparent p-4 transition hover:bg-gray-800/50"
+							on:click={() => openModal(file)}
+						>
+							<div class="flex flex-row gap-4">
+								{#if file.imageUrl}
+									<div class="flex-shrink-0">
+										<img
+											src={extractImageUrl(file.imageUrl)}
+											alt="{file.title}のサムネイル"
+											class="h-24 w-24 rounded-md object-cover sm:h-28 sm:w-28"
+										/>
+									</div>
+								{/if}
+
+								<div class="flex flex-grow flex-col overflow-hidden">
+									<h3 class="truncate text-lg font-semibold text-gray-200">{file.title}</h3>
+
+									{#if file.tags && file.tags.length > 0}
+										<div class="mt-2 flex flex-wrap gap-2">
+											{#each file.tags as tag}
+												<span
+													class="rounded-full bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-300"
+												>
+													{tag}
+												</span>
+											{/each}
+										</div>
+									{/if}
+
+									<p class="mt-2 line-clamp-2 flex-grow text-sm text-gray-400">
+										{file.description}
+									</p>
+
+									<!-- メタ情報 -->
+									<div class="mt-3 flex items-center justify-between">
+										<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+											<span>👤 {file.authorName}</span>
+											{#if file.model}
+												<span class="flex items-center gap-1" title="使用モデル">
+													🤖 {file.model.replace(/^models\//, '')}
+												</span>
+											{/if}
+											<span>★ {file.starCount}</span>
+											<span>↓ {file.downloadCount}</span>
+											<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					{/each}
+				{/if}
+			{:catch error}
+				<div class="rounded-lg border border-red-800 bg-red-900/20 p-4 text-center text-red-400">
+					<p>データの読み込みに失敗しました。</p>
+					<p class="text-sm opacity-75">{error.message}</p>
+				</div>
+			{/await}
 		</div>
 	</div>
 </div>

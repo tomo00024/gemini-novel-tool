@@ -61,13 +61,13 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions, a11y-click-events-have-key-events -->
 <div
-	class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+	class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
 	on:click={handleCancel}
 >
 	<div
 		bind:this={modalElement}
 		tabindex="-1"
-		class="w-full max-w-2xl rounded-lg bg-app-bg p-6 shadow-xl outline-none"
+		class="flex h-full w-full flex-col overflow-y-auto bg-[#111]/95 p-6 shadow-2xl backdrop-blur-md outline-none sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-xl sm:border sm:border-white/10"
 		on:click|stopPropagation
 		role="dialog"
 		aria-modal="true"

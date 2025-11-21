@@ -134,54 +134,54 @@
 -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="flex h-screen flex-col bg-app-bg p-4 text-gray-200" on:click={handleBackgroundClick}>
-	<div class="mx-auto w-full max-w-3xl flex-1 overflow-y-auto pb-20">
-		<!-- ヘッダー -->
-		<div class="mb-6 flex items-center justify-between">
-			<h1 class="text-xl font-bold text-gray-200">履歴画面</h1>
-			<div class="flex items-center gap-4">
-				{#if isUploadMode}
-					<Button
-						variant="secondary"
-						on:click={(e) => {
-							e.stopPropagation();
-							isUploadMode = false;
-						}}
-					>
-						戻る
-					</Button>
-				{:else}
-					<a href="{base}/public" on:click|stopPropagation>
-						<Button variant="secondary">探す</Button>
-					</a>
-
-					<Button
-						variant="secondary"
-						on:click={(e) => {
-							e.stopPropagation();
-							isUploadMode = true;
-						}}
-					>
-						投稿
-					</Button>
-				{/if}
-
-				<a href="{base}/settings" on:click|stopPropagation>
-					<Button variant="secondary">アプリ設定</Button>
+<div class="flex h-screen flex-col bg-app-bg text-gray-200" on:click={handleBackgroundClick}>
+	<!-- ヘッダー -->
+	<div class="flex items-center justify-between p-4">
+		<h1 class="text-xl font-bold text-gray-200">履歴画面</h1>
+		<div class="flex items-center gap-4">
+			{#if isUploadMode}
+				<Button
+					variant="secondary"
+					on:click={(e) => {
+						e.stopPropagation();
+						isUploadMode = false;
+					}}
+				>
+					戻る
+				</Button>
+			{:else}
+				<a href="{base}/public" on:click|stopPropagation>
+					<Button variant="secondary">探す</Button>
 				</a>
 
 				<Button
-					variant="primary"
+					variant="secondary"
 					on:click={(e) => {
 						e.stopPropagation();
-						handleNewSession();
+						isUploadMode = true;
 					}}
 				>
-					新規セッション
+					投稿
 				</Button>
-			</div>
-		</div>
+			{/if}
 
+			<a href="{base}/settings" on:click|stopPropagation>
+				<Button variant="secondary">アプリ設定</Button>
+			</a>
+
+			<Button
+				variant="secondary"
+				on:click={(e) => {
+					e.stopPropagation();
+					handleNewSession();
+				}}
+			>
+				新規セッション
+			</Button>
+		</div>
+	</div>
+
+	<div class="mx-auto w-full max-w-3xl flex-1 overflow-y-auto px-4 pb-20">
 		<!-- アップロードモードの案内文 -->
 		{#if isUploadMode}
 			<!-- 

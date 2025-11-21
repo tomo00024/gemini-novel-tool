@@ -9,15 +9,19 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	if (!POSTGRES_URL) {
 		return {
-			files: [],
+			streamed: {
+				files: Promise.resolve([])
+			},
 			error: 'データベース接続文字列が設定されていません。',
 			session
 		};
 	}
 
-	try {
-		// ▼ 修正: SELECT に model を追加
-		const result = await db.sql`
+	// データベースクエリをPromiseとして定義（awaitしない）
+	const filesPromise = (async () => {
+		try {
+			// ▼ 修正: SELECT に model を追加
+			const result = await db.sql`
             SELECT
                 id,
                 title,
@@ -37,16 +41,19 @@ export const load: PageServerLoad = async ({ locals }) => {
             ORDER BY
                 uploaded_at DESC;
         `;
-		return {
-			files: result.rows,
-			session
-		};
-	} catch (error) {
-		console.error('データベースからのデータ取得に失敗しました:', error);
-		return {
-			files: [],
-			error: 'データベースからのデータ取得に失敗しました。',
-			session
-		};
-	}
+			return result.rows;
+		} catch (error) {
+			console.error('データベースからのデータ取得に失敗しました:', error);
+			// エラー時は空配列を返すか、エラーをスローしてクライアントで処理する
+			// ここでは空配列を返してクライアント側で空表示にする
+			return [];
+		}
+	})();
+
+	return {
+		streamed: {
+			files: filesPromise
+		},
+		session
+	};
 };

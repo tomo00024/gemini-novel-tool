@@ -150,9 +150,9 @@
 	}
 </script>
 
-<div class="flex h-screen flex-col bg-app-bg p-4 text-gray-200">
+<div class="flex h-screen flex-col bg-app-bg text-gray-200">
 	<!-- ヘッダー部分 -->
-	<div class="mb-6 flex items-center justify-between">
+	<div class="flex items-center justify-between p-4">
 		<h1 class="text-xl font-bold">セッション設定</h1>
 		<a
 			href="{base}/session/{$sessionId}"
@@ -163,7 +163,7 @@
 	</div>
 
 	{#if $currentSession}
-		<div class="flex-1 overflow-y-auto">
+		<div class="flex-1 overflow-y-auto px-4">
 			<div class="mx-auto max-w-3xl space-y-8 pb-20">
 				<Section title="メッセージ設定">
 					<Toggle

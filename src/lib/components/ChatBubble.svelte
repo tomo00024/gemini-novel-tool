@@ -126,10 +126,10 @@
 	<div
 		bind:this={bubbleContainer}
 		on:click={handleBubbleClick}
-		class="chat-bubble group relative max-w-[95%] px-4 py-0 text-[length:inherit] break-words
+		class="chat-bubble group relative text-[length:inherit] break-words
         {isTranscript
-			? 'rounded-lg px-0 py-0'
-			: `rounded-2xl px-4 ${
+			? 'max-w-full rounded-lg px-0 py-0'
+			: `max-w-[95%] rounded-2xl px-4 py-0 ${
 					isUser
 						? 'bg-bubble-user-bg text-bubble-user-text [&_pre]:bg-bubble-user-bg [&_pre]:text-bubble-user-text'
 						: 'bg-bubble-ai-bg text-bubble-ai-text [&_pre]:bg-code-bg [&_pre]:text-code-text'

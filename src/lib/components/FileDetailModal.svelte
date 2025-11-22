@@ -1,13 +1,12 @@
-<!-- src/lib/components/FileDetailModal.svelte -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { fade } from 'svelte/transition';
 	import { onMount, onDestroy } from 'svelte';
 	import { sessions } from '$lib/stores';
 	import type { Session } from '$lib/types';
 	import { generateUUID } from '$lib/utils';
 	import type { Session as AuthSession } from '@auth/sveltekit';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Modal from '$lib/components/ui/Modal.svelte';
 
 	export let session: AuthSession | null = null;
 	export let file: any;
@@ -68,7 +67,6 @@
 		}
 	}
 
-	let dialogElement: HTMLElement;
 	let isImporting = false;
 	let isDeleting = false;
 	$: isOwner = session?.user?.id === file.uploaderId;
@@ -151,12 +149,6 @@
 		}
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape' && !isEditing) {
-			closeModal();
-		}
-	}
-
 	function extractImageUrl(urlString: string): string {
 		if (typeof urlString !== 'string') {
 			return '';
@@ -164,204 +156,144 @@
 		const match = urlString.match(/!\[.*?\]\((.*?)\)/);
 		return match ? match[1] : urlString;
 	}
-
-	onMount(() => {
-		document.body.style.overflow = 'hidden';
-		if (dialogElement) {
-			dialogElement.focus();
-		}
-	});
-
-	onDestroy(() => {
-		document.body.style.overflow = '';
-	});
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
-
-<!-- 背景オーバーレイ -->
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<div
-	role="button"
-	tabindex="-1"
-	class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-	on:click={() => !isEditing && closeModal()}
-	on:keydown={(e) => e.key === 'Enter' && !isEditing && closeModal()}
-	transition:fade={{ duration: 150 }}
+<Modal
+	isOpen={true}
+	title={isEditing ? '情報を編集' : file.title}
+	size="lg"
+	noPadding={true}
+	on:close={closeModal}
 >
-	<div
-		bind:this={dialogElement}
-		tabindex="-1"
-		class="relative flex h-full w-full flex-col overflow-y-auto bg-main-bg shadow-2xl backdrop-blur-md outline-none sm:mx-4 sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-xl sm:border sm:border-white/10"
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="modal-title"
-		aria-describedby="modal-description"
-		on:click|stopPropagation
-		on:keydown|stopPropagation
-	>
-		<!-- 画像ヘッダー -->
-		{#if !isEditing}
-			{#if file.imageUrl}
-				<img
-					src={extractImageUrl(file.imageUrl)}
-					alt="{file.title}のサムネイル"
-					class="h-64 w-full object-cover opacity-90 sm:rounded-t-xl"
-				/>
-			{/if}
+	<!-- 画像ヘッダー -->
+	{#if !isEditing}
+		{#if file.imageUrl}
+			<img
+				src={extractImageUrl(file.imageUrl)}
+				alt="{file.title}のサムネイル"
+				class="h-64 w-full object-cover opacity-90"
+			/>
 		{/if}
+	{/if}
 
-		<!-- コンテンツエリア -->
-		<div class="flex flex-col p-6">
-			{#if isEditing}
-				<h2 id="modal-title" class="mb-4 text-2xl font-bold text-text-main">情報を編集</h2>
-				<div class="space-y-4">
-					<div>
-						<label for="title" class="block text-sm font-medium text-text-off">タイトル *</label>
-						<input
-							type="text"
-							id="title"
-							bind:value={editableFile.title}
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-							required
-						/>
-					</div>
-					<div>
-						<label for="model" class="block text-sm font-medium text-text-off">モデル</label>
-						<input
-							type="text"
-							id="model"
-							bind:value={editableFile.model}
-							placeholder="gemini-1.5-pro など"
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-						/>
-					</div>
-					<div>
-						<label for="authorName" class="block text-sm font-medium text-text-off">作者名</label>
-						<input
-							type="text"
-							id="authorName"
-							bind:value={editableFile.authorName}
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-						/>
-					</div>
-					<div>
-						<label for="description" class="block text-sm font-medium text-text-off">説明文</label>
-						<textarea
-							id="description"
-							bind:value={editableFile.description}
-							rows="4"
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-						></textarea>
-					</div>
-					<div>
-						<label for="imageUrl" class="block text-sm font-medium text-text-off">画像URL</label>
-						<input
-							type="url"
-							id="imageUrl"
-							bind:value={editableFile.imageUrl}
-							class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-						/>
-					</div>
-				</div>
-			{:else}
-				<!-- タイトル -->
-				<h2 id="modal-title" class="mb-2 text-2xl font-bold text-text-main">{file.title}</h2>
-
-				<!-- メタ情報 -->
-				<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-off">
-					{#if file.model}
-						<span class="flex items-center gap-1" title="使用モデル">
-							🤖 {file.model.replace(/^models\//, '')}
-						</span>
-					{/if}
-					<span>👤 {file.authorName}</span>
-					<span>★ {file.starCount}</span>
-					<span>↓ {file.downloadCount}</span>
-					<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
-				</div>
-
-				<!-- タグ -->
-				{#if file.tags && file.tags.length > 0}
-					<div class="mb-4 flex flex-wrap gap-2">
-						{#each file.tags as tag}
-							<span class="rounded-full bg-stone-700 px-3 py-1 text-xs font-medium text-text-main">
-								{tag}
-							</span>
-						{/each}
-					</div>
-				{/if}
-
-				<!-- 説明 -->
-				<p id="modal-description" class="text-base leading-relaxed text-text-main">
-					{file.description}
-				</p>
-			{/if}
-		</div>
-
-		<!-- フッター -->
-		<div
-			class="sticky bottom-0 mt-auto border-t border-white/10 bg-main-bg p-4 backdrop-blur sm:rounded-b-xl"
-		>
-			{#if isEditing}
-				<!-- --- 編集モードのフッター --- -->
-				<div class="flex justify-end gap-3">
-					<Button variant="primary" on:click={handleCancelEdit}>キャンセル</Button>
-					<Button
-						variant="primary"
-						on:click={handleUpdate}
-						disabled={!editableFile.title || isSaving}
-					>
-						{isSaving ? '保存中...' : '保存する'}
-					</Button>
-				</div>
-			{:else}
-				<!-- --- 表示モードのフッター --- -->
-				<div class="flex items-center justify-between">
-					<!-- 左側にオーナー用ボタンを配置 -->
-					<div class="flex gap-2">
-						{#if isOwner}
-							<Button variant="danger" on:click={handleDelete} disabled={isDeleting}>
-								{isDeleting ? '削除中...' : '削除'}
-							</Button>
-							<!-- 編集ボタン -->
-							<Button variant="primary" on:click={handleEditClick}>編集</Button>
-						{/if}
-					</div>
-
-					<!-- 右側に通常のボタンを配置 -->
-					<div class="flex justify-end gap-3">
-						<Button variant="primary" on:click={closeModal}>閉じる</Button>
-						<Button variant="primary" on:click={handleImport} disabled={isImporting}>
-							{isImporting ? '読み込み中...' : '読み込む'}
-						</Button>
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<!-- 右上の閉じるボタン -->
-		{#if !isEditing}
-			<button
-				on:click={closeModal}
-				class="absolute top-4 right-4 rounded-full bg-black/50 p-2 text-text-off transition hover:bg-bg-hover hover:text-white"
-				aria-label="閉じる"
-			>
-				<svg
-					class="h-5 w-5"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M6 18L18 6M6 6l12 12"
+	<!-- コンテンツエリア -->
+	<div class="flex flex-col p-6">
+		{#if isEditing}
+			<div class="space-y-4">
+				<div>
+					<label for="title" class="block text-sm font-medium text-text-sub">タイトル *</label>
+					<input
+						type="text"
+						id="title"
+						bind:value={editableFile.title}
+						class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+						required
 					/>
-				</svg>
-			</button>
+				</div>
+				<div>
+					<label for="model" class="block text-sm font-medium text-text-sub">モデル</label>
+					<input
+						type="text"
+						id="model"
+						bind:value={editableFile.model}
+						placeholder="gemini-1.5-pro など"
+						class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+					/>
+				</div>
+				<div>
+					<label for="authorName" class="block text-sm font-medium text-text-sub">作者名</label>
+					<input
+						type="text"
+						id="authorName"
+						bind:value={editableFile.authorName}
+						class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+					/>
+				</div>
+				<div>
+					<label for="description" class="block text-sm font-medium text-text-sub">説明文</label>
+					<textarea
+						id="description"
+						bind:value={editableFile.description}
+						rows="4"
+						class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+					></textarea>
+				</div>
+				<div>
+					<label for="imageUrl" class="block text-sm font-medium text-text-sub">画像URL</label>
+					<input
+						type="url"
+						id="imageUrl"
+						bind:value={editableFile.imageUrl}
+						class="mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-text-main shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+					/>
+				</div>
+			</div>
+		{:else}
+			<!-- メタ情報 -->
+			<div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-sub">
+				{#if file.model}
+					<span class="flex items-center gap-1" title="使用モデル">
+						🤖 {file.model.replace(/^models\//, '')}
+					</span>
+				{/if}
+				<span>👤 {file.authorName}</span>
+				<span>★ {file.starCount}</span>
+				<span>↓ {file.downloadCount}</span>
+				<span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
+			</div>
+
+			<!-- タグ -->
+			{#if file.tags && file.tags.length > 0}
+				<div class="mb-4 flex flex-wrap gap-2">
+					{#each file.tags as tag}
+						<span class="rounded-full bg-main-bg px-3 py-1 text-xs font-medium text-text-main">
+							{tag}
+						</span>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- 説明 -->
+			<p id="modal-description" class="text-base leading-relaxed text-text-main">
+				{file.description}
+			</p>
 		{/if}
 	</div>
-</div>
+
+	<!-- フッター -->
+	<div slot="footer" class="flex w-full items-center justify-between">
+		{#if isEditing}
+			<!-- --- 編集モードのフッター --- -->
+			<div class="ml-auto flex gap-3">
+				<Button variant="primary" on:click={handleCancelEdit}>キャンセル</Button>
+				<Button
+					variant="primary"
+					on:click={handleUpdate}
+					disabled={!editableFile.title || isSaving}
+				>
+					{isSaving ? '保存中...' : '保存する'}
+				</Button>
+			</div>
+		{:else}
+			<!-- --- 表示モードのフッター --- -->
+			<!-- 左側にオーナー用ボタンを配置 -->
+			<div class="flex gap-2">
+				{#if isOwner}
+					<Button variant="danger" on:click={handleDelete} disabled={isDeleting}>
+						{isDeleting ? '削除中...' : '削除'}
+					</Button>
+					<!-- 編集ボタン -->
+					<Button variant="primary" on:click={handleEditClick}>編集</Button>
+				{/if}
+			</div>
+
+			<!-- 右側に通常のボタンを配置 -->
+			<div class="flex justify-end gap-3">
+				<Button variant="primary" on:click={closeModal}>閉じる</Button>
+				<Button variant="primary" on:click={handleImport} disabled={isImporting}>
+					{isImporting ? '読み込み中...' : '読み込む'}
+				</Button>
+			</div>
+		{/if}
+	</div>
+</Modal>

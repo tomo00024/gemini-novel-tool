@@ -19,9 +19,9 @@
 	/>
 	<div
 		class="ml-6 flex items-center space-x-2"
-		class:opacity-50={!$appSettings.assist.summarizeOnTokenOverflow}
+		class:opacity-30={!$appSettings.assist.summarizeOnTokenOverflow}
 	>
-		<label for="token-threshold" class="text-sm whitespace-nowrap text-text-off">
+		<label for="token-threshold" class="text-sm whitespace-nowrap text-text-main">
 			トークン数:
 		</label>
 		<Input

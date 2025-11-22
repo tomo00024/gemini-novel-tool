@@ -72,18 +72,18 @@
 </script>
 
 <Section title="ダイスロール設定">
-	<p class="mb-3 text-xs text-text-off">常時ダイスロールを同時に送信します。</p>
+	<p class="mb-3 text-xs text-text-sub">常時ダイスロールを同時に送信します。</p>
 
 	<!-- ダイスロール設定のリスト -->
 	<div class="space-y-4">
 		{#if $currentSession?.diceRolls}
 			{#each $currentSession.diceRolls as diceRoll (diceRoll.id)}
-				<div class="space-y-3 rounded-lg border border-stone-600 bg-transparent p-4">
+				<div class="space-y-3 rounded-lg border border-bg-border-main bg-transparent p-4">
 					<div class="flex items-center justify-between">
 						<h4 class="font-semibold text-text-main">ダイスロール</h4>
 						<button
 							type="button"
-							class="rounded-md p-1 text-text-off hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-stone-500 focus:outline-none"
+							class="rounded-md p-1 text-text-sub hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-bg-border-main focus:outline-none"
 							on:click={() => removeDiceRoll(diceRoll.id)}
 							aria-label="Remove dice roll"
 						>

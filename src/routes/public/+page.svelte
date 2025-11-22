@@ -70,7 +70,7 @@
 				<Button variant="primary">履歴画面</Button>
 			</a>
 		</div>
-		<p class="mb-6 text-stone-400">他のユーザーが公開したセッションを読み込みます</p>
+		<p class="mb-6 text-text-sub">他のユーザーが公開したセッションを読み込みます</p>
 
 		<div class="mb-6">
 			<Input
@@ -85,18 +85,20 @@
 			{#await data.streamed.files}
 				<!-- Skeleton Loading State -->
 				{#each Array(5) as _}
-					<div class="animate-pulse rounded-lg border border-stone-700 bg-stone-800/30 p-4">
+					<div class="animate-pulse rounded-lg border border-bg-border-sub bg-main-bg p-4">
 						<div class="flex flex-row gap-4">
-							<div class="h-24 w-24 flex-shrink-0 rounded-md bg-stone-700/50 sm:h-28 sm:w-28"></div>
+							<div
+								class="h-24 w-24 flex-shrink-0 rounded-md bg-bg-border-sub/50 sm:h-28 sm:w-28"
+							></div>
 							<div class="flex flex-grow flex-col gap-3">
-								<div class="h-6 w-3/4 rounded bg-stone-700/50"></div>
+								<div class="h-6 w-3/4 rounded bg-bg-border-sub/50"></div>
 								<div class="flex gap-2">
-									<div class="h-5 w-16 rounded-full bg-stone-700/50"></div>
-									<div class="h-5 w-16 rounded-full bg-stone-700/50"></div>
+									<div class="h-5 w-16 rounded-full bg-bg-border-sub/50"></div>
+									<div class="h-5 w-16 rounded-full bg-bg-border-sub/50"></div>
 								</div>
-								<div class="h-4 w-full rounded bg-stone-700/50"></div>
+								<div class="h-4 w-full rounded bg-bg-border-sub/50"></div>
 								<div class="mt-auto flex justify-between">
-									<div class="h-4 w-32 rounded bg-stone-700/50"></div>
+									<div class="h-4 w-32 rounded bg-bg-border-sub/50"></div>
 								</div>
 							</div>
 						</div>
@@ -112,7 +114,7 @@
 				<!-- 注意: 本格的な検索はサーバーサイドで行うべきだが、ここでは既存の動作を維持しつつ表示 -->
 
 				{#if loadedFiles.length === 0}
-					<div class="py-16 text-center text-text-off">
+					<div class="py-16 text-center text-text-sub">
 						まだ公開されているセッションがありません。
 					</div>
 				{:else}
@@ -121,7 +123,7 @@
 						<!-- svelte-ignore a11y-no-static-element-interactions -->
 						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<div
-							class="cursor-pointer rounded-lg border border-stone-700 bg-transparent p-4 transition hover:bg-bg-hover/50"
+							class="cursor-pointer rounded-lg border border-bg-border-sub bg-transparent p-4 transition hover:bg-bg-hover/50"
 							on:click={() => openModal(file)}
 						>
 							<div class="flex flex-row gap-4">
@@ -142,7 +144,7 @@
 										<div class="mt-2 flex flex-wrap gap-2">
 											{#each file.tags as tag}
 												<span
-													class="rounded-full bg-stone-700 px-2.5 py-0.5 text-xs font-medium text-text-off"
+													class="rounded-full bg-bg-border-sub px-2.5 py-0.5 text-xs font-medium text-text-sub"
 												>
 													{tag}
 												</span>
@@ -150,13 +152,13 @@
 										</div>
 									{/if}
 
-									<p class="mt-2 line-clamp-2 flex-grow text-sm text-stone-400">
+									<p class="mt-2 line-clamp-2 flex-grow text-sm text-text-sub">
 										{file.description}
 									</p>
 
 									<!-- メタ情報 -->
 									<div class="mt-3 flex items-center justify-between">
-										<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-off">
+										<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-sub">
 											<span>👤 {file.authorName}</span>
 											{#if file.model}
 												<span class="flex items-center gap-1" title="使用モデル">

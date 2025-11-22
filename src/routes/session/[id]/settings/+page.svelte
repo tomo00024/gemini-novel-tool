@@ -156,7 +156,7 @@
 		<h1 class="text-xl font-bold">セッション設定</h1>
 		<a
 			href="{base}/session/{$sessionId}"
-			class="rounded bg-stone-200 px-3 py-2 text-sm font-semibold text-text-off hover:bg-bg-hover"
+			class="rounded bg-bg-border-sub px-3 py-2 text-sm font-semibold text-text-sub hover:bg-bg-hover"
 		>
 			セッション画面
 		</a>

@@ -17,8 +17,8 @@
 		bind:checked={$appSettings.ui.useCustomFontSize}
 		label="チャットの文字サイズを変更"
 	/>
-	<div class="ml-6 flex items-center gap-2" class:opacity-50={!$appSettings.ui.useCustomFontSize}>
-		<label for="font-size-input" class="text-sm whitespace-nowrap text-text-off">
+	<div class="ml-6 flex items-center gap-2" class:opacity-30={!$appSettings.ui.useCustomFontSize}>
+		<label for="font-size-input" class="text-sm whitespace-nowrap text-text-main">
 			サイズ(px):
 		</label>
 		<Input

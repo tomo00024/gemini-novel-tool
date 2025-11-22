@@ -1,6 +1,6 @@
 <script lang="ts">
 	export let size: 'sm' | 'md' | 'lg' = 'sm';
-	export let color = 'bg-stone-400';
+	export let color = 'bg-bg-border-main';
 
 	const sizeClasses: Record<string, string> = {
 		sm: 'w-1.5 h-1.5',

@@ -76,7 +76,7 @@
 
 <Section title="構造化出力モード（非推奨・試験版）">
 	{#if $apiMode === 'oneStepFC'}
-		<div class="mt-4 space-y-4 border-t border-stone-600 pt-4">
+		<div class="mt-4 space-y-4 border-t border-bg-border-main pt-4">
 			<div>
 				<Textarea
 					id="goodwill-desc"
@@ -92,7 +92,7 @@
 					{#if $goodwill}
 						{#each $goodwill.thresholds as threshold, i (i)}
 							<div
-								class="flex items-start gap-2 rounded-md border border-stone-600 bg-stone-800 p-2"
+								class="bg-bg-main flex items-start gap-2 rounded-md border border-bg-border-main p-2"
 							>
 								<div class="flex-none">
 									<Input

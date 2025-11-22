@@ -126,7 +126,7 @@
 				type="datetime-local"
 				id="expiresAt"
 				bind:value={expiresAt}
-				class="w-full rounded-lg border border-stone-600 bg-transparent px-3 py-2 text-sm text-text-main focus:outline-none"
+				class="w-full rounded-lg border border-bg-border-main bg-transparent px-3 py-2 text-sm text-text-main focus:outline-none"
 			/>
 		</div>
 	</div>

@@ -3,32 +3,57 @@
 @theme {
 	--color-text-main: var(--text-main);
 	--color-text-off: var(--text-off);
+	--color-text-sub: var(--text-sub);
 	--color-main-bg: var(--bg-main);
 	--color-btn-primary-bg: var(--btn-primary-bg);
 	--color-btn-secondary-bg: var(--btn-secondary-bg);
 	--color-bg-hover: var(--bg-hover);
 	--color-bg-bubble-user: var(--bg-bubble-user);
 	--color-bg-bubble-ai: var(--bg-bubble-ai);
+	--color-bg-border-main: var(--bg-border-main);
+	--color-bg-border-off: var(--bg-border-off);
+	--color-bg-border-sub: var(--bg-border-sub);
+
+}
+
+/* ブラウザやOSによる強制的な色反転・ハイコントラスト化を無効化 */
+input,
+div,
+body {
+	forced-color-adjust: none !important;
+	color-scheme: only light !important;
 }
 
 :root {
-	/* 基本テキスト e0e0e0*/
-	--text-main: #dbdbdb;
+	/* 基本テキスト */
+	--text-main: #E3E3E3;
 
-	/* オフのテキスト acacac*/
-	--text-off: #7a7878;
+	/* オフのテキスト */
+	--text-off: #e3e3e34d;
 
-	/* 基本背景色 171717*/
-	--bg-main: #111111;
+	/* サブのテキスト */
+	--text-sub: #e3e3e3be;
 
-	/* ボタン・浮き出し要素 (AIバブル含む)d8d8d8 */
-	--btn-primary-bg: #292929;
+	/* 基本背景色 */
+	--bg-main: #131314;
 
-	/* セグメントのオフ色 e7e7e7*/
+	/* ボタン・浮き出し要素 (AIバブル含む) */
+	--btn-primary-bg: #303030;
+
+	/* セグメントのオフ色 */
 	--btn-secondary-bg: #1d1d1d;
 
-	/* ホバー色 d6d3d1*/
+	/* ホバー色 */
 	--bg-hover: #1f1f1f;
+
+	/* ボーダーメイン */
+	--bg-border-main: #e3e3e3a6;
+
+	/* ボーダーオフ */
+	--bg-border-off: #e3e3e323;
+
+	/* ボーダーサブ */
+	--bg-border-sub: #e3e3e359;
 
 	/* ユーザーバブル */
 	--bg-bubble-user: #133a0e;

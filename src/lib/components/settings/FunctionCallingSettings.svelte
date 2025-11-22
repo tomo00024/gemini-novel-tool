@@ -11,8 +11,8 @@
 
 <Section title="Function Callingモード（開発中）">
 	{#if apiMode === 'twoStepFC'}
-		<div class="mt-4 border-t border-stone-600 pt-4">
-			<p class="text-sm text-text-off">TwoStepFC用の設定項目はまだありません。</p>
+		<div class="mt-4 border-t border-bg-border-main pt-4">
+			<p class="text-sm text-text-sub">TwoStepFC用の設定項目はまだありません。</p>
 		</div>
 	{/if}
 </Section>

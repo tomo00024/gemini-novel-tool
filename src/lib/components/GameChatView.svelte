@@ -235,7 +235,7 @@
 		<div
 			role="button"
 			tabindex="0"
-			class="dialog-box relative h-32 cursor-pointer rounded-lg border border-stone-600 p-4"
+			class="dialog-box relative h-32 cursor-pointer rounded-lg border border-bg-border-main p-4"
 			on:click={handleNextPage}
 			on:keydown={(e) => e.key === 'Enter' && handleNextPage()}
 			bind:clientWidth={dialogWidth}

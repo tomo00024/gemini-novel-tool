@@ -115,7 +115,7 @@
 >
 	<!-- 発言者名 (トランスクリプトモードのみ) -->
 	{#if isTranscript && showSpeakerName}
-		<div class="mb-1 text-xs text-text-off {isUser ? 'font-bold' : ''}">
+		<div class="mb-1 text-xs text-text-sub {isUser ? 'font-bold' : ''}">
 			{isUser ? 'User' : 'Model'}
 		</div>
 	{/if}

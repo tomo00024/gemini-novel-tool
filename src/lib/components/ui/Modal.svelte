@@ -10,6 +10,8 @@
 	export let noPadding = false;
 	export let disableAnimation = false;
 
+	export let align: 'center' | 'top' = 'center';
+
 	const dispatch = createEventDispatcher();
 
 	function close() {
@@ -54,7 +56,10 @@
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-0 backdrop-blur-sm sm:p-4"
+		class="fixed inset-0 z-50 flex justify-center bg-black/60 p-0 backdrop-blur-sm sm:p-4 {align ===
+		'center'
+			? 'items-center'
+			: 'items-start sm:pt-20'}"
 		transition:fade={{ duration: disableAnimation ? 0 : 200 }}
 		on:click={closeOnOutsideClick ? close : null}
 	>
@@ -80,14 +85,14 @@
 		>
 			<!-- Header -->
 			<div
-				class="flex flex-shrink-0 items-center justify-between border-b border-stone-700 px-4 py-2"
+				class="flex flex-shrink-0 items-center justify-between border-b border-bg-border-main px-4 py-2"
 			>
 				<h2 id="modal-title" class="text-lg font-semibold text-text-main">{title}</h2>
 				<div class="flex items-center gap-2">
 					<slot name="header-extra" />
 					<button
 						on:click={close}
-						class="rounded-md p-1 text-text-off hover:bg-bg-hover hover:text-white focus:outline-none"
+						class="rounded-md p-1 text-text-main hover:bg-bg-hover hover:text-text-main focus:outline-none"
 						aria-label="Close"
 					>
 						<svg
@@ -116,7 +121,7 @@
 			<!-- Footer (Optional) -->
 			{#if $$slots.footer}
 				<div
-					class="flex flex-shrink-0 items-center justify-end gap-3 border-t border-stone-700/50 bg-stone-900/30 px-4 py-2 sm:px-6"
+					class="flex flex-shrink-0 items-center justify-end gap-3 border-t border-bg-border-sub bg-main-bg px-4 py-2 sm:px-6"
 				>
 					<slot name="footer" />
 				</div>

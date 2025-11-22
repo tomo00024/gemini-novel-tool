@@ -91,14 +91,14 @@
 </script>
 
 <Section title="ステータス設定">
-	<p class="mb-3 text-xs text-text-off">
+	<p class="mb-3 text-xs text-text-sub">
 		AIに `&#123;&#123;ステータス名: 値&#125;&#125;`
 		のように指示すると、各ステータスで設定された計算方法で値が変動します。
 	</p>
 	<div class="space-y-4">
 		{#if $session?.customStatuses}
 			{#each $session.customStatuses as status (status.id)}
-				<div class="rounded-lg border border-stone-700 bg-transparent p-4">
+				<div class="rounded-lg border border-bg-border-main bg-transparent p-4">
 					<div class="grid grid-cols-[1fr_1fr_auto] items-center gap-3">
 						<!-- 行 1: 入力欄 -->
 						<Input
@@ -117,7 +117,7 @@
 						/>
 						<button
 							type="button"
-							class="rounded-md p-1 text-text-off hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-stone-500 focus:outline-none"
+							class="rounded-md p-1 text-text-sub hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-bg-border-main focus:outline-none"
 							on:click={() => removeCustomStatus(status.id)}
 							aria-label="Remove status {status.name}"
 						>
@@ -140,7 +140,7 @@
 
 					<!-- 行 2: オプション -->
 					<div
-						class="mt-3 flex flex-wrap items-center justify-between gap-4 border-t border-stone-700 pt-3"
+						class="mt-3 flex flex-wrap items-center justify-between gap-4 border-t border-bg-border-main pt-3"
 					>
 						<Toggle
 							id="mode-{status.id}"

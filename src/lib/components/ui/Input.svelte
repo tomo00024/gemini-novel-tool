@@ -11,7 +11,7 @@
 
 <div class={className}>
 	{#if label}
-		<label for={id} class="text-text-main mb-1 block text-sm font-medium">{label}</label>
+		<label for={id} class="mb-1 block text-sm font-medium text-text-main">{label}</label>
 	{/if}
 	{#if type === 'textarea'}
 		<textarea
@@ -19,7 +19,7 @@
 			bind:value
 			{placeholder}
 			{disabled}
-			class="text-text-main w-full rounded-lg border border-stone-600 bg-transparent px-3 py-2 text-sm focus:outline-none disabled:opacity-50"
+			class="w-full rounded-lg border border-bg-border-main bg-transparent px-3 py-2 text-sm text-text-main focus:outline-none disabled:opacity-70"
 			{...$$restProps}
 		></textarea>
 	{:else}
@@ -29,7 +29,7 @@
 			bind:value
 			{placeholder}
 			{disabled}
-			class="text-text-main w-full rounded-lg border border-stone-600 bg-transparent px-3 py-2 text-sm focus:outline-none disabled:opacity-50"
+			class="w-full rounded-lg border border-bg-border-main bg-transparent px-3 py-2 text-sm text-text-main focus:outline-none disabled:opacity-70"
 			{...$$restProps}
 		/>
 	{/if}

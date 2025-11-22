@@ -308,12 +308,12 @@
 <div class="flex h-[100dvh] flex-col overflow-hidden bg-main-bg">
 	<div class="flex-shrink-0">
 		<!-- ヘッダーブロック  -->
-		<div class="gap-4border flex items-center border-b border-stone-100 px-4 py-2">
+		<div class="gap-4border flex items-center border-b border-bg-border-off px-4 py-2">
 			<!-- 左側: ハンバーガーメニュー -->
 			<button
 				type="button"
 				on:click={openMenu}
-				class="rounded p-1 text-text-main hover:bg-bg-hover focus:ring-2 focus:ring-stone-400 focus:outline-none"
+				class="rounded p-1 text-text-main hover:bg-bg-hover focus:ring-2 focus:ring-bg-border-main focus:outline-none"
 				aria-label="Menu"
 			>
 				<svg
@@ -341,13 +341,13 @@
 						bind:value={editingTitle}
 						on:keydown={handleKeyDown}
 						on:blur={saveTitle}
-						class="text-text-inverse w-full rounded-md border border-stone-400 bg-white px-2 py-0.5 text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none"
+						class="text-text-inverse w-full rounded-md border border-bg-border-main bg-transparent px-2 py-0.5 text-lg font-semibold focus:outline-none"
 					/>
 				{:else}
 					<button
 						type="button"
 						on:click={startEditing}
-						class="hover:text-text-inverse w-full truncate rounded-md px-2 py-0.5 text-left text-lg font-semibold text-text-main hover:bg-bg-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+						class="hover:text-text-inverse focus-visible:ring-offset w-full truncate rounded-md px-2 py-0.5 text-left text-lg font-semibold text-text-main hover:bg-bg-hover focus:outline-none focus-visible:ring-2"
 						title={sessionTitle}
 					>
 						{sessionTitle}
@@ -395,7 +395,7 @@
 				<button
 					type="button"
 					on:click={handleOpenSessionSettings}
-					class="rounded p-1 text-text-main hover:bg-bg-hover focus:ring-2 focus:ring-stone-400 focus:outline-none"
+					class="rounded p-1 text-text-main hover:bg-bg-hover focus:ring-2 focus:ring-bg-border-main focus:outline-none"
 					aria-label="Session Settings"
 				>
 					<svg
@@ -440,7 +440,7 @@
 					}
 				}}
 				placeholder={isLoading ? '送信中...' : 'メッセージを入力...'}
-				class="flex-1 resize-none overflow-y-auto rounded-lg border border-stone-600 p-2 leading-normal text-text-main"
+				class="flex-1 resize-none overflow-y-auto rounded-lg border border-bg-border-main bg-transparent p-2 leading-normal text-text-main focus:outline-none"
 				style="max-height: 25vh;"
 			></textarea>
 			{#if isLoading}
@@ -463,7 +463,7 @@
 				<button
 					type="button"
 					on:click={handleSubmit}
-					class="flex h-10 w-10 items-center justify-center rounded-full border-none bg-btn-primary-bg text-text-main transition-all duration-200 hover:bg-bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+					class="flex h-10 w-10 items-center justify-center rounded-full border-none bg-btn-primary-bg text-text-main transition-all duration-200 hover:bg-bg-hover disabled:cursor-not-allowed disabled:opacity-70"
 					disabled={!userInput.trim()}
 					aria-label="送信"
 				>
@@ -496,7 +496,7 @@
 	side="left"
 >
 	<!-- 上部固定: 新規作成、探す -->
-	<div class="flex flex-col gap-2 border-b border-stone-700 p-4">
+	<div class="flex flex-col gap-2 border-b border-bg-border-sub p-4">
 		<button
 			type="button"
 			on:click={handleNewSession}
@@ -546,7 +546,7 @@
 	</div>
 
 	<!-- 下部固定: アプリ設定 -->
-	<div class="border-t border-stone-700 p-4">
+	<div class="border-t border-bg-border-sub p-4">
 		<button
 			type="button"
 			on:click={handleOpenAppSettings}

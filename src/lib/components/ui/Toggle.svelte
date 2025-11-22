@@ -32,7 +32,7 @@
 <div
 	class="flex items-center space-x-3 {className}"
 	class:cursor-pointer={!disabled}
-	class:opacity-50={disabled}
+	class:opacity-80={disabled}
 	class:cursor-not-allowed={disabled}
 	on:click={toggle}
 >
@@ -49,12 +49,12 @@
 		<!-- Sliding Background Pill -->
 		<div
 			class="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full shadow transition-all duration-200 ease-in-out"
-			style="background-color: #e5e5e5; left: {checked ? 'calc(50%)' : '4px'};"
+			style="background-color: var(--btn-primary-bg); left: {checked ? 'calc(50%)' : '4px'};"
 		></div>
 
 		<!-- OFF Segment -->
 		<span
-			class="relative z-10 w-1/2 text-center text-xs font-bold text-text-off transition-colors duration-200"
+			class="relative z-10 w-1/2 text-center text-xs font-bold text-text-main transition-colors duration-200"
 			class:text-text-main={!checked}
 			class:text-text-off={checked}
 		>
@@ -63,7 +63,7 @@
 
 		<!-- ON Segment -->
 		<span
-			class="relative z-10 w-1/2 text-center text-xs font-bold transition-colors duration-200"
+			class="relative z-10 w-1/2 text-center text-xs font-bold text-text-main transition-colors duration-200"
 			class:text-text-main={checked}
 			class:text-text-off={!checked}
 		>

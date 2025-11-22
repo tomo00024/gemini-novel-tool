@@ -149,6 +149,4 @@
 	<TriggerSettings />
 
 	<ImportExportSettings />
-
-	<ImportExportSettings />
 </div>

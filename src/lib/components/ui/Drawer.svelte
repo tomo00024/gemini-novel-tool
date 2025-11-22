@@ -66,14 +66,14 @@
 	>
 		<!-- Header -->
 		<div
-			class="flex flex-shrink-0 items-center justify-between border-b border-stone-700 px-4 py-2"
+			class="flex flex-shrink-0 items-center justify-between border-b border-bg-border-main px-4 py-2"
 		>
 			<h2 id="drawer-title" class="text-lg font-semibold text-text-main">{title}</h2>
 			<div class="flex items-center gap-12">
 				<slot name="header-actions" />
 				<button
 					on:click={close}
-					class="rounded-md p-1 text-text-off hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-stone-500 focus:outline-none"
+					class="rounded-md p-1 text-text-main hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-bg-border-main focus:outline-none"
 					aria-label="Close"
 				>
 					<svg

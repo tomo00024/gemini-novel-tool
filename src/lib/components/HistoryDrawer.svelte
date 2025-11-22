@@ -173,11 +173,11 @@
 	<!-- セッションリスト -->
 	<div class="flex-1 space-y-6">
 		{#if $sessions.length === 0}
-			<p class="mt-4 text-center text-text-off">履歴はありません。</p>
+			<p class="mt-4 text-center text-text-sub">履歴はありません。</p>
 		{:else}
 			{#if groupedSessions.today.length > 0}
 				<div>
-					<h3 class="mb-2 px-2 text-xs font-bold text-text-off">今日</h3>
+					<h3 class="mb-2 px-2 text-xs font-bold text-text-sub">今日</h3>
 					<ul class="space-y-1">
 						{#each groupedSessions.today as session (session.id)}
 							<li>
@@ -200,7 +200,7 @@
 											{session.title}
 										</button>
 										<button
-											class="p-2 text-text-off hover:text-text-main"
+											class="p-2 text-text-sub hover:text-text-main"
 											on:click={(e) => toggleMenu(e, session.id)}
 										>
 											<svg
@@ -220,7 +220,7 @@
 										</button>
 										{#if activeMenuSessionId === session.id}
 											<div
-												class="ring-opacity-5 absolute top-8 right-0 z-50 w-32 rounded-md bg-stone-800 py-1 shadow-lg ring-1 ring-black"
+												class="ring-opacity-5 absolute top-8 right-0 z-50 w-32 rounded-md bg-main-bg py-1 shadow-lg ring-1 ring-bg-border-sub"
 											>
 												<button
 													class="block w-full px-4 py-2 text-left text-sm text-text-main hover:bg-bg-hover hover:text-white"
@@ -258,7 +258,7 @@
 
 			{#if groupedSessions.yesterday.length > 0}
 				<div>
-					<h3 class="mb-2 px-2 text-xs font-bold text-text-off">昨日</h3>
+					<h3 class="mb-2 px-2 text-xs font-bold text-text-sub">昨日</h3>
 					<ul class="space-y-1">
 						{#each groupedSessions.yesterday as session (session.id)}
 							<li>
@@ -281,7 +281,7 @@
 											{session.title}
 										</button>
 										<button
-											class="p-2 text-text-off hover:text-text-main"
+											class="p-2 text-text-sub hover:text-text-main"
 											on:click={(e) => toggleMenu(e, session.id)}
 										>
 											<svg
@@ -301,7 +301,7 @@
 										</button>
 										{#if activeMenuSessionId === session.id}
 											<div
-												class="ring-opacity-5 absolute top-8 right-0 z-50 w-32 rounded-md bg-stone-800 py-1 shadow-lg ring-1 ring-black"
+												class="ring-opacity-5 absolute top-8 right-0 z-50 w-32 rounded-md bg-main-bg py-1 shadow-lg ring-1 ring-bg-border-sub"
 											>
 												<button
 													class="block w-full px-4 py-2 text-left text-sm text-text-main hover:bg-bg-hover hover:text-white"
@@ -339,7 +339,7 @@
 
 			{#if groupedSessions.last7Days.length > 0}
 				<div>
-					<h3 class="mb-2 px-2 text-xs font-bold text-text-off">過去7日間</h3>
+					<h3 class="mb-2 px-2 text-xs font-bold text-text-sub">過去7日間</h3>
 					<ul class="space-y-1">
 						{#each groupedSessions.last7Days as session (session.id)}
 							<li>
@@ -362,7 +362,7 @@
 											{session.title}
 										</button>
 										<button
-											class="p-2 text-text-off hover:text-text-main"
+											class="p-2 text-text-sub hover:text-text-main"
 											on:click={(e) => toggleMenu(e, session.id)}
 										>
 											<svg
@@ -382,7 +382,7 @@
 										</button>
 										{#if activeMenuSessionId === session.id}
 											<div
-												class="ring-opacity-5 absolute top-8 right-0 z-50 w-32 rounded-md bg-stone-800 py-1 shadow-lg ring-1 ring-black"
+												class="ring-opacity-5 absolute top-8 right-0 z-50 w-32 rounded-md bg-main-bg py-1 shadow-lg ring-1 ring-bg-border-sub"
 											>
 												<button
 													class="block w-full px-4 py-2 text-left text-sm text-text-main hover:bg-bg-hover hover:text-white"
@@ -420,7 +420,7 @@
 
 			{#if groupedSessions.older.length > 0}
 				<div>
-					<h3 class="mb-2 px-2 text-xs font-bold text-text-off">それ以前</h3>
+					<h3 class="mb-2 px-2 text-xs font-bold text-text-sub">それ以前</h3>
 					<ul class="space-y-1">
 						{#each groupedSessions.older as session (session.id)}
 							<li>
@@ -443,7 +443,7 @@
 											{session.title}
 										</button>
 										<button
-											class="p-2 text-text-off hover:text-text-main"
+											class="p-2 text-text-sub hover:text-text-main"
 											on:click={(e) => toggleMenu(e, session.id)}
 										>
 											<svg
@@ -463,7 +463,7 @@
 										</button>
 										{#if activeMenuSessionId === session.id}
 											<div
-												class="ring-opacity-5 absolute top-8 right-0 z-50 w-32 rounded-md bg-stone-800 py-1 shadow-lg ring-1 ring-black"
+												class="ring-opacity-5 absolute top-8 right-0 z-50 w-32 rounded-md bg-main-bg py-1 shadow-lg ring-1 ring-bg-border-sub"
 											>
 												<button
 													class="block w-full px-4 py-2 text-left text-sm text-text-main hover:bg-bg-hover hover:text-white"

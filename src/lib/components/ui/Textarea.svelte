@@ -29,7 +29,7 @@
 
 <div class={className}>
 	{#if label}
-		<label for={id} class="text-text-main mb-1 block text-lg font-bold">{label}</label>
+		<label for={id} class="mb-1 block text-lg font-bold text-text-main">{label}</label>
 	{/if}
 	<textarea
 		{id}
@@ -40,7 +40,7 @@
 		{disabled}
 		on:input
 		on:keydown
-		class="text-text-main w-full resize-none rounded-lg border border-stone-600 bg-transparent px-3 py-2 focus:outline-none disabled:opacity-50"
+		class="w-full resize-none rounded-lg border border-bg-border-main bg-transparent px-3 py-2 text-text-main focus:outline-none disabled:opacity-30"
 		{...$$restProps}
 	></textarea>
 </div>

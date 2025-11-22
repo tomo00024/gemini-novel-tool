@@ -79,7 +79,7 @@
 
 <Section title="ゲーム風モード">
 	{#if $currentSession?.viewMode === 'game' && $session?.gameViewSettings}
-		<div class="mt-4 space-y-6 border-t border-stone-600 pt-4">
+		<div class="mt-4 space-y-6 border-t border-bg-border-main pt-4">
 			<!-- 画像設定 -->
 			<div class="space-y-4">
 				<h3 class="font-medium text-text-main">画像ベース設定</h3>
@@ -107,11 +107,11 @@
 					{@const sizing =
 						$session.gameViewSettings.sizing?.[targetInfo.key] ??
 						defaultGameViewSettings.sizing![targetInfo.key]}
-					<div class="rounded border border-stone-600 p-3">
+					<div class="rounded border border-bg-border-main p-3">
 						<p class="mb-2 font-semibold text-text-main">{targetInfo.label}</p>
 						<div class="space-y-2">
 							<!-- ラジオボタン -->
-							<div class="flex flex-wrap gap-x-4 gap-y-2 text-text-off">
+							<div class="flex flex-wrap gap-x-4 gap-y-2 text-text-sub">
 								<label class="flex items-center gap-1">
 									<input
 										type="radio"
@@ -159,7 +159,7 @@
 										on:input={(e) => handleSizingChange(targetInfo.key, 'scale', e)}
 										on:blur={(e) => handleSizingBlur(targetInfo.key, e)}
 									/>
-									<span class="text-sm text-text-off">%</span>
+									<span class="text-sm text-text-sub">%</span>
 								</div>
 							{/if}
 						</div>

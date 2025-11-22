@@ -178,17 +178,17 @@
 </script>
 
 <Section title="トリガー設定">
-	<p class="mb-3 text-xs text-text-off">上から順に条件が判定・実行されます。</p>
+	<p class="mb-3 text-xs text-text-sub">上から順に条件が判定・実行されます。</p>
 
 	<!-- トリガーのリスト -->
 	<div class="space-y-6">
 		{#if $currentSession?.triggers}
 			{#each $currentSession.triggers as trigger, index (trigger.id)}
-				<div class="rounded-lg border border-stone-700 bg-transparent p-4">
+				<div class="rounded-lg border border-bg-border-main bg-transparent p-4">
 					<!-- ヘッダー (トリガー名 + 操作ボタン) -->
-					<div class="mb-4 flex items-center justify-between border-b border-stone-700 pb-2">
+					<div class="mb-4 flex items-center justify-between border-b border-bg-border-main pb-2">
 						<div class="flex items-center gap-2">
-							<span class="text-sm font-semibold text-text-off">#{index + 1}</span>
+							<span class="text-sm font-semibold text-text-sub">#{index + 1}</span>
 							<h4 class="font-semibold text-text-main">トリガー条件</h4>
 						</div>
 						<div class="flex items-center gap-1">
@@ -205,11 +205,11 @@
 								on:click={() => moveTrigger(index, 'down')}>↓</Button
 							>
 							<div
-								class="divider divider-horizontal mx-2 h-4 w-[1px] self-center bg-stone-700"
+								class="divider divider-horizontal mx-2 h-4 w-[1px] self-center bg-bg-border-main"
 							></div>
 							<button
 								type="button"
-								class="rounded-md p-1 text-text-off hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-stone-500 focus:outline-none"
+								class="rounded-md p-1 text-text-sub hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-bg-border-main focus:outline-none"
 								on:click={() => removeTrigger(trigger.id)}
 								aria-label="Remove trigger"
 							>
@@ -233,7 +233,7 @@
 
 					<!-- 条件 (If) -->
 					<div class="mb-4 space-y-2">
-						<p class="text-sm font-semibold text-text-off">If (もし)</p>
+						<p class="text-sm font-semibold text-text-sub">If (もし)</p>
 						<div class="space-y-3 pl-2">
 							{#each trigger.conditions as condition, j (condition.id)}
 								<div class="space-y-2">
@@ -295,7 +295,7 @@
 										{#if trigger.conditions.length > 1}
 											<button
 												type="button"
-												class="rounded-md p-1 text-text-off hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-stone-500 focus:outline-none"
+												class="rounded-md p-1 text-text-sub hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-bg-border-main focus:outline-none"
 												on:click={() => removeCondition(trigger, condition.id)}
 												aria-label="Remove condition"
 											>
@@ -349,35 +349,36 @@
 					</div>
 
 					<!-- 実行内容 (Then) -->
-					<div class="space-y-2 border-t border-stone-700 pt-4">
+					<div class="space-y-2 border-t border-bg-border-main pt-4">
 						<div class="flex items-center justify-between">
-							<p class="text-sm font-semibold text-text-off">Then (ならば)</p>
+							<p class="text-sm font-semibold text-text-sub">Then (ならば)</p>
 						</div>
 
 						<!-- タブ切り替え -->
-						<div class="flex overflow-hidden rounded-lg border border-stone-700">
+						<div class="flex overflow-hidden rounded-lg border border-bg-border-main">
 							<button
 								class="flex-1 py-2 text-xs font-medium transition-colors {!activeTabMap[
 									trigger.id
 								] || activeTabMap[trigger.id] === 'response'
 									? 'bg-btn-primary-bg text-text-main'
-									: 'bg-transparent text-text-off hover:bg-bg-hover hover:text-text-main'}"
+									: 'bg-transparent text-text-sub hover:bg-bg-hover hover:text-text-main'}"
 								on:click={() => toggleTab(trigger.id, 'response')}
 							>
-								💬 AI応答
+								AI応答
 							</button>
-							<div class="w-[1px] bg-stone-700"></div>
+							<div class="w-[1px] bg-bg-border-main"></div>
 							<button
 								class="flex-1 py-2 text-xs font-medium transition-colors {activeTabMap[
 									trigger.id
 								] === 'status'
 									? 'bg-btn-primary-bg text-text-main'
-									: 'bg-transparent text-text-off hover:bg-bg-hover hover:text-text-main'}"
+									: 'bg-transparent text-text-sub hover:bg-bg-hover hover:text-text-main'}"
 								on:click={() => toggleTab(trigger.id, 'status')}
 							>
-								⚡ ステータス
+								ステータス
 								{#if trigger.statusUpdates && trigger.statusUpdates.length > 0}
-									<span class="ml-1 rounded-full bg-stone-600 px-1.5 py-0.5 text-[10px] text-white"
+									<span
+										class="ml-1 rounded-full bg-bg-border-main px-1.5 py-0.5 text-[10px] text-white"
 										>{trigger.statusUpdates.length}</span
 									>
 								{/if}
@@ -391,7 +392,7 @@
 								: 'hidden'}
 						>
 							<div class="flex items-center justify-between">
-								<span class="text-xs text-text-off">実行タイミング:</span>
+								<span class="text-xs text-text-sub">実行タイミング:</span>
 								<div class="w-48">
 									<Select
 										value={trigger.executionType}
@@ -481,7 +482,7 @@
 										/>
 										<button
 											type="button"
-											class="rounded-md p-1 text-text-off hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-stone-500 focus:outline-none"
+											class="rounded-md p-1 text-text-sub hover:bg-bg-hover hover:text-text-main focus:ring-2 focus:ring-bg-border-main focus:outline-none"
 											on:click={() => removeStatusUpdate(trigger.id, k)}
 											aria-label="Remove status update"
 										>
@@ -503,7 +504,7 @@
 									</div>
 								{/each}
 							{:else}
-								<p class="py-2 text-center text-xs text-text-off">設定なし</p>
+								<p class="py-2 text-center text-xs text-text-sub">設定なし</p>
 							{/if}
 							<Button
 								variant="primary"

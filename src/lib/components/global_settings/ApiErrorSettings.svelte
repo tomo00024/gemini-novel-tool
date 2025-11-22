@@ -21,11 +21,11 @@
 	<!-- 全体を囲むdiv -->
 	<div
 		class="ml-6 flex flex-wrap items-center gap-6"
-		class:opacity-50={!$appSettings.apiErrorHandling.exponentialBackoff}
+		class:opacity-30={!$appSettings.apiErrorHandling.exponentialBackoff}
 	>
 		<!-- 1つ目のセット: 回数 -->
 		<div class="flex items-center gap-2">
-			<label for="max-retries" class="text-sm whitespace-nowrap text-text-off"> 回数: </label>
+			<label for="max-retries" class="text-sm whitespace-nowrap text-text-main"> 回数: </label>
 			<Input
 				id="max-retries"
 				type="number"
@@ -37,7 +37,7 @@
 
 		<!-- 2つ目のセット: 待機時間 -->
 		<div class="flex items-center gap-2">
-			<label for="initial-wait" class="text-sm whitespace-nowrap text-text-off">
+			<label for="initial-wait" class="text-sm whitespace-nowrap text-text-main">
 				一回目の待機時間(ms):
 			</label>
 			<Input

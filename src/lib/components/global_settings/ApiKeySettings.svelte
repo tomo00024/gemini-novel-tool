@@ -53,24 +53,22 @@
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<div
-					class="cursor-pointer rounded-lg border p-3 transition-all duration-200"
-					style:background-color={$appSettings.activeApiKeyId === apiKey.id
-						? 'var(--bg-hover)'
+					class="cursor-pointer rounded-lg border px-3 transition-all duration-200"
+					style:border-color={$appSettings.activeApiKeyId === apiKey.id
+						? 'transparent'
 						: 'transparent'}
-					style:border-color={$appSettings.activeApiKeyId === apiKey.id ? '#737373' : '#525252'}
 					on:click={() => ($appSettings.activeApiKeyId = apiKey.id)}
 				>
 					<div class="grid grid-cols-[auto_1fr_2fr_auto] items-center gap-3">
 						<!-- Custom Radio/Check Indicator -->
 						<div
 							class="flex h-5 w-5 items-center justify-center rounded-full border transition-all"
-							style:border-color={$appSettings.activeApiKeyId === apiKey.id ? '#e5e5e5' : '#525252'}
-							style:background-color={$appSettings.activeApiKeyId === apiKey.id
-								? '#e5e5e5'
-								: 'transparent'}
+							style:border-color={$appSettings.activeApiKeyId === apiKey.id
+								? 'var(--bg-border-main)'
+								: 'rgb(from var(--bg-border-main) r g b / 0.5)'}
 						>
 							{#if $appSettings.activeApiKeyId === apiKey.id}
-								<span class="text-xs font-bold" style:color="#171717">✓</span>
+								<span class="text-xs font-bold" style:color="var(--text-main)">✓</span>
 							{/if}
 						</div>
 
@@ -78,15 +76,34 @@
 							id={`key-name-${apiKey.id}`}
 							bind:value={apiKey.name}
 							placeholder={`キー ${index + 1} の名前`}
-							class="w-full"
+							class="w-full transition-colors duration-200"
+							style="
+								border-color: {$appSettings.activeApiKeyId === apiKey.id
+								? 'var(--bg-border-main)'
+								: 'rgb(from var(--bg-border-main) r g b / 0.5)'};
+								color: {$appSettings.activeApiKeyId === apiKey.id
+								? 'var(--bg-border-main)'
+								: 'rgb(from var(--bg-border-main) r g b / 0.5)'};
+							"
 						/>
+
+						<!-- Input 2: Key Value -->
 						<Input
 							id={`key-value-${apiKey.id}`}
 							type="password"
 							bind:value={apiKey.key}
 							placeholder="sk-..."
-							class="w-full"
-						/><Button
+							class="w-full transition-colors duration-200"
+							style="
+								border-color: {$appSettings.activeApiKeyId === apiKey.id
+								? 'var(--bg-border-main)'
+								: 'rgb(from var(--bg-border-main) r g b / 0.5)'};
+								color: {$appSettings.activeApiKeyId === apiKey.id
+								? 'var(--bg-border-main)'
+								: 'rgb(from var(--bg-border-main) r g b / 0.5)'};
+							"
+						/>
+						<Button
 							variant="danger"
 							on:click={(e) => {
 								e.stopPropagation();
@@ -100,14 +117,14 @@
 				</div>
 			{/each}
 		{:else}
-			<p class="px-2 text-sm text-text-off">
+			<p class="px-2 text-sm text-text-sub">
 				保存されているAPIキーはありません。「+ APIを追加」ボタンで追加してください。
 			</p>
 		{/if}
 	</div>
 	<div>
 		<Button on:click={addApiKey}>+ APIを追加</Button>
-		<p class="mt-2 text-sm text-text-off">
+		<p class="mt-2 text-sm text-text-sub">
 			APIキーはブラウザ内にのみ保存されます。入力や変更は自動的に保存されます。
 		</p>
 	</div>

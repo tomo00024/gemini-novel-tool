@@ -81,7 +81,7 @@
 						)}
 						{#if siblings.length > 1}
 							{@const currentIndex = siblings.findIndex((l) => l.id === log.id)}
-							<div class="mt-2 flex w-full items-center justify-center gap-2 text-sm text-text-off">
+							<div class="mt-2 flex w-full items-center justify-center gap-2 text-sm text-text-sub">
 								<button
 									class="cursor-pointer rounded p-1 hover:bg-bg-hover disabled:opacity-30"
 									disabled={currentIndex <= 0}
@@ -115,14 +115,14 @@
 		{#if isLoading}
 			<div class="flex w-full flex-col items-start">
 				{#if $appSettings.ui.chatDisplayMode === 'transcript' && $appSettings.ui.showSpeakerNameInTranscript}
-					<div class="mb-1 text-xs text-text-off">Model</div>
+					<div class="mb-1 text-xs text-text-sub">Model</div>
 				{/if}
 				<div
 					class="chat-bubble {$appSettings.ui.chatDisplayMode === 'transcript'
 						? 'max-w-full px-0 py-0'
 						: 'bg-bubble-ai-bg text-bubble-ai-text max-w-[95%] rounded-2xl px-4 py-4'}"
 				>
-					<LoadingIndicator size="sm" color="bg-stone-400" />
+					<LoadingIndicator size="sm" color="bg-bg-border-main" />
 				</div>
 			</div>
 		{/if}

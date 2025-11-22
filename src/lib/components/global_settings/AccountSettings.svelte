@@ -211,9 +211,9 @@
 			</p>
 			<Button onclick={() => signOut()}>ログアウト</Button>
 		</div>
-		<div class="space-y-3 border-t border-stone-600 pt-4">
+		<div class="space-y-3 border-t border-bg-border-sub pt-4">
 			<h3 class="font-bold text-red-600">アカウントの削除 (退会)</h3>
-			<p class="text-sm text-text-off">
+			<p class="text-sm text-text-sub">
 				アカウントを削除すると、サーバーにアップロードしたすべてのセッション履歴が完全に削除され、元に戻すことはできません。
 			</p>
 			<Button variant="danger" onclick={handleDeleteAccount} disabled={isDeleting}>
@@ -223,7 +223,7 @@
 	{:else}
 		<div class="space-y-3">
 			<Button variant="primary" onclick={() => signIn('google')}>Googleアカウントでログイン</Button>
-			<p class="text-sm text-text-off">
+			<p class="text-sm text-text-sub">
 				ログインすると、セッション履歴をWeb上に公開して共有したり、Google
 				Driveへ自動でバックアップしたりできるようになります。
 			</p>
@@ -244,7 +244,7 @@
 		/>
 
 		{#if !$page.data.session}
-			<p class="pl-6 text-sm text-text-off">
+			<p class="pl-6 text-sm text-text-sub">
 				この機能を利用するには、まずGoogleアカウントでログインしてください。
 			</p>
 		{:else if isPermissionMissing}
@@ -263,7 +263,7 @@
 			</div>
 		{:else if $appSettings.backup.isEnabled}
 			<div class="space-y-2 pl-6">
-				<div class="text-sm text-text-off">
+				<div class="text-sm text-text-sub">
 					{#if $appSettings.backup.lastBackupAt}
 						最終同期: {new Date($appSettings.backup.lastBackupAt).toLocaleString()}
 					{:else}
@@ -285,7 +285,7 @@
 						<span class="text-sm text-green-500">{backupMessage}</span>
 					{/if}
 				</div>
-				<p class="text-xs text-text-off">
+				<p class="text-xs text-text-sub">
 					※ 1日1つのバックアップファイル（gemini-backup-YYYY-MM-DD.json）が作成されます。<br />
 					※ 自動バックアップも「今すぐバックアップ」も、その日のファイルを上書き更新します。
 				</p>
@@ -294,8 +294,8 @@
 	</div>
 
 	<!-- 手動バックアップ -->
-	<div class="space-y-2 border-t border-stone-600 pt-4">
-		<h3 class="font-bold">手動バックアップ (JSON)</h3>
+	<div class="space-y-2 border-t border-bg-border-sub pt-4">
+		<h3 class="font-bold text-text-main">手動バックアップ (JSON)</h3>
 		<div class="flex flex-wrap gap-2">
 			<Button variant="primary" onclick={handleExportJson}>セッション履歴をJSON出力</Button>
 			<Button variant="primary" onclick={() => fileInput.click()}>セッション履歴をJSON読込</Button>
@@ -307,14 +307,14 @@
 				onchange={handleImportJson}
 			/>
 		</div>
-		<p class="text-sm text-text-off">
+		<p class="text-sm text-text-sub">
 			セッション履歴をJSONファイルで手動でバックアップ・復元します。
 		</p>
 	</div>
 </Section>
 
 <!-- 破壊的変更 -->
-<section class="space-y-4 border-t border-red-200 pt-4">
+<section class="space-y-4 border-t border-red-600 pt-4">
 	<button
 		class="flex w-full items-center justify-between text-left"
 		onclick={() => (isDestructiveOpen = !isDestructiveOpen)}

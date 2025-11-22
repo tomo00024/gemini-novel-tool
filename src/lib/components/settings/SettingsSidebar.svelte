@@ -18,8 +18,8 @@
 			on:click={() => selectCategory(category.id)}
 			class="w-full rounded-md px-4 py-3 text-left text-sm font-medium focus:outline-none {activeCategory ===
 			category.id
-				? 'bg-stone-200 text-text-off'
-				: 'text-text-off hover:bg-white/10 hover:text-white'}"
+				? 'bg-bg-main-bg text-text-sub'
+				: 'text-text-sub hover:bg-bg-hover hover:text-text-main'}"
 			style="-webkit-tap-highlight-color: transparent;"
 		>
 			{category.label}

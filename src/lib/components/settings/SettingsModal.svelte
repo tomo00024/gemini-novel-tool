@@ -39,18 +39,21 @@
 	size="xl"
 	noPadding={true}
 	disableAnimation={true}
+	align="top"
 	on:close={close}
 >
 	<div class="flex h-full flex-col sm:flex-row">
 		<!-- Sidebar (Desktop) -->
-		<aside class="hidden w-64 flex-shrink-0 flex-col border-r border-stone-700 bg-main-bg sm:flex">
+		<aside
+			class="hidden w-64 flex-shrink-0 flex-col border-r border-bg-border-main bg-main-bg sm:flex"
+		>
 			<div class="flex-1 overflow-y-auto py-4">
 				<SettingsSidebar {categories} {activeCategory} on:select={handleCategorySelect} />
 			</div>
 		</aside>
 
 		<!-- Mobile Header & Nav -->
-		<div class="flex flex-col border-b border-stone-700 bg-main-bg sm:hidden">
+		<div class="flex flex-col border-b border-bg-border-main bg-main-bg sm:hidden">
 			<div class="overflow-x-auto px-2 py-2">
 				<div class="flex min-w-max space-x-2">
 					{#each categories as category}
@@ -60,7 +63,7 @@
 							class="rounded px-3 py-1.5 text-sm font-medium focus:outline-none {activeCategory ===
 							category.id
 								? 'bg-btn-primary-bg text-text-main'
-								: 'text-text-off hover:bg-white/10'}"
+								: 'text-text-sub hover:bg-white/10'}"
 							style="-webkit-tap-highlight-color: transparent;"
 						>
 							{category.label}

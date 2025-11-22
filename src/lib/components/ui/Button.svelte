@@ -12,7 +12,8 @@
 	const variants = {
 		primary:
 			'rounded-full bg-btn-primary-bg px-3 py-2 text-text-main hover:bg-btn-primary-hover-bg text-sm',
-		danger: 'rounded bg-red-600 px-3 py-2 text-text-inverse hover:bg-red-600 text-sm',
+		danger:
+			'rounded bg-bg-main px-3 py-2 text-red-600 hover:bg-red-600 text-sm border border-red-600 border-1',
 		menu: 'rounded-full border border-btn-menu-border bg-btn-menu-bg px-3 py-1 text-btn-menu-text hover:border-btn-menu-hover-border hover:bg-btn-menu-hover-bg text-sm whitespace-nowrap'
 	};
 </script>

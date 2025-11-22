@@ -241,7 +241,7 @@
 													複製
 												</button>
 												<button
-													class="block w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-bg-hover hover:text-red-300"
+													class="block w-full px-4 py-2 text-left text-sm text-text-main hover:bg-bg-hover hover:text-text-main"
 													on:click={(e) => handleDelete(e, session)}
 												>
 													削除
@@ -322,7 +322,7 @@
 													複製
 												</button>
 												<button
-													class="block w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-bg-hover hover:text-red-300"
+													class="block w-full px-4 py-2 text-left text-sm text-text-main hover:bg-bg-hover hover:text-text-main"
 													on:click={(e) => handleDelete(e, session)}
 												>
 													削除
@@ -403,7 +403,7 @@
 													複製
 												</button>
 												<button
-													class="block w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-bg-hover hover:text-red-300"
+													class="block w-full px-4 py-2 text-left text-sm text-text-main hover:bg-bg-hover hover:text-text-main"
 													on:click={(e) => handleDelete(e, session)}
 												>
 													削除
@@ -484,7 +484,7 @@
 													複製
 												</button>
 												<button
-													class="block w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-bg-hover hover:text-red-300"
+													class="block w-full px-4 py-2 text-left text-sm text-text-main hover:bg-bg-hover hover:text-text-main"
 													on:click={(e) => handleDelete(e, session)}
 												>
 													削除

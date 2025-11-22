@@ -187,7 +187,7 @@
 					<p class="whitespace-pre-wrap">{log.text}</p>
 				{:else}
 					{#await marked(log.text || '')}
-						<p class="animate-pulse text-stone-400">...</p>
+						<p class="animate-pulse text-text-sub">...</p>
 					{:then rawHtml}
 						{@html DOMPurify.sanitize(rawHtml)}
 					{:catch error}

@@ -88,37 +88,37 @@
 					集計期間: <span class="text-text-main">{rangeStats.periodLabel}</span>
 				</div>
 				<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
-					<div class="rounded-md bg-stone-700/50 p-3">
+					<div class="rounded-md p-3">
 						<div class="text-xs text-blue-400">合計トークン</div>
 						<div class="mt-1 text-xl font-bold text-blue-300">
 							{rangeStats.total.toLocaleString()}
 						</div>
 					</div>
-					<div class="rounded-md bg-stone-700/30 p-3">
+					<div class="rounded-md p-3">
 						<div class="text-xs text-text-sub">入力 (Prompt)</div>
 						<div class="mt-1 text-lg font-semibold text-text-main">
 							{rangeStats.input.toLocaleString()}
 						</div>
 					</div>
-					<div class="rounded-md bg-stone-700/30 p-3">
+					<div class="rounded-md p-3">
 						<div class="text-xs text-text-sub">出力 (Response)</div>
 						<div class="mt-1 text-lg font-semibold text-text-main">
 							{rangeStats.output.toLocaleString()}
 						</div>
 					</div>
-					<div class="rounded-md bg-stone-700/30 p-3">
+					<div class="rounded-md p-3">
 						<div class="text-xs text-text-sub">思考 (Thinking)</div>
 						<div class="mt-1 text-lg font-semibold text-text-main">
 							{rangeStats.thinking.toLocaleString()}
 						</div>
 					</div>
-					<div class="relative overflow-hidden rounded-md bg-stone-700/30 p-3">
+					<div class="relative overflow-hidden rounded-md p-3">
 						<div class="text-xs text-emerald-400">キャッシュ (Cached)</div>
 						<div class="mt-1 text-lg font-semibold text-emerald-300">
 							{rangeStats.cached.toLocaleString()}
 						</div>
 					</div>
-					<div class="rounded-md bg-stone-700/30 p-3">
+					<div class="rounded-md p-3">
 						<div class="text-xs text-emerald-400">キャッシュ率 (Rate)</div>
 						<div class="mt-1 text-lg font-semibold text-emerald-300">
 							{rangeStats.cacheRate.toFixed(1)}<span class="ml-0.5 text-sm">%</span>
@@ -130,7 +130,7 @@
 		<div class="rounded-lg border border-bg-border-main bg-transparent p-4 text-xs text-text-sub">
 			<p class="mb-1">
 				<span class="font-bold text-emerald-400">● コスト仕様:</span>
-				暗黙的キャッシュ（Implicit Caching）は一定長以上の共通プレフィックス（2.5Pro: 4096+）に対し自動適用され、入力コストを大幅に削減（約90%OFF）しますがストレージ料金は発生しません。
+				暗黙的キャッシュ（Implicit Caching）は一定長以上の共通プレフィックス（2.5Pro: 4096+）に対し自動適用され、入力コストを大幅に削減（約90%OFF）します。ストレージ料金は発生しません。
 			</p>
 			<p class="mb-1">
 				<span class="font-bold text-yellow-400">● レート制限:</span>
